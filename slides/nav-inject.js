@@ -250,7 +250,7 @@ const SLIDE_ORDER = [
       const ch2Files = ['5-1','5-2','6-0a','6-0b','6-1','6-2','6-3','6-4',
         'prompt-attack','prompt-attack-cases','prompt-defense',
         '7-1','7-2','7-3','7-4','7-5','8-1','8-2','8-2b','8-3','8-4','8-5','8-5b',
-        '8-6','8-7','8-8','engineering-philosophy','summary-2','summary-2b'];
+        '8-6','8-7','8-8','cost-eval','engineering-philosophy','summary-2','summary-2b'];
       const base = cur.replace('.html','');
       location.href = ch2Files.includes(base) ? 'story-2.html' : 'llm-story.html';
       return;
