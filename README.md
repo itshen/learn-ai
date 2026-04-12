@@ -76,6 +76,6 @@ npx serve .
 
 MIT License
 
-Copyright (c) 2025 Miyang Tech (Zhuhai Hengqin) Co., Ltd.
+Copyright (c) 2026 Miyang Tech (Zhuhai Hengqin) Co., Ltd.
 
 本项目基于 MIT 协议开源，可自由使用、修改和分发，保留署名即可。
