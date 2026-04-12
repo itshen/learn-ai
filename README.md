@@ -74,8 +74,16 @@ npx serve .
 
 ## License
 
-MIT License
+**GNU Affero General Public License v3.0 (AGPL-3.0)**
 
-Copyright (c) 2026 Miyang Tech (Zhuhai Hengqin) Co., Ltd.
+Copyright (c) 2026 洛小山 · Miyang Tech (Zhuhai Hengqin) Co., Ltd.
 
-本项目基于 MIT 协议开源，可自由使用、修改和分发，保留署名即可。
+本项目采用 **AGPL-3.0** 协议开源，使用本项目须遵守以下条款：
+
+- ✅ 可自由学习、使用、修改
+- ⚠️ 若对本项目进行**修改或二次开发**，修改后的代码**必须以相同协议开源**
+- ⚠️ 若将本项目（或修改版）用于**网络服务/商业部署**，源代码**必须公开**
+- 📌 任何情况下必须**保留原作者署名**：洛小山 · [luoxiaoshan.cn](https://luoxiaoshan.cn)
+- ❌ **不允许**在闭源商业产品中使用本项目
+
+> 简单说：你可以学习和改造，但不能拿去闷声赚钱，改了就得开源，且必须注明来源。
