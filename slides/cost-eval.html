@@ -2,394 +2,451 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>大模型成本评估</title>
+<title>模型选型：能力 vs 成本的权衡</title>
 <style>
-:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706;--gold:#b45309}
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:fadein .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
 @keyframes fadein{to{opacity:1}}
 .slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
 
 /* Header */
-.hd{padding:14px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd{padding:16px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
 .hd-tag{font-size:14px;font-weight:800;color:var(--amber)}
-.hd-title{font-size:22px;font-weight:800;color:var(--text)}
-.hd-title em{font-style:normal;color:var(--accent)}
-.hd-right{display:flex;align-items:center;gap:14px}
-.xsct-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,102,255,.07);border:1.5px solid rgba(0,102,255,.2);border-radius:10px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;transition:all .2s}
-.xsct-badge:hover{background:rgba(0,102,255,.13);border-color:rgba(0,102,255,.4)}
-.xsct-badge svg{flex-shrink:0}
-.hd-sub{font-size:13px;color:var(--muted)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--amber)}
+.hd-sub{font-size:14px;color:var(--muted)}
 
-/* Body */
-.body{flex:1;display:grid;grid-template-columns:400px 1fr;min-height:0}
+/* Body split */
+.body{flex:1;display:grid;grid-template-columns:360px 1fr;min-height:0}
 
-/* ── Left ── */
-.left-col{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.left-tabs{display:flex;padding:12px 16px 0;gap:6px;flex-shrink:0}
-.tab{padding:6px 14px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);border:1px solid transparent;border-bottom:none;transition:all .18s;background:transparent}
-.tab.active{background:white;border-color:var(--border);color:var(--text)}
-.left-body{flex:1;overflow-y:auto;padding:10px 14px 14px}
+/* ── Left: nav ── */
+.nav-col{padding:20px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.nav-group{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:4px 2px 2px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid transparent;background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;width:100%;text-align:left}
+.nav-item:hover{border-color:rgba(0,0,0,0.1);background:#fafaf8}
+.nav-item.active{border-color:var(--accent);background:rgba(0,102,255,.04);box-shadow:0 2px 10px rgba(0,102,255,.1)}
+.nav-badge{padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800;flex-shrink:0}
+.badge-q{background:rgba(234,88,12,.12);color:var(--orange)}
+.badge-c{background:rgba(0,102,255,.12);color:var(--accent)}
+.badge-t{background:rgba(91,79,207,.12);color:var(--purple)}
+.nav-text h5{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.nav-text p{font-size:13px;color:var(--sub);margin-top:1px}
 
-/* 排行榜表格 */
-.lb-table{width:100%;border-collapse:collapse}
-.lb-table th{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;padding:6px 8px;text-align:left;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:var(--bg)}
-.lb-row{cursor:pointer;border-radius:8px;transition:background .15s}
-.lb-row:hover{background:rgba(0,0,0,.03)}
-.lb-row.selected td{background:rgba(0,102,255,.04)}
-.lb-row td{padding:7px 8px;font-size:13px;vertical-align:middle}
-.lb-rank{font-weight:900;color:var(--muted);font-size:13px;width:24px;text-align:center}
-.lb-rank.top1{color:#b45309}
-.lb-rank.top2{color:#6b7280}
-.lb-rank.top3{color:#92400e}
-.lb-name{font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lb-score{font-weight:800;font-size:14px;text-align:right}
-.lb-price{font-size:12px;color:var(--sub);text-align:right;white-space:nowrap}
-.lb-vfm{text-align:right}
-.vfm-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;flex-shrink:0}
-.lb-bar-wrap{width:80px}
-.lb-bar-bg{height:6px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden}
-.lb-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+/* ── Right: demo ── */
+.demo-col{padding:24px 30px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.demo-heading{flex-shrink:0}
+.demo-heading h3{font-size:21px;font-weight:800;color:var(--text)}
+.demo-heading p{font-size:15px;color:var(--sub);margin-top:5px;line-height:1.7}
+.demo-body{flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden}
 
-/* 性价比标签 */
-.vfm-tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700}
-.vfm-high{background:rgba(22,163,74,.12);color:var(--green)}
-.vfm-mid{background:rgba(234,88,12,.1);color:var(--orange)}
-.vfm-low{background:rgba(0,0,0,.06);color:var(--muted)}
+/* 通用卡片 */
+.card{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:16px 18px}
+.card-title{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
 
-/* ── Right ── */
-.right-col{display:flex;flex-direction:column;gap:0;overflow:hidden}
+/* 对比两列 */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp-col{border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.cmp-col.bad{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.18)}
+.cmp-col.good{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.18)}
+.cmp-col.neutral{background:rgba(0,102,255,.04);border:1.5px solid rgba(0,102,255,.15)}
+.cmp-head{font-size:14px;font-weight:800}
+.cmp-col.bad .cmp-head{color:var(--red)}
+.cmp-col.good .cmp-head{color:var(--green)}
+.cmp-col.neutral .cmp-head{color:var(--accent)}
+.cmp-body{font-size:14px;color:var(--sub);line-height:1.7}
+.cmp-body b{color:var(--text)}
 
-/* 详情面板 */
-.detail-panel{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+/* 统计 */
+.stats{display:flex;gap:10px;flex-shrink:0}
+.stat{flex:1;border-radius:10px;padding:11px 14px;text-align:center}
+.stat .sv{font-size:24px;font-weight:900}
+.stat .sl{font-size:12px;font-weight:700;margin-top:2px;color:var(--muted)}
+.stat.red-s{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.15)}.stat.red-s .sv{color:var(--red)}
+.stat.green-s{background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.15)}.stat.green-s .sv{color:var(--green)}
+.stat.blue-s{background:rgba(0,102,255,.07);border:1px solid rgba(0,102,255,.15)}.stat.blue-s .sv{color:var(--accent)}
+.stat.amber-s{background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.2)}.stat.amber-s .sv{color:var(--amber)}
+.stat.gray-s{background:var(--surface);border:1px solid var(--border)}.stat.gray-s .sv{color:var(--text)}
 
-/* 模型信息头 */
-.model-info{display:flex;align-items:flex-start;gap:16px}
-.model-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white;flex-shrink:0}
-.model-meta h2{font-size:20px;font-weight:800;color:var(--text);line-height:1.2}
-.model-meta p{font-size:13px;color:var(--sub);margin-top:4px}
-.model-meta .tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.tag-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+/* 提示 */
+.tip{border-radius:10px;padding:11px 14px;font-size:14px;line-height:1.65;flex-shrink:0}
+.tip.green{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);color:var(--green)}
+.tip.amber{background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.22);color:var(--amber)}
+.tip.blue{background:rgba(0,102,255,.06);border:1px solid rgba(0,102,255,.2);color:var(--accent)}
+.tip.red{background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.2);color:var(--red)}
+.tip b{font-weight:800}
 
-/* 四维得分 */
-.scores-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.score-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:12px 14px;text-align:center}
-.score-card .sc-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
-.score-card .sc-val{font-size:26px;font-weight:900;line-height:1}
-.score-card .sc-bar{height:4px;border-radius:2px;margin-top:8px;background:rgba(0,0,0,.06);overflow:hidden}
-.score-card .sc-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+/* 按钮 */
+.btn-row{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.btn{padding:9px 20px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-p{background:var(--accent);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.35;cursor:not-allowed;filter:none}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-hint{font-size:13px;color:var(--muted)}
 
-/* 成本对比区 */
-.cost-section{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:16px 18px}
-.cost-title{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:12px}
-.cost-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cost-box{background:var(--bg);border-radius:10px;padding:12px 14px}
-.cost-box .cb-label{font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:600}
-.cost-box .cb-val{font-size:20px;font-weight:900;color:var(--text)}
-.cost-box .cb-unit{font-size:12px;color:var(--sub);margin-top:2px}
-.cost-box.highlight .cb-val{color:var(--accent)}
+/* 散点图 */
+.scatter-wrap{position:relative;border-radius:12px;border:1px solid var(--border);background:var(--surface);overflow:hidden}
+.scatter-canvas{display:block;width:100%;height:100%}
+.scatter-label-x{position:absolute;bottom:6px;right:12px;font-size:11px;font-weight:700;color:var(--muted)}
+.scatter-label-y{position:absolute;top:8px;left:8px;font-size:11px;font-weight:700;color:var(--muted);writing-mode:horizontal-tb}
+.axis-label-x{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--muted)}
+.axis-label-y{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--muted)}
+.scatter-tooltip{position:absolute;background:var(--text);color:white;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;pointer-events:none;white-space:nowrap;display:none;z-index:10;line-height:1.6}
 
-/* 月费估算 */
-.estimate-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.est-box{background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center}
-.est-box .eb-label{font-size:11px;color:var(--sub);margin-bottom:4px}
-.est-box .eb-val{font-size:17px;font-weight:800;color:var(--text)}
-.est-box.best .eb-val{color:var(--green)}
+/* 成本条形图 */
+.bar-chart{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-name{font-size:13px;font-weight:700;color:var(--text);width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:22px;background:rgba(0,0,0,.06);border-radius:5px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:800;color:white;transition:width .5s ease;white-space:nowrap;min-width:0}
+.bar-val{font-size:12px;font-weight:700;color:var(--sub);width:56px;text-align:right;flex-shrink:0}
 
-/* 计算器区 */
-.calc-section{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:14px 18px;flex-shrink:0}
-.calc-title{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
-.calc-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end}
+/* 月费计算器 */
+.calc-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .calc-field{display:flex;flex-direction:column;gap:5px}
 .calc-field label{font-size:11px;font-weight:700;color:var(--sub)}
-.calc-field input{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;color:var(--text);background:var(--bg);font-family:inherit;width:100%;outline:none;transition:border-color .2s}
-.calc-field input:focus{border-color:var(--accent)}
-.calc-btn{padding:8px 18px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
-.calc-btn:hover{filter:brightness(1.1)}
-.calc-result{margin-top:10px;font-size:13px;color:var(--sub);line-height:1.6;min-height:20px}
-.calc-result b{color:var(--text)}
-.calc-result .highlight{color:var(--accent);font-weight:800}
+.calc-input{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--text);background:var(--bg);font-family:inherit;outline:none;transition:border-color .2s;width:100%}
+.calc-input:focus{border-color:var(--accent)}
+.calc-result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.cres{background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center}
+.cres .cr-name{font-size:11px;color:var(--sub);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cres .cr-val{font-size:17px;font-weight:900;color:var(--text)}
+.cres.best .cr-val{color:var(--green)}
+.cres .cr-score{font-size:11px;color:var(--muted);margin-top:2px}
 
-/* xsct 推广底部 */
-.promo-bar{flex-shrink:0;background:linear-gradient(90deg,rgba(0,102,255,.07),rgba(91,79,207,.07));border-top:1px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:12px}
-.promo-text{font-size:13px;color:var(--sub);flex:1}
-.promo-text b{color:var(--text)}
-.promo-link{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:white;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none;transition:all .2s;flex-shrink:0}
-.promo-link:hover{filter:brightness(1.1);transform:translateY(-1px)}
-
-/* 空状态 */
-.empty-hint{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px}
-.empty-hint svg{opacity:.3}
-.empty-hint p{font-size:14px;font-weight:600;opacity:.6}
+@keyframes row-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.row-in{animation:row-in .3s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease}
 </style>
 </head>
 <body>
 <div class="slide">
-
-  <!-- Header -->
   <div class="hd">
     <div>
-      <div class="hd-tag">成本优化 · 第五层</div>
-      <div class="hd-title">大模型<em>成本评估</em>与模型选型</div>
+      <div class="hd-tag">模块八 · 成本优化 · 第 10 页</div>
+      <div class="hd-title">模型选型：<em>能力 vs 成本</em>的权衡</div>
     </div>
-    <div class="hd-right">
-      <span class="hd-sub">数据来源</span>
-      <a class="xsct-badge" href="https://xsct.ai" target="_blank">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-        xsct.ai 场景化评测平台
-      </a>
-    </div>
+    <div class="hd-sub">优化做完了，还需要选对模型 · 点击左侧选择视角</div>
   </div>
 
-  <!-- Body -->
   <div class="body">
+    <!-- 左栏 -->
+    <div class="nav-col">
+      <div class="nav-group">三个选型问题</div>
 
-    <!-- Left: 排行榜 -->
-    <div class="left-col">
-      <div class="left-tabs">
-        <div class="tab active" onclick="switchTab('lb')">综合排行榜</div>
-        <div class="tab" onclick="switchTab('vfm')">性价比榜</div>
-      </div>
-      <div class="left-body">
-        <table class="lb-table">
-          <thead>
-            <tr>
-              <th style="width:24px">#</th>
-              <th>模型</th>
-              <th style="text-align:right">综合分</th>
-              <th style="text-align:right;width:80px">输出价格</th>
-            </tr>
-          </thead>
-          <tbody id="lb-body"></tbody>
-        </table>
+      <button class="nav-item active" onclick="pick(this,0)">
+        <span class="nav-badge badge-q">问题1</span>
+        <div class="nav-text">
+          <h5>更贵的模型，一定更好？</h5>
+          <p>能力与价格不是线性关系</p>
+        </div>
+      </button>
+
+      <button class="nav-item" onclick="pick(this,1)">
+        <span class="nav-badge badge-c">问题2</span>
+        <div class="nav-text">
+          <h5>同一任务，成本差多少？</h5>
+          <p>相同 Token 用不同模型</p>
+        </div>
+      </button>
+
+      <button class="nav-item" onclick="pick(this,2)">
+        <span class="nav-badge badge-t">问题3</span>
+        <div class="nav-text">
+          <h5>我的业务，应该选哪个？</h5>
+          <p>按场景匹配：日常 / 专业 / 极限</p>
+        </div>
+      </button>
+
+      <div class="nav-group" style="margin-top:6px">结论</div>
+      <div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px 14px;font-size:13px;color:var(--sub);line-height:1.8">
+        选型 = <b style="color:var(--text)">任务难度</b> × <b style="color:var(--text)">调用量</b> × <b style="color:var(--text)">容错空间</b><br>
+        <span style="font-size:12px">数据来源：<a href="https://xsct.ai" target="_blank" style="color:var(--accent);font-weight:700;text-decoration:none">xsct.ai 场景化评测</a></span>
       </div>
     </div>
 
-    <!-- Right: 详情 -->
-    <div class="right-col">
-      <div class="detail-panel" id="detail-panel">
-        <div class="empty-hint" id="empty-hint">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          <p>点击左侧模型，查看详细成本分析</p>
-        </div>
-        <div id="detail-content" style="display:none;flex-direction:column;gap:14px"></div>
-      </div>
-
-      <!-- 计算器 -->
-      <div class="calc-section">
-        <div class="calc-title">月费快速估算</div>
-        <div class="calc-row">
-          <div class="calc-field">
-            <label>单次输入 Token</label>
-            <input type="number" id="c-in" value="2000" min="0">
-          </div>
-          <div class="calc-field">
-            <label>单次输出 Token</label>
-            <input type="number" id="c-out" value="500" min="0">
-          </div>
-          <div class="calc-field">
-            <label>日调用次数</label>
-            <input type="number" id="c-calls" value="1000" min="1">
-          </div>
-          <button class="calc-btn" onclick="calcCost()">计算</button>
-        </div>
-        <div class="calc-result" id="calc-result">← 选择模型后点击计算</div>
-      </div>
-
-      <!-- 推广底栏 -->
-      <div class="promo-bar">
-        <div class="promo-text">
-          想要对比更多模型？<b>XSCT Arena</b> 提供跨场景评测得分 + 实时价格，帮你找到最合适的模型。
-        </div>
-        <a class="promo-link" href="https://xsct.ai" target="_blank">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          前往 xsct.ai →
-        </a>
-      </div>
-    </div>
-
+    <!-- 右栏 -->
+    <div class="demo-col" id="demoCol"></div>
   </div>
 </div>
-
+<script src="nav-inject.js"></script>
 <script>
-// ── 数据 ──
+
+/* ─────── 数据 ─────── */
+// 按 xsct.ai 实际数据（文本能力 xsct-l，输出价格 $/1M）
 const MODELS = [
-  {rank:1, name:"Claude Sonnet 4.6",    short:"Claude",  provider:"Anthropic",  input:3.00,  output:15.00, overall:90.3, daily:90.8, pro:90.3, extreme:89.8, vfm:6.4,  color:"#7c3aed"},
-  {rank:2, name:"Claude Opus 4.6",      short:"Opus",    provider:"Anthropic",  input:5.00,  output:25.00, overall:89.7, daily:91.1, pro:89.7, extreme:88.2, vfm:3.3,  color:"#5b4fcf"},
-  {rank:3, name:"qwen3.6-plus-preview", short:"Qwen3.6", provider:"阿里云",      input:0.29,  output:1.75,  overall:88.3, daily:89.8, pro:88.1, extreme:87.2, vfm:30.4, color:"#0066ff"},
-  {rank:4, name:"GLM-5.1",              short:"GLM-5.1", provider:"智谱 AI",     input:0.58,  output:2.63,  overall:88.1, daily:89.1, pro:88.0, extreme:87.3, vfm:19.0, color:"#0891b2"},
-  {rank:5, name:"kimi-k2.5",            short:"Kimi K2", provider:"月之暗面",    input:0.58,  output:3.03,  overall:87.8, daily:89.3, pro:87.6, extreme:86.6, vfm:14.4, color:"#ea580c"},
-  {rank:6, name:"GLM-5v-turbo",         short:"GLM-5v",  provider:"智谱 AI",     input:0.58,  output:2.63,  overall:87.8, daily:89.2, pro:87.5, extreme:86.6, vfm:16.5, color:"#0891b2"},
-  {rank:7, name:"GPT-5.4",              short:"GPT-5.4", provider:"OpenAI",     input:2.50,  output:15.00, overall:87.1, daily:87.5, pro:87.1, extreme:86.6, vfm:2.2,  color:"#16a34a"},
-  {rank:8, name:"GPT-5.2",              short:"GPT-5.2", provider:"OpenAI",     input:1.75,  output:14.00, overall:86.3, daily:86.8, pro:86.3, extreme:85.7, vfm:1.6,  color:"#16a34a"},
-  {rank:9, name:"qwen3.5-plus",         short:"Qwen3.5", provider:"阿里云",      input:0.12,  output:0.70,  overall:86.3, daily:88.3, pro:86.1, extreme:84.5, vfm:31.3, color:"#0066ff"},
-  {rank:10,name:"Gemini 3.1 Pro",       short:"Gemini",  provider:"Google",     input:2.00,  output:12.00, overall:85.8, daily:87.3, pro:85.6, extreme:84.7, vfm:6.6,  color:"#dc2626"},
-  {rank:11,name:"glm-5-turbo",          short:"GLM-5T",  provider:"智谱 AI",     input:0.58,  output:2.61,  overall:85.5, daily:87.3, pro:85.3, extreme:83.8, vfm:33.9, color:"#0891b2"},
-  {rank:12,name:"qwen3.5-flash",        short:"Qwen-F",  provider:"阿里云",      input:0.03,  output:0.29,  overall:84.3, daily:86.2, pro:83.9, extreme:82.8, vfm:99.0, color:"#0066ff"},
+  {name:'qwen3.5-flash',    short:'Qwen Flash',  output:0.29,  overall:84.3, daily:86.2, pro:83.9, extreme:82.8, color:'#0066ff'},
+  {name:'qwen3.5-plus',     short:'Qwen Plus',   output:0.70,  overall:86.3, daily:88.3, pro:86.1, extreme:84.5, color:'#0066ff'},
+  {name:'GLM-5v-turbo',     short:'GLM-5v',      output:2.63,  overall:87.8, daily:89.2, pro:87.5, extreme:86.6, color:'#0891b2'},
+  {name:'kimi-k2.5',        short:'Kimi K2',     output:3.03,  overall:87.8, daily:89.3, pro:87.6, extreme:86.6, color:'#ea580c'},
+  {name:'Claude Sonnet 4.6',short:'Sonnet 4.6',  output:15.00, overall:90.3, daily:90.8, pro:90.3, extreme:89.8, color:'#7c3aed'},
+  {name:'GPT-5.4',          short:'GPT-5.4',     output:15.00, overall:87.1, daily:87.5, pro:87.1, extreme:86.6, color:'#16a34a'},
+  {name:'Gemini 3.1 Pro',   short:'Gemini Pro',  output:12.00, overall:85.8, daily:87.3, pro:85.6, extreme:84.7, color:'#dc2626'},
+  {name:'GPT-5.2',          short:'GPT-5.2',     output:14.00, overall:86.3, daily:86.8, pro:86.3, extreme:85.7, color:'#16a34a'},
+  {name:'glm-5-turbo',      short:'GLM-5T',      output:2.61,  overall:85.5, daily:87.3, pro:85.3, extreme:83.8, color:'#0891b2'},
+  {name:'qwen3.6-plus',     short:'Qwen3.6+',    output:1.75,  overall:88.3, daily:89.8, pro:88.1, extreme:87.2, color:'#0066ff'},
 ];
 
-let currentTab = 'lb';
-let selectedIdx = null;
-
-function getVfmTag(vfm) {
-  if (vfm >= 20) return `<span class="vfm-tag vfm-high">高性价比</span>`;
-  if (vfm >= 5)  return `<span class="vfm-tag vfm-mid">中等</span>`;
-  return `<span class="vfm-tag vfm-low">偏贵</span>`;
+/* ─────── Demo 0：能力 vs 价格散点图 ─────── */
+function demo0() {
+  return `
+  <div class="demo-heading">
+    <h3>更贵的模型，一定更好？</h3>
+    <p>横轴是<b>输出价格（$/1M Token）</b>，纵轴是<b>xsct.ai 综合评分</b>。<br>
+       看清楚：<b style="color:var(--orange)">价格翻 50 倍，能力只差 6 分</b>。</p>
+  </div>
+  <div class="demo-body">
+    <div class="scatter-wrap" style="flex:1;min-height:0">
+      <canvas id="scatterCanvas" style="width:100%;height:100%"></canvas>
+      <div class="scatter-tooltip" id="tooltip"></div>
+      <div class="axis-label-x">← 输出价格（越左越便宜）</div>
+    </div>
+    <div class="tip amber">
+      <b>结论：</b>日常对话任务，选 qwen3.5-flash（¢0.29/1M）和选 Claude Sonnet（$15/1M）的<b>效果差距不到 6 分</b>，但成本相差 <b>50 倍</b>。
+      贵不等于好，<b>适合场景的才是最好的</b>。
+    </div>
+  </div>`;
 }
 
-function getScoreColor(s) {
-  if (s >= 88) return '#16a34a';
-  if (s >= 85) return '#0066ff';
-  if (s >= 82) return '#ea580c';
-  return '#6b7280';
-}
+/* ─────── Demo 1：成本条形图 ─────── */
+function demo1() {
+  const toks = {input: 2000, output: 500};
+  const calls = 10000;
+  const days = 30;
+  // 计算月费（$）
+  const costs = MODELS.map(m => {
+    const inputP = m.output / 4; // 粗估输入价格约为输出 1/4
+    const monthly = ((inputP * toks.input + m.output * toks.output) / 1e6) * calls * days;
+    return {...m, monthly};
+  }).sort((a, b) => a.monthly - b.monthly);
+  const maxCost = costs[costs.length - 1].monthly;
 
-function renderLb() {
-  const sorted = [...MODELS].sort((a, b) =>
-    currentTab === 'lb' ? b.overall - a.overall : b.vfm - a.vfm
-  );
-  const maxVfm = Math.max(...MODELS.map(m => m.vfm));
-  const tbody = document.getElementById('lb-body');
-  tbody.innerHTML = sorted.map((m, i) => {
-    const origIdx = MODELS.indexOf(m);
-    const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-    const score = currentTab === 'lb' ? m.overall : m.vfm;
-    const maxScore = currentTab === 'lb' ? 90.3 : maxVfm;
-    const barW = Math.round(score / maxScore * 100);
-    const barColor = getScoreColor(m.overall);
-    const selected = origIdx === selectedIdx ? 'selected' : '';
-    return `<tr class="lb-row ${selected}" onclick="selectModel(${origIdx})">
-      <td class="lb-rank ${rankClass}">${i+1}</td>
-      <td>
-        <div class="lb-name" title="${m.name}">${m.name}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px">${m.provider}</div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-          <div class="lb-bar-wrap"><div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${barW}%;background:${barColor}"></div></div></div>
-          <span class="lb-score" style="color:${barColor};min-width:36px">${score}</span>
+  const bars = costs.map(m => {
+    const pct = Math.round(m.monthly / maxCost * 100);
+    const color = m.monthly < 5 ? '#16a34a' : m.monthly < 50 ? '#ea580c' : '#dc2626';
+    return `<div class="bar-row row-in">
+      <div class="bar-name" title="${m.name}">${m.short}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${color}">
+          ${pct > 20 ? `评分 ${m.overall}` : ''}
         </div>
-      </td>
-      <td class="lb-price">$${m.output.toFixed(2)}<span style="color:var(--muted);font-size:10px">/1M</span></td>
-    </tr>`;
+      </div>
+      <div class="bar-val">$${m.monthly < 1 ? m.monthly.toFixed(2) : m.monthly.toFixed(0)}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="demo-heading">
+    <h3>同一任务，各模型月费对比</h3>
+    <p>假设：单次输入 <b>2000T</b> + 输出 <b>500T</b>，日调用 <b>10,000 次</b>，跑满 30 天。</p>
+  </div>
+  <div class="demo-body">
+    <div class="card" style="flex:1;overflow-y:auto">
+      <div class="card-title">30 天月费估算（从低到高）</div>
+      <div class="bar-chart">${bars}</div>
+    </div>
+    <div class="tip blue">
+      <b>核心思路：</b>先用便宜模型跑 A/B 测试，只有在效果差异显著时才升级。<b>能力不是越高越好，刚好够用才是最优解。</b>
+    </div>
+  </div>`;
+}
+
+/* ─────── Demo 2：月费计算器 ─────── */
+function demo2() {
+  return `
+  <div class="demo-heading">
+    <h3>按业务场景匹配模型</h3>
+    <p>不同任务对模型的要求不同——<b style="color:var(--green)">日常问答</b>不需要顶尖模型，<b style="color:var(--red)">极限推理</b>才需要旗舰。</p>
+  </div>
+  <div class="demo-body">
+    <div class="card">
+      <div class="card-title">场景 vs 推荐模型</div>
+      <div class="cmp" style="gap:8px">
+        <div class="cmp-col good">
+          <div class="cmp-head">日常场景（客服/问答）</div>
+          <div class="cmp-body">
+            <b>xsct-l daily 维度</b> 排名靠前：<br>
+            qwen3.5-flash <b style="color:var(--green)">86.2 分</b>，输出仅 $0.29/1M<br>
+            qwen3.6-plus <b style="color:var(--green)">89.8 分</b>，输出仅 $1.75/1M<br>
+            <span style="font-size:12px;color:var(--muted)">→ 日常难题，便宜模型足够胜任</span>
+          </div>
+        </div>
+        <div class="cmp-col bad">
+          <div class="cmp-head">极限场景（复杂推理/代码）</div>
+          <div class="cmp-body">
+            <b>xsct-l extreme 维度</b> 差距拉大：<br>
+            Claude Sonnet 4.6 <b style="color:var(--red)">89.8 分</b>，$15/1M<br>
+            qwen3.5-flash <b style="color:var(--red)">82.8 分</b>（差 7 分）<br>
+            <span style="font-size:12px;color:var(--muted)">→ 极限任务，7 分差距代表真实失败率</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">估算我的月费</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label>单次输入 Token</label>
+          <input class="calc-input" id="ci" type="number" value="2000" oninput="calcAll()">
+        </div>
+        <div class="calc-field">
+          <label>单次输出 Token</label>
+          <input class="calc-input" id="co" type="number" value="500" oninput="calcAll()">
+        </div>
+        <div class="calc-field">
+          <label>日调用次数</label>
+          <input class="calc-input" id="cc" type="number" value="1000" oninput="calcAll()">
+        </div>
+      </div>
+      <div class="calc-result-grid" id="calcGrid"></div>
+    </div>
+
+    <div class="tip green">
+      <b>决策框架：</b>① 先定场景难度 → ② 看对应维度评分 → ③ 用月费估算工具确认预算 → ④ 小流量 A/B 验证后全量。
+      评测数据参考 <a href="https://xsct.ai" target="_blank" style="color:var(--green);font-weight:700">xsct.ai</a>。
+    </div>
+  </div>`;
+}
+
+/* 计算器 */
+function calcAll() {
+  const inTok  = parseFloat(document.getElementById('ci')?.value) || 0;
+  const outTok = parseFloat(document.getElementById('co')?.value) || 0;
+  const calls  = parseFloat(document.getElementById('cc')?.value) || 1;
+  const grid   = document.getElementById('calcGrid');
+  if (!grid) return;
+
+  // 选4个有代表性的模型
+  const picks = [
+    MODELS.find(m => m.short === 'Qwen Flash'),
+    MODELS.find(m => m.short === 'Qwen3.6+'),
+    MODELS.find(m => m.short === 'GLM-5v'),
+    MODELS.find(m => m.short === 'Sonnet 4.6'),
+  ];
+
+  const costs = picks.map(m => {
+    const inputP = m.output / 4;
+    return ((inputP * inTok + m.output * outTok) / 1e6) * calls * 30;
+  });
+  const minCost = Math.min(...costs);
+
+  grid.innerHTML = picks.map((m, i) => {
+    const isBest = costs[i] === minCost;
+    const val = costs[i] < 1 ? '$' + costs[i].toFixed(2) : '$' + costs[i].toFixed(0);
+    return `<div class="cres ${isBest ? 'best' : ''}">
+      <div class="cr-name" title="${m.name}">${m.short}</div>
+      <div class="cr-val">${val}<span style="font-size:11px;font-weight:600;color:var(--muted)">/月</span></div>
+      <div class="cr-score">评分 ${m.overall}</div>
+    </div>`;
   }).join('');
 }
 
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i===0) === (tab==='lb')));
-  renderLb();
-}
+/* ─────── 散点图绘制 ─────── */
+function drawScatter() {
+  const canvas = document.getElementById('scatterCanvas');
+  if (!canvas) return;
 
-function selectModel(idx) {
-  selectedIdx = idx;
-  renderLb();
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width  = rect.width  + 'px';
+  canvas.style.height = rect.height + 'px';
 
-  const m = MODELS[idx];
-  document.getElementById('empty-hint').style.display = 'none';
-  const dc = document.getElementById('detail-content');
-  dc.style.display = 'flex';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const PAD = {top: 20, right: 20, bottom: 36, left: 40};
 
-  // 月均费用（默认 2000in+500out，日1000次，30天）
-  const inTok = 2000, outTok = 500, calls = 1000, days = 30;
-  const monthly = ((m.input * inTok + m.output * outTok) / 1000000) * calls * days;
+  const maxPrice = 16, minPrice = 0;
+  const maxScore = 92, minScore = 82;
 
-  const initials = m.name.replace(/[^A-Z0-9\u4e00-\u9fa5]/gi, '').slice(0,2).toUpperCase() || m.name[0];
-
-  dc.innerHTML = `
-    <!-- 模型基本信息 -->
-    <div class="model-info">
-      <div class="model-avatar" style="background:${m.color}">${initials}</div>
-      <div class="model-meta">
-        <h2>${m.name}</h2>
-        <p>服务商：${m.provider} &nbsp;·&nbsp; 综合评分 ${m.overall}</p>
-        <div class="tags">
-          ${getVfmTag(m.vfm)}
-          ${m.overall >= 88 ? '<span class="tag-pill" style="background:rgba(22,163,74,.1);color:#16a34a">Top 能力</span>' : ''}
-          ${m.input < 0.5 ? '<span class="tag-pill" style="background:rgba(0,102,255,.1);color:#0066ff">低价输入</span>' : ''}
-          ${m.output < 3 ? '<span class="tag-pill" style="background:rgba(8,145,178,.1);color:#0891b2">低价输出</span>' : ''}
-        </div>
-      </div>
-    </div>
-
-    <!-- 四维得分 -->
-    <div class="scores-grid">
-      ${[['综合','overall',m.overall],['日常','daily',m.daily],['专业','pro',m.pro],['极限','extreme',m.extreme]].map(([label,,val])=>`
-      <div class="score-card">
-        <div class="sc-label">${label}</div>
-        <div class="sc-val" style="color:${getScoreColor(val)}">${val}</div>
-        <div class="sc-bar"><div class="sc-bar-fill" style="width:${Math.round(val/100*100)}%;background:${getScoreColor(val)}"></div></div>
-      </div>`).join('')}
-    </div>
-
-    <!-- 定价 -->
-    <div class="cost-section">
-      <div class="cost-title">API 定价（每 100 万 Token）</div>
-      <div class="cost-grid">
-        <div class="cost-box">
-          <div class="cb-label">输入价格</div>
-          <div class="cb-val">$${m.input.toFixed(2)}</div>
-          <div class="cb-unit">/ 1M input tokens</div>
-        </div>
-        <div class="cost-box highlight">
-          <div class="cb-label">输出价格</div>
-          <div class="cb-val">$${m.output.toFixed(2)}</div>
-          <div class="cb-unit">/ 1M output tokens</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 月费估算 -->
-    <div class="cost-section">
-      <div class="cost-title">月费参考（基于计算器参数）</div>
-      <div class="estimate-row" id="est-row">
-        <div class="est-box">
-          <div class="eb-label">轻量（日 100 次）</div>
-          <div class="eb-val">$${(((m.input*inTok+m.output*outTok)/1e6)*100*days).toFixed(2)}</div>
-        </div>
-        <div class="est-box best">
-          <div class="eb-label">中型（日 1,000 次）</div>
-          <div class="eb-val">$${monthly.toFixed(2)}</div>
-        </div>
-        <div class="est-box">
-          <div class="eb-label">规模（日 10,000 次）</div>
-          <div class="eb-val">$${(monthly*10).toFixed(2)}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // 更新计算器结果
-  calcCost();
-}
-
-function calcCost() {
-  if (selectedIdx === null) return;
-  const m = MODELS[selectedIdx];
-  const inTok  = parseFloat(document.getElementById('c-in').value)    || 0;
-  const outTok = parseFloat(document.getElementById('c-out').value)   || 0;
-  const calls  = parseFloat(document.getElementById('c-calls').value) || 1;
-  const daily  = ((m.input * inTok + m.output * outTok) / 1e6) * calls;
-  const monthly = daily * 30;
-  const el = document.getElementById('calc-result');
-  el.innerHTML = `<b>${m.name}</b>：单次约 <span class="highlight">$${((m.input*inTok+m.output*outTok)/1e6).toFixed(5)}</span>，每日 <span class="highlight">$${daily.toFixed(3)}</span>，每月约 <span class="highlight">$${monthly.toFixed(2)}</span>`;
-
-  // 同步更新月费卡片
-  const days = 30;
-  const er = document.getElementById('est-row');
-  if (er) {
-    er.innerHTML = `
-      <div class="est-box"><div class="eb-label">轻量（日 100 次）</div><div class="eb-val">$${(daily/calls*100).toFixed(2)}</div></div>
-      <div class="est-box best"><div class="eb-label">中型（日 ${calls.toLocaleString()} 次）</div><div class="eb-val">$${monthly.toFixed(2)}</div></div>
-      <div class="est-box"><div class="eb-label">规模（日 ${(calls*10).toLocaleString()} 次）</div><div class="eb-val">$${(monthly*10).toFixed(2)}</div></div>
-    `;
+  function px(price) {
+    return PAD.left + Math.log1p(price) / Math.log1p(maxPrice) * (W - PAD.left - PAD.right);
   }
+  function py(score) {
+    return H - PAD.bottom - (score - minScore) / (maxScore - minScore) * (H - PAD.top - PAD.bottom);
+  }
+
+  // 网格线
+  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+  ctx.lineWidth = 1;
+  [83,85,87,89,91].forEach(s => {
+    ctx.beginPath(); ctx.moveTo(PAD.left, py(s)); ctx.lineTo(W - PAD.right, py(s)); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.font = '10px -apple-system,sans-serif';
+    ctx.fillText(s, PAD.left - 26, py(s) + 3);
+  });
+
+  // 轴
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top); ctx.lineTo(PAD.left, H - PAD.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.left, H - PAD.bottom); ctx.lineTo(W - PAD.right, H - PAD.bottom); ctx.stroke();
+
+  // 价格刻度
+  [0, 1, 3, 5, 10, 15].forEach(p => {
+    const x = px(p);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.font = '10px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(p === 0 ? '$0' : '$' + p, x, H - PAD.bottom + 14);
+    ctx.strokeStyle = 'rgba(0,0,0,0.05)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, PAD.top); ctx.lineTo(x, H - PAD.bottom); ctx.stroke();
+  });
+
+  // 画点
+  const tooltip = document.getElementById('tooltip');
+  const points = [];
+  MODELS.forEach(m => {
+    const x = px(m.output), y = py(m.overall);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = m.color + 'cc';
+    ctx.fill();
+    ctx.strokeStyle = m.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    points.push({x, y, m});
+
+    // 标签
+    ctx.fillStyle = m.color;
+    ctx.font = 'bold 11px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    const labelY = y > H / 2 ? y - 14 : y + 20;
+    ctx.fillText(m.short, x, labelY);
+  });
+
+  // hover 交互
+  canvas.onmousemove = (e) => {
+    const br = canvas.getBoundingClientRect();
+    const mx = e.clientX - br.left, my = e.clientY - br.top;
+    const hit = points.find(p => Math.hypot(p.x - mx, p.y - my) < 14);
+    if (hit) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (hit.x + 12) + 'px';
+      tooltip.style.top  = (hit.y - 12) + 'px';
+      tooltip.innerHTML  = `${hit.m.name}<br>评分 ${hit.m.overall} · 输出 $${hit.m.output}/1M`;
+      canvas.style.cursor = 'pointer';
+    } else {
+      tooltip.style.display = 'none';
+      canvas.style.cursor = 'default';
+    }
+  };
+  canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
 }
 
-// 初始化
-renderLb();
-// 默认选中第一条
-selectModel(0);
+/* ─────── 主控 ─────── */
+const DEMOS = [demo0, demo1, demo2];
+
+function pick(btn, idx) {
+  document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.getElementById('demoCol').innerHTML = DEMOS[idx]();
+  if (idx === 0) requestAnimationFrame(() => requestAnimationFrame(drawScatter));
+  if (idx === 2) requestAnimationFrame(calcAll);
+}
+
+pick(document.querySelector('.nav-item'), 0);
 </script>
 </body>
 </html>

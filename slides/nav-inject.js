@@ -47,6 +47,7 @@ const SLIDE_ORDER = [
   { file: '8-6.html',                  title: '语法层优化',               num: 39 },
   { file: '8-7.html',                  title: '语义层优化',               num: 40 },
   { file: '8-8.html',                  title: '输出层+KV进阶',            num: 41 },
+  { file: 'cost-eval.html',            title: '模型选型：能力 vs 成本',   num: 42 },
   { file: 'engineering-philosophy.html', title: '大道至简',               num: 0  },
   { file: 'summary-2.html',            title: '第二篇章汇总（上）',      num: 0  },
   { file: 'summary-2b.html',           title: '第二篇章汇总（下）',      num: 0  },
@@ -56,7 +57,89 @@ const SLIDE_ORDER = [
 
   const cur = location.pathname.split('/').pop();
   const idx = SLIDE_ORDER.findIndex(s => s.file === cur);
-  if (idx < 0) return; // 不在序列中则不注入
+
+  // 无论是否在序列中，都注入顶部栏（请教作者 + PV）
+  (function injectTopBar() {
+    const style = document.createElement('style');
+    style.textContent = `
+      #nav-top-bar {
+        position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center;
+        background: rgba(255,255,255,0.82); backdrop-filter: blur(16px);
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 40px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 0;
+        z-index: 9999; font-family: -apple-system, "PingFang SC", sans-serif;
+        overflow: hidden;
+      }
+      #nav-author-link {
+        font-size: 12px; font-weight: 600; color: #6b6b70;
+        text-decoration: none;
+        padding: 7px 16px;
+        transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+      }
+      #nav-author-link:hover { background: rgba(0,102,255,0.06); color: #0066ff; }
+      #nav-top-sep {
+        width: 1px; height: 20px; background: rgba(0,0,0,0.08); flex-shrink: 0;
+      }
+      #nav-pv-badge {
+        display: flex; align-items: center; gap: 6px;
+        padding: 7px 16px;
+        font-size: 12px;
+      }
+      .nav-pv-label { color: #9a9a9f; font-weight: 500; }
+      .nav-pv-num-today { color: #0066ff; font-weight: 800; }
+      .nav-pv-sep { width:1px; height:12px; background:rgba(0,0,0,0.1); margin: 0 2px; }
+      .nav-pv-num-total { color: #7c3aed; font-weight: 800; }
+      #nav-github-link {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 12px; font-weight: 600; color: #6b6b70;
+        text-decoration: none; padding: 7px 16px;
+        transition: background 0.15s, color 0.15s;
+        white-space: nowrap;
+      }
+      #nav-github-link:hover { background: rgba(0,0,0,0.05); color: #1c1c1e; }
+    `;
+    document.head.appendChild(style);
+
+    const topBar = document.createElement('div');
+    topBar.id = 'nav-top-bar';
+    topBar.innerHTML = `
+      <a id="nav-author-link" href="https://luoxiaoshan.cn/" target="_blank">请教作者</a>
+      <div id="nav-top-sep"></div>
+      <div id="nav-pv-badge">
+        <span class="nav-pv-label">今日</span>
+        <span class="nav-pv-num-today" id="nav-pv-today">—</span>
+        <div class="nav-pv-sep"></div>
+        <span class="nav-pv-label">总学习</span>
+        <span class="nav-pv-num-total" id="nav-pv-total">—</span>
+      </div>
+      <div id="nav-top-sep"></div>
+      <a id="nav-github-link" href="https://github.com/itshen/learn-ai" target="_blank" title="GitHub 开源仓库">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    `;
+    document.body.appendChild(topBar);
+
+    fetch('/pv')
+      .then(r => r.json())
+      .then(d => {
+        function fmt(n) {
+          if (n >= 10000) return (n / 10000).toFixed(1) + 'w';
+          if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+          return n;
+        }
+        document.getElementById('nav-pv-today').textContent = fmt(d.today);
+        document.getElementById('nav-pv-total').textContent = fmt(d.total);
+      })
+      .catch(() => {});
+  })();
+
+  // 不在序列中则不注入底部导航条
+  if (idx < 0) return;
 
   const total = SLIDE_ORDER.length;
   const prev  = idx > 0           ? SLIDE_ORDER[idx - 1] : null;
@@ -106,27 +189,6 @@ const SLIDE_ORDER = [
       transition: all 0.15s;
     }
     .snav-home:hover { color: white; background: rgba(255,255,255,0.08); }
-    #nav-top-bar {
-      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 12px;
-      z-index: 9999; font-family: -apple-system, "PingFang SC", sans-serif;
-    }
-    #nav-author-link {
-      font-size: 13px; font-weight: 600; color: var(--sub, #6b6b70);
-      text-decoration: none; transition: color 0.15s;
-    }
-    #nav-author-link:hover { color: var(--accent, #0066ff); }
-    #nav-pv-badge {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.72); backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(0,102,255,0.15);
-      border-radius: 10px; padding: 4px 12px;
-      font-size: 12px; font-weight: 700;
-    }
-    .nav-pv-sep { width:1px; height:12px; background:rgba(0,0,0,0.1); }
-    .nav-pv-label { color: var(--sub, #6b6b70); font-weight: 600; }
-    .nav-pv-num-today { color: var(--accent, #0066ff); font-size: 14px; font-weight: 900; min-width: 24px; text-align:right; }
-    .nav-pv-num-total { color: #7c3aed; font-size: 14px; font-weight: 900; min-width: 28px; text-align:right; }
   `;
   document.head.appendChild(style);
 
@@ -146,35 +208,6 @@ const SLIDE_ORDER = [
     <div class="snav-sep"></div>
     <div style="font-size:10px;color:rgba(255,255,255,0.3);padding:0 4px;line-height:1.4;text-align:center">→ 下一步<br>⌘→ 换页</div>
   `;
-  // 顶部栏：请教作者 + PV 数据
-  const topBar = document.createElement('div');
-  topBar.id = 'nav-top-bar';
-  topBar.innerHTML = `
-    <a id="nav-author-link" href="https://luoxiaoshan.cn/" target="_blank">请教作者</a>
-    <div id="nav-pv-badge">
-      <span class="nav-pv-label">今日</span>
-      <span class="nav-pv-num-today" id="nav-pv-today">—</span>
-      <div class="nav-pv-sep"></div>
-      <span class="nav-pv-label">总学习</span>
-      <span class="nav-pv-num-total" id="nav-pv-total">—</span>
-    </div>
-  `;
-  document.body.appendChild(topBar);
-
-  // 拉取 PV 数据
-  fetch('/pv')
-    .then(r => r.json())
-    .then(d => {
-      function fmt(n) {
-        if (n >= 10000) return (n / 10000).toFixed(1) + 'w';
-        if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-        return n;
-      }
-      document.getElementById('nav-pv-today').textContent = fmt(d.today);
-      document.getElementById('nav-pv-total').textContent = fmt(d.total);
-    })
-    .catch(() => {});
-
   // 触发热区
   const trigger = document.createElement('div');
   trigger.id = 'slide-nav-trigger';
@@ -258,4 +291,98 @@ const SLIDE_ORDER = [
       return;
     }
   });
+
+  // ── 触摸滑动翻页 ──────────────────────────────────────────
+  (function initTouchSwipe() {
+    let startX = 0, startY = 0;
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0 && next) location.href = next.file;   // 左滑 → 下一页
+      if (dx > 0 && prev) location.href = prev.file;   // 右滑 → 上一页
+    }, { passive: true });
+  })();
+
+})();
+
+// ── 移动端竖屏适配（全局，所有页面生效）────────────────────────
+(function initMobilePortrait() {
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  // 注入 meta viewport（防止部分页面缺失）
+  if (!document.querySelector('meta[name="viewport"]')) {
+    const m = document.createElement('meta');
+    m.name = 'viewport';
+    m.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+    document.head.appendChild(m);
+  }
+
+  // 注入遮罩层样式
+  const style = document.createElement('style');
+  style.textContent = `
+    #mobile-portrait-mask {
+      display: none;
+      position: fixed; inset: 0; z-index: 99999;
+      background: #1c1c1e;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+      font-family: -apple-system, "PingFang SC", sans-serif;
+    }
+    #mobile-portrait-mask.show { display: flex; }
+    .mpm-icon {
+      font-size: 56px;
+      animation: mpm-rotate 1.6s ease-in-out infinite alternate;
+    }
+    @keyframes mpm-rotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(90deg); }
+    }
+    .mpm-title {
+      font-size: 18px; font-weight: 700; color: #fff;
+    }
+    .mpm-sub {
+      font-size: 13px; color: rgba(255,255,255,0.45);
+      text-align: center; line-height: 1.6; padding: 0 32px;
+    }
+    /* 竖屏时隐藏顶部栏，避免遮挡 */
+    body.mobile-portrait #nav-top-bar { display: none !important; }
+  `;
+  document.head.appendChild(style);
+
+  // 注入遮罩 DOM
+  const mask = document.createElement('div');
+  mask.id = 'mobile-portrait-mask';
+  mask.innerHTML = `
+    <div class="mpm-icon">📱</div>
+    <div class="mpm-title">请横屏观看</div>
+    <div class="mpm-sub">将手机旋转为横屏<br>即可获得最佳体验</div>
+  `;
+  document.body.appendChild(mask);
+
+  function check() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait) {
+      mask.classList.add('show');
+      document.body.classList.add('mobile-portrait');
+    } else {
+      mask.classList.remove('show');
+      document.body.classList.remove('mobile-portrait');
+    }
+  }
+
+  window.addEventListener('resize', check);
+  window.addEventListener('orientationchange', () => setTimeout(check, 300));
+  // 等 DOM 渲染完再首次检测
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', check);
+  } else {
+    check();
+  }
 })();
