@@ -2,7 +2,7 @@
 
 > 一套面向 AI 产品经理的完整培训课程，涵盖大模型底层原理到 AI 工程化落地。
 
-🌐 **在线访问：** [https://luoxiaoshan.cn](https://luoxiaoshan.cn)
+🌐 **在线访问：** [https://xueai.app](https://xueai.app)
 
 ---
 
@@ -52,7 +52,8 @@ npx serve .
 
 **洛小山** · AI 产品经理 / 独立开发者
 
-- 🌐 个人网站：[https://luoxiaoshan.cn](https://luoxiaoshan.cn)
+- 🌐 课程网站：[https://xueai.app](https://xueai.app)
+- 🏠 个人网站：[https://luoxiaoshan.cn](https://luoxiaoshan.cn)
 - 📖 公众号：**洛小山**（扫码关注，获取更多 AI 干货）
 
 <table>
