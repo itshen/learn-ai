@@ -120,6 +120,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
 .pop{animation:pop .3s ease}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="如何在 AI 产品上线前预估成本？讲解 Token 用量估算方法、并发模型下的成本计算、不同模型价格对比，以及制定合理成本预算的实用框架。">
+<meta name="keywords" content="AI成本评估,大模型成本计算,Token用量,API成本预估,AI产品预算">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/cost-eval.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="AI 成本评估：如何量化与预测大模型的使用成本">
+<meta property="og:description" content="如何在 AI 产品上线前预估成本？讲解 Token 用量估算方法、并发模型下的成本计算、不同模型价格对比，以及制定合理成本预算的实用框架。">
+<meta property="og:url" content="https://xueai.app/slides/cost-eval.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI 成本评估：如何量化与预测大模型的使用成本">
+<meta name="twitter:description" content="如何在 AI 产品上线前预估成本？讲解 Token 用量估算方法、并发模型下的成本计算、不同模型价格对比，以及制定合理成本预算的实用框架。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -165,6 +187,10 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
         选型 = <b style="color:var(--text)">任务难度</b> × <b style="color:var(--text)">调用量</b> × <b style="color:var(--text)">容错空间</b><br>
         <span style="font-size:12px">数据来源：<a href="https://xsct.ai" target="_blank" style="color:var(--accent);font-weight:700;text-decoration:none">xsct.ai 场景化评测</a></span>
       </div>
+      <a href="https://xsct.ai" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:white;border-radius:12px;padding:13px 16px;text-decoration:none;font-weight:800;font-size:14px;transition:all .2s;margin-top:2px" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        立即查看 xsct.ai →
+      </a>
     </div>
 
     <!-- 右栏 -->
@@ -306,8 +332,11 @@ function demo2() {
 
     <div class="tip green">
       <b>决策框架：</b>① 先定场景难度 → ② 看对应维度评分 → ③ 用月费估算工具确认预算 → ④ 小流量 A/B 验证后全量。
-      评测数据参考 <a href="https://xsct.ai" target="_blank" style="color:var(--green);font-weight:700">xsct.ai</a>。
     </div>
+    <a href="https://xsct.ai" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:white;border-radius:11px;padding:11px 18px;text-decoration:none;font-weight:800;font-size:14px;transition:all .2s;flex-shrink:0" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      在 xsct.ai 查看完整模型排行榜 →
+    </a>
   </div>`;
 }
 
