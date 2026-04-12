@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>上下文窗口：AI 的工作记忆</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--amber:#d97706;--green:#16a34a;--red:#dc2626;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--amber);letter-spacing:.5px;text-transform:uppercase}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--amber)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+/* ── 左栏 ── */
+.left{padding:24px 28px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:14px;overflow:auto}
+.desc{font-size:18px;color:var(--sub);line-height:1.7}
+.model-grid{display:flex;flex-direction:column;gap:5px}
+.model-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 14px;display:flex;align-items:center;gap:14px}
+.model-card .size{font-size:20px;font-weight:800;color:var(--amber);min-width:54px;text-align:right;flex-shrink:0}
+.model-card .name{font-size:15px;font-weight:700;color:var(--text);min-width:140px;flex-shrink:0}
+.model-card .desc-s{font-size:13px;color:var(--muted);line-height:1.4}
+.insight-box{background:rgba(215,119,6,.07);border:1px solid rgba(215,119,6,.2);border-radius:10px;padding:12px 14px;font-size:17px;color:var(--text);line-height:1.65}
+.insight-box b{color:var(--amber)}
+/* ── 右栏 ── */
+.right{padding:24px 28px;display:flex;flex-direction:column;gap:12px}
+.ctx-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ctx-header{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;justify-content:space-between;align-items:center}
+.ctx-header h4{font-size:17px;font-weight:700;color:var(--text)}
+.ctx-cap{font-size:16px;font-weight:700;color:var(--amber)}
+.ctx-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px}
+.bar-wrap{flex:1}
+.ctx-bar{display:flex;height:44px;border-radius:8px;overflow:hidden;gap:2px}
+.ctx-seg{display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:rgba(255,255,255,.9);transition:flex .4s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.ctx-labels{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:4px;padding:0 2px}
+.legend-row{display:flex;flex-wrap:wrap;gap:8px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:15px;color:var(--muted)}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.status-bar{font-size:16px;font-weight:600;text-align:center;padding:4px;border-radius:6px;transition:all .3s}
+.status-bar.ok{background:rgba(22,163,74,.08);color:var(--green)}
+.status-bar.warn{background:rgba(220,38,38,.08);color:var(--red)}
+.slider-row{display:flex;flex-direction:column;gap:6px}
+.slider-lbl{display:flex;justify-content:space-between;font-size:16px;color:var(--sub)}
+.slider-lbl span:last-child{font-weight:700;color:var(--amber)}
+input[type=range]{width:100%;accent-color:var(--amber);height:4px}
+.takeaway{background:rgba(0,102,255,.06);border:1px solid rgba(0,102,255,.15);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);display:flex;gap:8px;align-items:flex-start;flex-shrink:0}
+.takeaway b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块五 · 上下文工程 · 第 1 页</div>
+      <div class="title">上下文窗口：<em>AI 的工作记忆</em></div>
+    </div>
+    <div style="font-size:16px;color:var(--muted)">拖动滑块亲自体验窗口溢出 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">上下文窗口（Context Window）是模型一次性能"看到"的所有文字。<strong>超出窗口，它就彻底"忘了"</strong>——不是模糊，是完全看不见。</p>
+
+      <div style="font-size:17px;font-weight:700;color:var(--muted)">主流模型上下文窗口对比（2025）</div>
+      <div class="model-grid">
+        <div class="model-card">
+          <div class="size">256K</div>
+          <div class="name">Kimi K2.5</div>
+          <div class="desc-s">约 20 万字<br>整部《三国演义》</div>
+        </div>
+        <div class="model-card">
+          <div class="size">256K</div>
+          <div class="name">Qwen3.6-Plus</div>
+          <div class="desc-s">原生 256K<br>可扩展至 1M</div>
+        </div>
+        <div class="model-card">
+          <div class="size">400K</div>
+          <div class="name">GPT-5</div>
+          <div class="desc-s">约 32 万字<br>Pro 用户可用</div>
+        </div>
+        <div class="model-card">
+          <div class="size">1M</div>
+          <div class="name">Claude Sonnet 4.6</div>
+          <div class="desc-s">约 80 万字<br>整部《红楼梦》×5</div>
+        </div>
+        <div class="model-card">
+          <div class="size">1M</div>
+          <div class="name">Gemini 2.5 Pro</div>
+          <div class="desc-s">约 80 万字<br>2M 即将支持</div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <b>💰 窗口越大，费用越高：</b><br>
+        LLM 按<strong>输入 + 输出 Token 数</strong>计费。放入一个 100 页 PDF（≈50K Token），每次对话额外多花约 ¥0.5（GPT-5 价格参考）。<br>
+        多轮对话后，历史记录也会累积占满窗口——<strong>上下文是有限的、有价格的资源。</strong>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="ctx-panel">
+        <div class="ctx-header">
+          <h4>一次请求的上下文构成（128K 窗口）</h4>
+          <span class="ctx-cap" id="ctxCap">0K / 128K</span>
+        </div>
+        <div class="ctx-body">
+          <div class="bar-wrap">
+            <div class="ctx-bar" id="ctxBar"></div>
+            <div class="ctx-labels">
+              <span>系统提示词</span><span>对话历史</span><span>上传文档</span><span>当前问题</span><span>预留回复</span>
+            </div>
+          </div>
+          <div class="legend-row">
+            <div class="legend-item"><div class="legend-dot" style="background:#5b4fcf"></div>系统提示词 (10K)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0891b2"></div>对话历史 (20K)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ea580c"></div>上传文档 (可变)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>当前问题 (5K)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#d1d5db"></div>预留回复 (10K)</div>
+          </div>
+          <div class="status-bar ok" id="statusBar">窗口充足 — 剩余 83K Token 可用</div>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-lbl">
+          <span>模拟上传文档大小（拖动体验溢出效果）</span>
+          <span id="docSize">0K Tokens</span>
+        </div>
+        <input type="range" min="0" max="150" value="0" oninput="updateCtx(this.value)">
+      </div>
+
+      <div class="takeaway">
+        <span>📏</span>
+        <span><b>窗口是有限资源。</b> 用了就要付钱，超了就会截断——下一页看溢出时的三种处理策略。</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+function updateCtx(v) {
+  const doc = parseInt(v);
+  document.getElementById('docSize').textContent = doc + 'K Tokens';
+  const total = 128, sys = 10, hist = 20, q = 5, reserve = 10;
+  const docFit = Math.min(doc, total - sys - hist - q - reserve);
+  const remaining = Math.max(0, total - sys - hist - docFit - q - reserve);
+  const overflow = doc > docFit;
+  const bar = document.getElementById('ctxBar');
+  let html = `<div class="ctx-seg" style="flex:${sys};background:#5b4fcf">系统 ${sys}K</div>`;
+  html += `<div class="ctx-seg" style="flex:${hist};background:#0891b2">历史 ${hist}K</div>`;
+  if (docFit > 0) html += `<div class="ctx-seg" style="flex:${docFit};background:#ea580c">文档 ${docFit}K${overflow ? ' ✂️' : ''}</div>`;
+  html += `<div class="ctx-seg" style="flex:${q};background:#16a34a">问题</div>`;
+  html += `<div class="ctx-seg" style="flex:${reserve};background:#d1d5db;color:#6b6b70">预留</div>`;
+  if (remaining > 0) html += `<div class="ctx-seg" style="flex:${remaining};background:#f0ede6;color:#8e8e93">剩余 ${remaining}K</div>`;
+  bar.innerHTML = html;
+  const used = sys + hist + docFit + q;
+  document.getElementById('ctxCap').textContent = `${used}K / ${total}K`;
+  const statusEl = document.getElementById('statusBar');
+  if (overflow) {
+    statusEl.className = 'status-bar warn';
+    statusEl.textContent = `⚠️ 文档超出窗口！${doc - docFit}K Token 被截断，模型完全看不到那部分内容`;
+  } else {
+    statusEl.className = 'status-bar ok';
+    statusEl.textContent = `窗口充足 — 剩余 ${remaining}K Token 可用`;
+  }
+}
+updateCtx(0);
+</script>
+</body>
+</html>

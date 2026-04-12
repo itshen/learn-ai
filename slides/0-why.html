@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>为什么要打基础？</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --text: #1c1c1e;
+  --sub: #6b7280;
+  --accent: #0066ff;
+  --danger: #dc2626;
+  --amber: #d97706;
+  --success: #16a34a;
+  --cyan: #0891b2;
+  --purple: #7c3aed;
+  --border: rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  padding: 14px 36px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.header-left h2 { font-size: 19px; font-weight: 800; color: var(--text); }
+.header-left p  { font-size: 12px; color: var(--sub); margin-top: 2px; }
+.btn-next {
+  background: var(--accent); color: white; border: none;
+  padding: 9px 22px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* Body */
+.body { flex: 1; display: flex; flex-direction: column; padding: 18px 40px 18px; gap: 14px; min-height: 0; }
+
+/* Core thesis */
+.thesis-box {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 18px 24px;
+  display: flex; align-items: flex-start; gap: 16px; flex-shrink: 0;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.thesis-box.show { opacity: 1; transform: translateY(0); }
+.thesis-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(0,102,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.thesis-text h3 { font-size: 20px; font-weight: 800; color: var(--text); }
+.thesis-text p  { font-size: 15px; color: var(--sub); margin-top: 5px; line-height: 1.65; }
+.thesis-text p b { color: var(--accent); }
+
+/* Two-column area */
+.cols { display: flex; gap: 14px; flex: 1; min-height: 0; }
+
+/* Column */
+.col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.col-label {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--sub); padding: 0 2px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.col-label.show { opacity: 1; }
+
+/* cards */
+.card {
+  background: white; border-radius: 12px;
+  border: 1.5px solid var(--border);
+  padding: 14px 18px; flex: 1;
+  display: flex; align-items: flex-start; gap: 14px;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s;
+  position: relative; overflow: hidden;
+}
+.card.show { opacity: 1; transform: translateY(0); }
+
+.card-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-top: 2px;
+}
+.c1 .card-icon { background: rgba(0,102,255,0.08); color: var(--accent); }
+.c2 .card-icon { background: rgba(217,119,6,0.08); color: var(--amber); }
+.c3 .card-icon { background: rgba(8,145,178,0.08); color: var(--cyan); }
+.c4 .card-icon { background: rgba(22,163,74,0.08); color: var(--success); }
+.c5 .card-icon { background: rgba(124,58,237,0.08); color: var(--purple); }
+
+.card-body h4 { font-size: 16px; font-weight: 700; color: var(--text); }
+.card-body p  { font-size: 14px; color: var(--sub); margin-top: 5px; line-height: 1.65; }
+.card-body p b { color: var(--text); }
+.card-body code {
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 13px;
+  background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 4px;
+  color: var(--accent);
+}
+
+/* bottom conclusion */
+.bottom-box {
+  background: rgba(0,102,255,0.04); border: 1.5px solid rgba(0,102,255,0.2);
+  border-radius: 14px; padding: 14px 20px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.bottom-box.show { opacity: 1; transform: translateY(0); }
+.bottom-box p { font-size: 16px; color: var(--text); line-height: 1.7; }
+.bottom-box p b { color: var(--accent); }
+.bottom-box p em { font-style: normal; font-weight: 700; color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div class="header-left">
+      <h2>为什么花这么多时间讲原理？</h2>
+      <p>磨刀不误砍柴工 · 打好基础才能真正做工程化</p>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="body">
+
+    <!-- 核心论断 -->
+    <div class="thesis-box show" id="thesis">
+      <div class="thesis-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="thesis-text">
+        <h3>AI 所有工程化操作，本质上都是对上下文的高效处理</h3>
+        <p>不管是 Prompt Engineering、RAG、Fine-tuning，还是 Agent 工具调用——<b>所有的"花活"，基本上都围绕着这个 message list 处理</b>。理解它，你才能真正判断方案好不好、问题出在哪里。</p>
+      </div>
+    </div>
+
+    <!-- 两列 -->
+    <div class="cols">
+
+      <!-- 左：工程实践全部绕的是什么 -->
+      <div class="col">
+        <div class="col-label" id="labelL">所有工程化操作，本质都在做这件事</div>
+
+        <div class="card c1" id="c0">
+          <div class="card-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>Prompt Engineering</h4>
+            <p>精心构造 <code>messages</code>，让模型"看到"正确的上下文——系统指令、角色定义、少样本示例，全部是往 message list 里塞内容。</p>
+          </div>
+        </div>
+
+        <div class="card c2" id="c1">
+          <div class="card-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>RAG 检索增强生成</h4>
+            <p>从外部知识库取回相关文档片段，<b>拼进 message list</b> 再发给模型——本质是在运行时扩充上下文。</p>
+          </div>
+        </div>
+
+        <div class="card c3" id="c2">
+          <div class="card-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>Agent 工具调用</h4>
+            <p>模型输出 function call → 执行工具 → 把结果 <b>append 回 message list</b> → 再次推理。每一轮都是在积累上下文。</p>
+          </div>
+        </div>
+
+        <div class="card c4" id="c3">
+          <div class="card-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>Fine-tuning / SFT</h4>
+            <p>把大量"理想 message list"烧进模型权重——让模型默认就能按期望方式处理上下文，省去每次都要在 prompt 里说明的成本。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：不懂底层会怎样 -->
+      <div class="col">
+        <div class="col-label" id="labelR">不理解底层，会卡在这些问题上</div>
+
+        <div class="card c1" id="c4">
+          <div class="card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>"Prompt 改了没用"</h4>
+            <p>System Prompt 被截断、历史对话占满窗口——<b>问题根本不在 Prompt 写得好不好</b>，而在上下文管理。</p>
+          </div>
+        </div>
+
+        <div class="card c2" id="c5">
+          <div class="card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>"RAG 效果差，不知道哪环节坏了"</h4>
+            <p>Chunking 粒度、Embedding 模型、相似度阈值——<b>不了解原理就不知道该查哪里</b>，只能瞎试。</p>
+          </div>
+        </div>
+
+        <div class="card c5" id="c6">
+          <div class="card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="card-body">
+            <h4>"模型答错了，该改 Prompt 还是 Fine-tune？"</h4>
+            <p>是上下文没给对，还是参数里压根没这个知识——<b>两件事的修复方式完全不同</b>，搞错方向浪费大量时间。</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /cols -->
+
+    <!-- 底部结论 -->
+    <div class="bottom-box" id="bottomBox">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <p>
+        我会花<em>比较大的篇幅</em>讲解这部分——<b>不推荐跳过</b>。<br>
+        理解了 message list 的处理逻辑，后面所有工程化方案你都能一眼看穿它在做什么，为什么有效，局限在哪。
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  () => {
+    document.getElementById('labelL').classList.add('show');
+    document.getElementById('c0').classList.add('show');
+  },
+  () => { document.getElementById('c1').classList.add('show'); },
+  () => { document.getElementById('c2').classList.add('show'); },
+  () => { document.getElementById('c3').classList.add('show'); },
+  () => {
+    document.getElementById('labelR').classList.add('show');
+    document.getElementById('c4').classList.add('show');
+  },
+  () => { document.getElementById('c5').classList.add('show'); },
+  () => { document.getElementById('c6').classList.add('show'); },
+  () => {
+    document.getElementById('bottomBox').classList.add('show');
+    document.getElementById('nextBtn').textContent = '进入正题 →';
+    document.getElementById('nextBtn').onclick = () => location.href = 'llm-story.html';
+  },
+];
+
+let step = 0;
+function nextStep() {
+  if (step >= STEPS.length) return;
+  STEPS[step]();
+  step++;
+}
+
+// 自动触发第一步
+nextStep();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

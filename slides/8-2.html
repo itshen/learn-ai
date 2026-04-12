@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>KV Cache：用空间换时间（和钱）</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93;--purple:#5b4fcf;--orange:#ea580c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--orange);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--green)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:18px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:11px;overflow:auto}
+.desc{font-size:17px;color:var(--sub);line-height:1.7}
+.analogy-box{background:rgba(91,79,207,.06);border:1px solid rgba(91,79,207,.15);border-radius:10px;padding:11px 14px;font-size:16px;color:var(--text);line-height:1.65}
+.analogy-box b{color:var(--purple)}
+.kv-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv-box{border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.kv-box-h{padding:7px 12px;font-size:15px;font-weight:700;border-bottom:1px solid var(--border)}
+.kv-box-b{padding:10px 12px;font-size:14px;color:var(--sub);line-height:1.65}
+.kv-box.no .kv-box-h{background:rgba(220,38,38,.05);color:var(--red)}
+.kv-box.yes .kv-box-h{background:rgba(22,163,74,.05);color:var(--green)}
+.insight-box{background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.18);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);line-height:1.6}
+.insight-box b{color:var(--green)}
+
+/* ── 右栏 ── */
+.right{padding:18px 24px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+
+.mode-tabs{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.mode-tabs span{font-size:14px;color:var(--muted);margin-right:4px;font-weight:600}
+.mode-btn{padding:5px 14px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s}
+.mode-btn.active-bad{border-color:var(--red);background:rgba(220,38,38,.08);color:var(--red)}
+.mode-btn.active-good{border-color:var(--green);background:rgba(22,163,74,.08);color:var(--green)}
+
+/* 图例 */
+.legend{display:flex;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--sub)}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* 可视化区域 */
+.viz-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.viz-title{padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:14px;font-weight:700;color:var(--muted);flex-shrink:0}
+
+/* 轮次列表 */
+.turns-list{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+
+.turn-row{display:flex;align-items:center;gap:10px;flex-shrink:0;animation:row-in .3s ease}
+@keyframes row-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.turn-label{font-size:13px;font-weight:800;color:var(--muted);min-width:34px;flex-shrink:0}
+
+/* 进度条式 token 条 — 绝对宽度，SYS 固定不缩 */
+.bar-wrap{flex:1;overflow:hidden}  /* 外层限制可见宽度 */
+.bar-track{height:28px;border-radius:6px;display:flex;gap:1px;background:transparent;min-width:0}
+.bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;overflow:hidden;white-space:nowrap;padding:0 4px;border-radius:4px;flex-shrink:0;animation:seg-in .35s ease}
+@keyframes seg-in{from{opacity:0;transform:scaleX(0.6)}to{opacity:1;transform:scaleX(1)}}
+.bar-seg.sys{background:var(--purple)}
+.bar-seg.recalc{background:var(--red)}
+.bar-seg.cached{background:rgba(22,163,74,.3);color:var(--green)}
+.bar-seg.new{background:var(--accent)}
+
+.turn-meta{min-width:80px;flex-shrink:0;text-align:right}
+.turn-cost{font-size:14px;font-weight:800}
+.turn-cost.bad{color:var(--red)}
+.turn-cost.good{color:var(--green)}
+.turn-diff{font-size:11px;color:var(--muted)}
+
+/* 统计行 */
+.stat-row{display:flex;gap:8px;flex-shrink:0}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 12px;text-align:center}
+.stat-box .sv{font-size:22px;font-weight:900}
+.stat-box .sl{font-size:12px;color:var(--muted);font-weight:600}
+.stat-box.waste .sv{color:var(--red)}
+.stat-box.save .sv{color:var(--green)}
+.stat-box.turns .sv{color:var(--text)}
+
+/* 控制条 */
+.ctrl-bar{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.btn-next{padding:7px 20px;border-radius:8px;background:var(--green);color:white;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+.btn-reset{padding:7px 14px;border-radius:8px;background:var(--surface2);color:var(--sub);font-size:14px;font-weight:600;border:1px solid var(--border);cursor:pointer;font-family:inherit}
+.ctrl-hint{flex:1;font-size:13px;color:var(--muted);line-height:1.4}
+
+.takeaway{background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.18);border-radius:9px;padding:8px 14px;font-size:14px;color:var(--text);flex-shrink:0;line-height:1.55}
+.takeaway b{color:var(--green)}
+.r-tab{padding:6px 16px;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:all .15s}
+.r-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 2 页</div>
+      <div class="title">KV Cache：<em>用空间换时间（和钱）</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">右侧逐轮对比，条形宽度 = 计算量</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">每轮对话，模型都要对所有历史 Token 做 Attention 计算。KV Cache 把已算过的 K/V 矩阵<b>缓存</b>下来，下轮只计算新增 Token。</p>
+
+      <div class="analogy-box">
+        <b>类比：</b><br>
+        无缓存 = 每次上课都从头默写所有课本<br>
+        有缓存 = 课本拍好存档，今天只看今天的新笔记
+      </div>
+
+      <div class="kv-compare">
+        <div class="kv-box no">
+          <div class="kv-box-h">无 KV Cache</div>
+          <div class="kv-box-b">
+            每轮：System Prompt + 全部历史 <b>全量重算</b><br><br>
+            第 N 轮成本 = 第 1 到 N 轮所有 Token 之和
+          </div>
+        </div>
+        <div class="kv-box yes">
+          <div class="kv-box-h">有 KV Cache</div>
+          <div class="kv-box-b">
+            历史 Token 的 K/V 已缓存，<b>只算本轮新 Token</b><br><br>
+            第 N 轮成本 ≈ 本轮新增那几个 Token
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <b>System Prompt 越长，KV Cache 越值钱。</b><br>
+        5000 Token 的系统提示词，1000 轮对话后，KV Cache 节省约 80% 总成本。<b>保持 System Prompt 不变 = 缓存命中。</b>
+      </div>
+
+      <div style="background:rgba(220,38,38,.05);border:1.5px solid rgba(220,38,38,.2);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--text);line-height:1.65">
+        <b style="color:var(--red)">⚠️ 隐藏大坑：分布式推理服务器</b><br>
+        云端 LLM 通常跑在<b>多台推理服务器</b>上。你的请求可能每次被路由到不同节点——那台节点没有你的前文缓存，<b>隐式缓存永远 MISS</b>。
+      </div>
+
+      <div onclick="location.href='8-2b.html'" style="background:rgba(22,163,74,.05);border:1.5px solid rgba(22,163,74,.25);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:12px" onmouseover="this.style.background='rgba(22,163,74,.1)'" onmouseout="this.style.background='rgba(22,163,74,.05)'">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--green)">→ 下一页：显式缓存（必看）</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:2px">一行代码保证命中 · Claude / Qwen / OpenAI 代码示例 · 命中率模拟对比</div>
+        </div>
+        <div style="font-size:22px;color:var(--green);opacity:.6">⌘→</div>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <!-- 对比演示面板 -->
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1;overflow:hidden;min-height:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div class="mode-tabs">
+            <span>模式：</span>
+            <button class="mode-btn active-bad" id="btnBad" onclick="setMode('bad')">无缓存</button>
+            <button class="mode-btn" id="btnGood" onclick="setMode('good')">有缓存</button>
+          </div>
+          <div class="legend">
+            <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div>System Prompt</div>
+            <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>重复计算</div>
+            <div class="leg"><div class="leg-dot" style="background:rgba(22,163,74,.4)"></div>缓存命中</div>
+            <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>新增计算</div>
+          </div>
+        </div>
+        <div class="viz-panel">
+          <div class="viz-title" id="vizTitle">点击"下一轮"开始演示 · 每格 = 固定 token 量，SYS 始终不变</div>
+          <div class="turns-list" id="turnsList"></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-box turns"><div class="sv" id="statTurns">0</div><div class="sl">已演示轮次</div></div>
+          <div class="stat-box waste"><div class="sv" id="statWaste">0T</div><div class="sl">无缓存累计算量</div></div>
+          <div class="stat-box save"><div class="sv" id="statSave">0T</div><div class="sl">有缓存累计算量</div></div>
+          <div class="stat-box save"><div class="sv" id="statPct" style="color:var(--accent)">—</div><div class="sl">节省比例</div></div>
+        </div>
+        <div class="ctrl-bar">
+          <button class="btn-next" id="btnNext" onclick="nextTurn()">▶ 下一轮</button>
+          <button class="btn-reset" onclick="resetDemo()">重置</button>
+          <div class="ctrl-hint" id="ctrlHint">切换"无缓存 / 有缓存"对比两种模式效果</div>
+        </div>
+        <div class="takeaway"><b>结论：</b>对话轮次越多，KV Cache 节省越大。保持 System Prompt 不变是最简单、最有效的优化手段。</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// 对话内容（用于标题展示）
+const TURNS = [
+  { user: '你好，帮我分析一下', assistant: '好的，我来帮你' },
+  { user: '数据显示销售下降了', assistant: '可能有几个原因' },
+  { user: '竞品也有同样问题吗', assistant: '根据行业数据来看' },
+  { user: '那我们应该怎么做', assistant: '建议从三个方向入手' },
+  { user: '重点优化哪个方向', assistant: '我认为第二个最关键' },
+];
+
+// 每"格"像素宽度 — 固定不变，直观体现 token 量
+const SYS_PX  = 72;   // System Prompt 固定宽度（px）
+const TURN_PX = 40;   // 每轮对话固定宽度（px）
+
+let mode = 'bad';
+let curTurn = 0;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btnBad').className  = 'mode-btn' + (m === 'bad'  ? ' active-bad'  : '');
+  document.getElementById('btnGood').className = 'mode-btn' + (m === 'good' ? ' active-good' : '');
+  resetDemo();
+}
+
+function resetDemo() {
+  curTurn = 0;
+  document.getElementById('turnsList').innerHTML = '';
+  document.getElementById('vizTitle').textContent = '点击"下一轮"开始演示 · 条形宽度代表计算量';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一轮';
+  document.getElementById('statTurns').textContent = '0';
+  document.getElementById('statWaste').textContent = '0T';
+  document.getElementById('statSave').textContent = '0T';
+  document.getElementById('statPct').textContent = '—';
+  document.getElementById('ctrlHint').textContent = '切换"无缓存 / 有缓存"对比两种模式效果';
+}
+
+function nextTurn() {
+  if (curTurn >= TURNS.length) return;
+  const turnNum = curTurn + 1;
+  const list = document.getElementById('turnsList');
+
+  // 各段绝对像素 — SYS 永远 SYS_PX，每轮永远 TURN_PX，不随轮次缩放
+  const sysPx   = SYS_PX;
+  const histPx  = curTurn * TURN_PX;   // 已有历史轮次
+  const newPx   = TURN_PX;             // 本轮新增（固定）
+
+  // 本轮实际计算像素（用于统计显示）
+  const badPx  = sysPx + histPx + newPx;   // 无缓存：全量
+  const goodPx = curTurn === 0 ? sysPx + newPx : newPx; // 有缓存：首轮含SYS，后续仅新增
+
+  const row = document.createElement('div');
+  row.className = 'turn-row';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'turn-label';
+  lbl.textContent = `轮 ${turnNum}`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bar-wrap';
+
+  const bar = document.createElement('div');
+  bar.className = 'bar-track';
+
+  if (mode === 'bad') {
+    bar.appendChild(seg('recalc', sysPx, 'SYS'));
+    if (histPx > 0) bar.appendChild(seg('recalc', histPx, '历史×' + curTurn));
+    bar.appendChild(seg('new', newPx, `+轮${turnNum}`));
+  } else {
+    const sClass = curTurn === 0 ? 'sys' : 'cached';
+    bar.appendChild(seg(sClass, sysPx, 'SYS'));
+    if (histPx > 0) bar.appendChild(seg('cached', histPx, '缓存×' + curTurn));
+    bar.appendChild(seg('new', newPx, `+轮${turnNum}`));
+  }
+
+  wrap.appendChild(bar);
+
+  // 右侧标注
+  const meta = document.createElement('div');
+  meta.className = 'turn-meta';
+  const computedPx = mode === 'bad' ? badPx : goodPx;
+  const costDiv = document.createElement('div');
+  costDiv.className = 'turn-cost ' + (mode === 'bad' ? 'bad' : 'good');
+  costDiv.textContent = computedPx + ' T';
+  const diffDiv = document.createElement('div');
+  diffDiv.className = 'turn-diff';
+  diffDiv.textContent = mode === 'bad' ? '全量重算' : (curTurn === 0 ? '首次计算' : '仅新增');
+  meta.appendChild(costDiv);
+  meta.appendChild(diffDiv);
+
+  row.appendChild(lbl);
+  row.appendChild(wrap);
+  row.appendChild(meta);
+  list.appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  curTurn++;
+
+  // 累计统计
+  let badTotal = 0, goodTotal = 0;
+  for (let i = 1; i <= curTurn; i++) {
+    badTotal  += SYS_PX + (i - 1) * TURN_PX + TURN_PX;          // 全量
+    goodTotal += i === 1 ? SYS_PX + TURN_PX : TURN_PX;           // 首轮含SYS，后续仅新增
+  }
+  const pct = badTotal > 0 ? Math.round((1 - goodTotal / badTotal) * 100) : 0;
+
+  document.getElementById('statTurns').textContent = curTurn;
+  document.getElementById('statWaste').textContent = badTotal + ' T';
+  document.getElementById('statSave').textContent  = goodTotal + ' T';
+  document.getElementById('statPct').textContent   = pct + '%';
+  document.getElementById('vizTitle').textContent  =
+    mode === 'bad'
+      ? `第 ${curTurn} 轮：全量重算 ${badPx} T · SYS + 历史每轮都在累积`
+      : `第 ${curTurn} 轮：仅算 ${goodPx} T · SYS 宽度不变 = 缓存命中`;
+
+  if (curTurn >= TURNS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 演示完成';
+    document.getElementById('ctrlHint').textContent =
+      `切换模式后点"重置"重新演示 · 累计节省 ${pct}%`;
+  }
+}
+
+function seg(cls, px, label) {
+  const d = document.createElement('div');
+  d.className = 'bar-seg ' + cls;
+  d.style.width = px + 'px';
+  d.textContent = px >= 36 ? label : '';
+  return d;
+}
+
+resetDemo();
+</script>
+</body>
+</html>

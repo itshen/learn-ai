@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>用 Prompt 约束幻觉</title>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+  --success: #16a34a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.header {
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0; background-color: var(--bg-color);
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.badge {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 14px; border-radius: 8px;
+  background: rgba(0,102,255,0.1); color: var(--accent);
+  white-space: nowrap;
+}
+.title-area h2 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* Left */
+.left-panel {
+  width: 34%; padding: 20px 24px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 14px;
+  overflow-y: auto;
+}
+.left-panel::-webkit-scrollbar { width: 3px; }
+.left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.section-label {
+  font-size: 12px; font-weight: 800; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+.scene-card {
+  background: white; border-radius: 12px; padding: 14px 18px;
+  border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+}
+.scene-card:hover { border-color: rgba(0,102,255,0.2); }
+.scene-card.active { border-color: var(--accent); background: rgba(0,102,255,0.03); }
+.scene-tag {
+  font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 5px;
+}
+.scene-name { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.scene-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+
+.pm-tip {
+  background: rgba(0,102,255,0.04);
+  border: 1px solid rgba(0,102,255,0.12);
+  border-radius: 12px; padding: 14px 18px;
+}
+.pm-tip-title { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.3px; }
+.pm-tip p { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+.pm-tip b { color: var(--text-main); }
+
+/* Right */
+.right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 30px; min-width: 0; gap: 14px;
+}
+.right-top { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.right-top h3 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+.toggle-group { display: flex; gap: 6px; }
+.toggle-btn {
+  padding: 7px 18px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: white; color: var(--text-sub); transition: all 0.15s;
+}
+.toggle-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+.compare-area {
+  flex: 1; display: flex; gap: 16px; min-height: 0;
+}
+.compare-col { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.col-label {
+  font-size: 13px; font-weight: 700; padding: 0 2px;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.col-label .dot { width: 10px; height: 10px; border-radius: 50%; }
+.col-label .dot.red { background: var(--danger); }
+.col-label .dot.green { background: var(--success); }
+.col-label span.label-text { color: var(--text-sub); }
+
+.convo-box {
+  flex: 1; background: white; border-radius: 14px; padding: 16px 18px;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+.convo-box::-webkit-scrollbar { width: 3px; }
+.convo-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+.bubble-user {
+  background: var(--accent); color: white;
+  padding: 11px 16px; border-radius: 12px 12px 4px 12px;
+  font-size: 15px; line-height: 1.6; align-self: flex-end;
+  max-width: 90%;
+}
+.bubble-system {
+  background: rgba(0,0,0,0.04); color: var(--text-sub);
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; line-height: 1.6; font-style: italic;
+  border: 1px dashed rgba(0,0,0,0.1);
+  max-width: 95%;
+}
+.bubble-ai {
+  background: rgba(0,0,0,0.04); color: var(--text-main);
+  padding: 11px 16px; border-radius: 12px 12px 12px 4px;
+  font-size: 15px; line-height: 1.8; align-self: flex-start;
+  max-width: 95%;
+}
+.bubble-ai .hl-red {
+  color: var(--danger); font-weight: 600;
+  text-decoration: underline wavy var(--danger);
+  text-underline-offset: 3px;
+}
+.bubble-ai .hl-green { color: var(--success); font-weight: 600; }
+.bubble-ai .note {
+  display: block; font-size: 13px; color: var(--text-sub);
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.verdict {
+  flex-shrink: 0; padding: 10px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+}
+.verdict.bad { background: rgba(229,62,62,0.06); color: var(--danger); border: 1px solid rgba(229,62,62,0.15); }
+.verdict.good { background: rgba(22,163,106,0.06); color: var(--success); border: 1px solid rgba(22,163,106,0.15); }
+
+/* Why it works */
+.why-box {
+  background: #1c1c1e; border-radius: 12px; padding: 14px 16px;
+  flex-shrink: 0;
+}
+.why-title {
+  font-size: 11px; font-weight: 800; color: #6b7280;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px;
+}
+.token-chain {
+  display: flex; align-items: center; gap: 0; margin-bottom: 12px; flex-wrap: wrap; gap: 4px;
+}
+.token-chip {
+  padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.token-chip.context { background: rgba(255,255,255,0.08); color: #9ca3af; }
+.token-chip.injected { background: rgba(0,102,255,0.25); color: #93c5fd; border: 1px solid rgba(0,102,255,0.4); }
+.token-chip.output { background: rgba(22,163,106,0.2); color: #6ee7b7; border: 1px solid rgba(22,163,106,0.35); }
+.token-chip.output-bad { background: rgba(229,62,62,0.2); color: #fca5a5; border: 1px solid rgba(229,62,62,0.35); }
+.token-arrow { color: #4b5563; font-size: 14px; font-weight: 700; padding: 0 2px; align-self: center; }
+.why-insight {
+  font-size: 13px; color: #9ca3af; line-height: 1.7; border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 10px; margin-top: 2px;
+}
+.why-insight b { color: #e5e7eb; }
+.why-insight .key { color: #93c5fd; font-weight: 700; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+  <div class="header">
+    <div class="header-left">
+      <div class="title-area">
+        <h2>Prompt 工程：用指令约束幻觉</h2>
+        <p>PM 视角：写需求文档、对接 AI 接口时，如何通过 System Prompt 减少模型"编造"。</p>
+      </div>
+    </div>
+    <div class="badge">手段 01 / 04 · 预防</div>
+  </div>
+
+  <div class="main-area">
+    <div class="left-panel">
+      <div>
+        <div class="section-label">选择业务场景</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="scene-card active" onclick="selectScene(0)">
+            <div class="scene-tag">场景 A · 智能客服</div>
+            <div class="scene-name">电商 / 金融客服机器人</div>
+            <div class="scene-desc">用户问产品细节、退款政策，模型极易"编造"不存在的规则。</div>
+          </div>
+          <div class="scene-card" onclick="selectScene(1)">
+            <div class="scene-tag">场景 B · 内容创作</div>
+            <div class="scene-name">AI 写作助手 / 公文生成</div>
+            <div class="scene-desc">生成报告时模型可能捏造数据、引用不存在的法规文件。</div>
+          </div>
+          <div class="scene-card" onclick="selectScene(2)">
+            <div class="scene-tag">场景 C · 知识问答</div>
+            <div class="scene-name">企业内部知识库问答</div>
+            <div class="scene-desc">员工问内部流程，模型用"通用知识"填充，与公司实际规定不符。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pm-tip" id="pmTip">
+        <div class="pm-tip-title">PM 操作要点</div>
+        <p id="pmTipContent">加载中…</p>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="right-top">
+        <h3 id="rightTitle">对话对比</h3>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="setView('compare')">对比视图</button>
+          <button class="toggle-btn" onclick="setView('prompt')">Prompt 模板</button>
+          <button class="toggle-btn" onclick="setView('why')">为什么有效</button>
+          <button class="toggle-btn" onclick="setView('strat')">三种策略</button>
+        </div>
+      </div>
+
+      <!-- Compare view -->
+      <div class="compare-area" id="viewCompare">
+        <div class="compare-col">
+          <div class="col-label"><span class="dot red"></span><span class="label-text">无约束 Prompt</span></div>
+          <div class="convo-box" id="boxBad"></div>
+          <div class="verdict bad" id="verdictBad"></div>
+        </div>
+        <div class="compare-col">
+          <div class="col-label"><span class="dot green"></span><span class="label-text">加约束 System Prompt</span></div>
+          <div class="convo-box" id="boxGood"></div>
+          <div class="verdict good" id="verdictGood"></div>
+        </div>
+      </div>
+
+      <!-- Prompt template view -->
+      <div id="viewPrompt" style="display:none;flex:1;min-height:0;">
+        <div style="background:#1c1c1e;border-radius:14px;padding:20px 24px;height:100%;overflow-y:auto;">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:12px;font-family:monospace;">System Prompt 模板 · 可直接复用</div>
+          <pre id="promptTemplate" style="font-family:'SF Mono','Fira Code',monospace;font-size:13px;line-height:1.9;color:#e5e5e5;white-space:pre-wrap;"></pre>
+        </div>
+      </div>
+
+      <!-- Strategy demo view (from 3-3) -->
+      <div id="viewStrat" style="display:none;flex:1;min-height:0;flex-direction:column;gap:12px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <button onclick="showStrat(this,'no_context')" class="strat-tab active-s" style="padding:7px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);font-size:13px;font-weight:600;cursor:pointer;background:var(--text-main);color:white;">无上下文</button>
+          <button onclick="showStrat(this,'with_doc')" class="strat-tab" style="padding:7px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text-sub);">附上文档</button>
+          <button onclick="showStrat(this,'force_unknown')" class="strat-tab" style="padding:7px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text-sub);">强制说不知道</button>
+          <span style="font-size:12px;color:var(--text-sub);margin-left:8px;">以"量子纠缠2025年商业应用"为例</span>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:12px;color:var(--text-sub);flex-shrink:0;">发送给模型的内容：</div>
+          <div id="stratPromptBox" style="background:#1c1c1e;border-radius:10px;padding:14px 18px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;line-height:1.8;color:#9ca3af;white-space:pre-wrap;flex-shrink:0;max-height:38%;overflow-y:auto;"></div>
+          <div style="font-size:12px;color:var(--text-sub);flex-shrink:0;">模型回复：</div>
+          <div id="stratOutputBox" style="background:white;border-radius:10px;padding:14px 18px;font-size:14px;line-height:1.8;border:1.5px solid rgba(0,0,0,0.08);flex:1;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Why it works view -->
+      <div id="viewWhy" style="display:none;flex:1;min-height:0;background:white;border-radius:14px;padding:24px 28px;flex-direction:column;gap:16px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;gap:16px;flex:1;min-height:0;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">没有 System Prompt</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,0,0,0.05);color:var(--text-sub);">用户问题</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">→</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(229,62,62,0.08);color:var(--danger);border:1px solid rgba(229,62,62,0.2);">编造的答案…</span>
+            </div>
+            <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">模型直接基于训练记忆推 Token，碰上知识盲区会"流畅地编造"</div>
+          </div>
+          <div style="width:1px;background:rgba(0,0,0,0.06);flex-shrink:0;"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">加入约束 System Prompt</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,0,0,0.05);color:var(--text-sub);">用户问题</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">+</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.2);">如果不确定</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.2);">就说不知道</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">→</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(22,163,106,0.1);color:var(--success);border:1px solid rgba(22,163,106,0.2);">我不确定…</span>
+            </div>
+            <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">蓝色的约束词成为上下文的一部分，拉高了「承认不知道」这个序列的概率</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.12);border-radius:12px;padding:16px 22px;flex-shrink:0;">
+          <div style="font-size:15px;color:var(--text-main);line-height:1.9;">
+            模型推下一个 Token 时，<b>当前上下文里的每一个 Token 都在影响概率分布。</b>
+            System Prompt 注入的约束词，就是在上下文里放入<span style="color:var(--accent);font-weight:700;">「高质量的前文」</span>——
+            它让「我不确定」这个序列的概率上升，让编造序列的概率下降。
+            <b>本质：用精心设计的前文，定向干预后文的概率分布。</b>
+          </div>
+        </div>
+        <div style="background:rgba(229,62,62,0.04);border:1px solid rgba(229,62,62,0.15);border-radius:12px;padding:16px 22px;flex-shrink:0;">
+          <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:10px;letter-spacing:0.3px;">⚠ 局限性：模型不知道自己不知道</div>
+          <div style="display:flex;gap:20px;">
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">约束指令有效的前提</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                模型对某个问题<b>有一定"不确定感"</b>时，约束词能把它推向承认不知道的序列。<br>
+                → 适合：<span style="color:var(--success);font-weight:600;">问题超出知识范围、模糊查询、时效性信息</span>
+              </div>
+            </div>
+            <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">约束指令失效的场景</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                模型对某个错误答案<b>"高度自信"</b>时，它推出的第一候选词就是错的，约束词干预不了这个概率。<br>
+                → 失效于：<span style="color:var(--danger);font-weight:600;">训练数据里的系统性错误、过时知识被当作"事实"</span>
+              </div>
+            </div>
+            <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">PM 应对策略</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                对于"模型高度自信但可能出错"的领域，Prompt 约束不够——<br>
+                → 需要搭配 <span style="color:var(--accent);font-weight:600;">RAG（注入真实知识）</span> 或 <span style="color:var(--amber);font-weight:600;">人工审核兜底</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script>
+const SCENES = [
+  {
+    name: '智能客服对话对比',
+    bad: [
+      { type: 'user', text: '你们的七天无理由退款是从什么时候开始算的？' },
+      { type: 'ai', bad: true, text: '从您<span class="hl-red">确认收货之日起7天内</span>均可申请无理由退款，<span class="hl-red">包括定制商品和食品</span>，只需保持原包装即可。' },
+    ],
+    good: [
+      { type: 'system', text: '你是客服助手。只能回答知识库中有明确记录的问题。不确定的内容必须说"我需要帮您查询一下，请稍等"，禁止自行推断或补充政策细节。' },
+      { type: 'user', text: '你们的七天无理由退款是从什么时候开始算的？' },
+      { type: 'ai', bad: false, text: '<span class="hl-green">我需要帮您查询一下，请稍等。</span>根据我们的退款政策，七天无理由从签收日期起算。但定制商品和食品等特殊品类是否适用，需要我帮您核实具体订单，您方便提供订单号吗？' },
+    ],
+    verdictBad: '✗ 模型编造了"定制商品也可退"——实际上不行，可能引发客诉纠纷。',
+    verdictGood: '✓ 回答了已知部分，主动承认未知部分，引导到安全路径。',
+    pmTip: '在需求文档中，<b>System Prompt 属于产品配置项</b>，不是研发决定的。PM 需要明确写出：哪些话题可以回答、哪些必须转人工、遇到不确定时的兜底话术。',
+    prompt: `# 智能客服 System Prompt 模板
+
+你是 [公司名] 的智能客服助手。
+
+## 核心约束
+- 只回答知识库中有明确记录的问题
+- 涉及价格、政策、库存等数字，必须从知识库获取，禁止自行推断
+- 不确定时，统一回复：「这个问题我需要帮您查询一下，请稍等」
+- 严禁编造不存在的优惠活动、退款规则、产品参数
+
+## 兜底话术
+当无法确认时：
+「感谢您的耐心等待，这个问题我帮您转接专属客服确认，
+ 预计 [X] 分钟内回复，是否方便留下联系方式？」
+
+## 拒绝回答的场景
+- 竞争对手产品比较
+- 超出本公司产品范围的法律/医疗建议
+- 用户情绪激动时，不做解释，直接转人工`
+  },
+  {
+    name: 'AI 写作助手对话对比',
+    bad: [
+      { type: 'user', text: '帮我写一段关于公司2024年营收增长的摘要，引用一些行业数据支撑。' },
+      { type: 'ai', bad: true, text: '2024年公司营收实现同比增长<span class="hl-red">32.5%</span>，远超行业平均水平。根据<span class="hl-red">艾瑞咨询2024年Q3报告</span>，该细分市场整体增速为18%，公司市占率提升至<span class="hl-red">14.7%</span>……' },
+    ],
+    good: [
+      { type: 'system', text: '你是写作助手。生成内容时，如包含具体数字、报告名称、机构名，必须标注"[需核实]"。不要虚构数据，宁可留空白让用户填写。' },
+      { type: 'user', text: '帮我写一段关于公司2024年营收增长的摘要，引用一些行业数据支撑。' },
+      { type: 'ai', bad: false, text: '2024年公司营收实现同比增长<span class="hl-green">[填入实际数据]%</span>，根据<span class="hl-green">[来源：请提供报告名称] [需核实]</span>，行业整体增速约为 [X]%……<span class="note">⚠ 我没有您公司的真实数据，已标注需要核实的位置，请填入准确数字后再发布。</span>' },
+    ],
+    verdictBad: '✗ 模型捏造了具体数字和报告来源——发出去会造成信息失实，严重时引发法律风险。',
+    verdictGood: '✓ 生成结构框架，主动标注缺口，避免了虚假数据流出。',
+    pmTip: '写作场景的核心风险是<b>数字幻觉</b>。PM 需要在 Prompt 中明确：遇到需要数据时，模型应留空白并标注"需核实"，而不是自行编造。这是<b>产品安全规范</b>，需要写入 PRD。',
+    prompt: `# AI 写作助手 System Prompt 模板
+
+你是专业写作助手，帮用户生成高质量文案。
+
+## 数据安全约束
+- 所有具体数字（百分比、金额、排名）如非用户提供，必须标注 [需核实]
+- 所有报告名称、机构名如非用户提供，必须标注 [来源待确认]
+- 禁止虚构调研数据、媒体报道、专家言论
+
+## 处理方式
+遇到需要数据的地方：
+✓ 写出内容结构，用 [X%] / [报告名] 等占位符
+✓ 在末尾提示：「以上 [需核实] 处请填入真实数据后再使用」
+✗ 不要自行"推测"或"估算"一个看似合理的数字
+
+## 输出格式
+重要声明放在回复末尾：
+「本文由 AI 辅助生成，标注 [需核实] 处请用真实数据替换后再发布。」`
+  },
+  {
+    name: '企业知识库问答对比',
+    bad: [
+      { type: 'user', text: '员工出差报销，住宿费标准是多少？' },
+      { type: 'ai', bad: true, text: '根据一般企业标准，住宿费报销通常为<span class="hl-red">一线城市500元/晚，二线城市350元/晚，三线城市200元/晚</span>。差旅补贴另计，通常为80-100元/天……' },
+    ],
+    good: [
+      { type: 'system', text: '你是企业内部知识库助手。只能基于提供的公司文档回答问题。如果文档中没有明确说明，必须回复"当前知识库中暂无此信息，请联系HR确认"，禁止使用通用行业经验推断公司政策。' },
+      { type: 'user', text: '员工出差报销，住宿费标准是多少？' },
+      { type: 'ai', bad: false, text: '<span class="hl-green">当前知识库中暂无出差住宿费标准的明确记录。</span>建议您联系 HR 行政部门确认最新标准，或查阅员工手册第 [X] 章差旅管理规定。<span class="note">注：不同城市级别、岗位级别可能有不同标准，请以公司正式文件为准。</span>' },
+    ],
+    verdictBad: '✗ 模型用"行业通用数据"替代了公司真实政策——员工据此报销会被驳回，信任崩塌。',
+    verdictGood: '✓ 承认知识边界，引导到正确渠道，不乱说一句话。',
+    pmTip: '企业知识库场景中，<b>"不知道就引导"比"知道但说错"好 10 倍</b>。PM 要在 System Prompt 中明确知识边界，并设计好兜底引导路径（联系谁、看哪个文档）。这是<b>信息准确性 SLA</b> 的一部分。',
+    prompt: `# 企业知识库问答 System Prompt 模板
+
+你是 [公司名] 内部知识库助手。
+
+## 严格边界
+- 只基于以下上下文文档回答：{context}
+- 文档中没有明确内容 → 回复固定话术，不推断、不补充
+- 禁止用"通常"、"一般来说"、"行业标准"等表述替代公司政策
+
+## 兜底话术（文档中无答案时）
+「当前知识库中暂无「{问题关键词}」的明确记录。
+ 建议您：① 联系 HR/法务/对应部门 ② 查阅员工手册 [章节]
+ 如需我帮您转发问题，可以告知。」
+
+## 回答格式
+1. 直接给出答案（仅限文档有明确记录）
+2. 标注依据：「根据 [文档名·版本·发布日期]」
+3. 如有歧义，列出多个可能并建议核实`
+  }
+];
+
+let currentScene = 0;
+let currentView = 'compare';
+
+function selectScene(idx) {
+  currentScene = idx;
+  document.querySelectorAll('.scene-card').forEach((c, i) => c.classList.toggle('active', i === idx));
+  renderScene();
+}
+
+function setView(v) {
+  currentView = v;
+  const views = ['compare', 'prompt', 'why', 'strat'];
+  document.querySelectorAll('.toggle-btn').forEach((b, i) => b.classList.toggle('active', views[i] === v));
+  document.getElementById('viewCompare').style.display = v === 'compare' ? 'flex' : 'none';
+  document.getElementById('viewPrompt').style.display = v === 'prompt' ? 'block' : 'none';
+  const whyEl = document.getElementById('viewWhy');
+  whyEl.style.display = v === 'why' ? 'flex' : 'none';
+  const stratEl = document.getElementById('viewStrat');
+  stratEl.style.display = v === 'strat' ? 'flex' : 'none';
+  if (v === 'strat') showStrat(document.querySelector('.strat-tab.active-s'), 'no_context');
+}
+
+const STRATS = {
+  no_context:{
+    prompt:`User: 请告诉我量子纠缠技术在 2025 年的最新商业应用进展。`,
+    output:`截至 2025 年第二季度，IBM 与波士顿量子公司已成功将量子纠缠应用于金融风险建模，交易速度提升 <span style="background:rgba(229,62,62,0.15);color:#dc2626;padding:0 4px;border-radius:3px;font-weight:600">340%</span>；中国科技大学宣布实现 <span style="background:rgba(229,62,62,0.15);color:#dc2626;padding:0 4px;border-radius:3px;font-weight:600">1024 量子比特纠缠</span>……<br><br><span style="font-size:12px;color:#dc2626;font-weight:600">⚠ 以上内容为模型编造，数字和公司进展均无法核实</span>`,
+    cls: 'bad'
+  },
+  with_doc:{
+    prompt:`System: 你是专业分析师。只根据用户提供的文件内容作答，不得引用文件外的信息。
+
+[已附加文件：quantum_report_2025.pdf · 23 页]
+—— 文件节选 ——
+"2025 年量子通信商业部署主要集中在安全密钥分发领域，
+IBM、IonQ 已有小规模试点，预计 2027 年进入规模化商用。"
+
+User: 请告诉我量子纠缠技术在 2025 年的最新商业应用进展。`,
+    output:`根据您提供的报告，2025 年量子纠缠技术的商业应用主要集中在<span style="color:#16a34a;font-weight:600">安全密钥分发</span>领域，IBM 和 IonQ 已有小规模试点项目。报告预测规模化商用将在 2027 年实现。<br><br><span style="font-size:12px;color:#16a34a;font-weight:600">✅ 信息来源于用户提供文件，准确可溯源</span>`,
+    cls: 'good'
+  },
+  force_unknown:{
+    prompt:`System: 你是一个严谨的助手。如果你不确定某个信息，必须直接说"我不知道"，不得猜测或编造任何数据。
+
+User: 请告诉我量子纠缠技术在 2025 年的最新商业应用进展。`,
+    output:`我没有关于 2025 年量子纠缠技术商业应用的可靠信息——我的训练数据有截止日期，且这一领域的最新进展超出了我的知识范围。<br><br>建议查阅 Nature、IEEE Spectrum 或相关企业（IBM、Google Quantum AI）的最新发布公告。<br><br><span style="font-size:12px;color:#16a34a;font-weight:600">✅ 拒绝幻觉，给出替代建议</span>`,
+    cls: 'good'
+  }
+};
+
+function showStrat(btn, key) {
+  document.querySelectorAll('.strat-tab').forEach(b => {
+    b.classList.remove('active-s');
+    b.style.background = 'white';
+    b.style.color = 'var(--text-sub)';
+  });
+  if (btn) {
+    btn.classList.add('active-s');
+    btn.style.background = 'var(--text-main)';
+    btn.style.color = 'white';
+  }
+  const d = STRATS[key];
+  document.getElementById('stratPromptBox').textContent = d.prompt;
+  const ob = document.getElementById('stratOutputBox');
+  ob.style.border = d.cls === 'good'
+    ? '1.5px solid rgba(22,163,74,0.25)'
+    : '1.5px solid rgba(229,62,62,0.25)';
+  ob.style.background = d.cls === 'good'
+    ? 'rgba(22,163,74,0.03)'
+    : 'rgba(229,62,62,0.03)';
+  ob.innerHTML = d.output;
+}
+
+function renderScene() {
+  const s = SCENES[currentScene];
+
+  // Bad box
+  const bad = document.getElementById('boxBad');
+  bad.innerHTML = '';
+  s.bad.forEach(m => bad.appendChild(makeBubble(m)));
+  document.getElementById('verdictBad').textContent = s.verdictBad;
+
+  // Good box
+  const good = document.getElementById('boxGood');
+  good.innerHTML = '';
+  s.good.forEach(m => good.appendChild(makeBubble(m)));
+  document.getElementById('verdictGood').textContent = s.verdictGood;
+
+  // PM tip
+  document.getElementById('pmTipContent').innerHTML = s.pmTip;
+
+  // Prompt template
+  document.getElementById('promptTemplate').textContent = s.prompt;
+}
+
+function makeBubble(m) {
+  const div = document.createElement('div');
+  if (m.type === 'user') {
+    div.className = 'bubble-user';
+    div.textContent = m.text;
+  } else if (m.type === 'system') {
+    div.className = 'bubble-system';
+    div.textContent = '⚙ System Prompt: ' + m.text;
+  } else {
+    div.className = 'bubble-ai';
+    div.innerHTML = m.text;
+  }
+  return div;
+}
+
+renderScene();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Prompt 进阶技巧</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:14px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--purple)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:360px 1fr;min-height:0}
+
+/* 左栏 */
+.left{padding:16px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.desc{font-size:16px;color:var(--sub);line-height:1.6;flex-shrink:0}
+
+.skill-list{display:flex;flex-direction:column;gap:6px;flex:1;overflow-y:auto}
+.skill-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;text-align:left;width:100%}
+.skill-btn:hover{border-color:rgba(0,0,0,.15)}
+.skill-btn.active{border-color:var(--purple);background:rgba(147,51,234,.05)}
+.snum{width:32px;height:32px;border-radius:9px;background:var(--surface2);color:var(--muted);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.skill-btn.active .snum{background:var(--purple);color:white}
+.st h4{font-size:17px;font-weight:700;color:var(--text);margin-bottom:2px;transition:color .2s}
+.skill-btn.active .st h4{color:var(--purple)}
+.st p{font-size:13px;color:var(--muted)}
+
+.formula-box{background:rgba(147,51,234,.06);border:1px solid rgba(147,51,234,.15);border-radius:10px;padding:10px 14px;flex-shrink:0}
+.feq{font-size:15px;font-weight:800;color:var(--purple);font-family:monospace;margin-bottom:4px}
+.fdesc{font-size:14px;color:var(--sub);line-height:1.5}
+
+/* 右栏 */
+.right{padding:16px 20px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.cmp-hd{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;flex-shrink:0}
+
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0}
+.cmp-box{border-radius:12px;display:flex;flex-direction:column;overflow:hidden;border:1.5px solid transparent}
+.cmp-box.bad{border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.04)}
+.cmp-box.good{border-color:rgba(22,163,74,.3);background:rgba(22,163,74,.04)}
+.cb-label{padding:8px 14px;font-size:14px;font-weight:800;border-bottom:1px solid rgba(0,0,0,.06)}
+.cmp-box.bad .cb-label{color:var(--red)}
+.cmp-box.good .cb-label{color:var(--green)}
+.cb-prompt{padding:10px 14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;color:var(--sub);background:rgba(0,0,0,.04);line-height:1.55;white-space:pre-wrap;flex-shrink:0}
+.cb-result{padding:10px 14px;font-size:15px;color:var(--text);line-height:1.7;flex:1;overflow-y:auto;min-height:60px}
+.cursor{display:inline-block;width:2px;height:16px;background:var(--text);vertical-align:middle;animation:blink 0.7s steps(1) infinite;margin-left:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.ctrl-row{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.btn{padding:8px 20px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-play{background:var(--purple);color:white}
+.btn-play:hover{filter:brightness(1.1)}
+.btn-play:disabled{opacity:.3;cursor:not-allowed}
+.btn-rst{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.hint{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块六 · Prompt Engineering · 第 4 页</div>
+      <div class="hd-title">Prompt <em>进阶技巧</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">选技巧 → 点播放对比两种 Prompt 的回答</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">掌握 4 个技巧，让模型回答质量翻倍。点击技巧，右侧实时演示好坏对比。</p>
+
+      <div class="skill-list">
+        <button class="skill-btn active" onclick="pickSkill(this,0)">
+          <div class="snum">01</div>
+          <div class="st"><h4>少样本示例（Few-Shot）</h4><p>给几个例子，模型就懂格式和标准</p></div>
+        </button>
+        <button class="skill-btn" onclick="pickSkill(this,1)">
+          <div class="snum">02</div>
+          <div class="st"><h4>思维链（Chain of Thought）</h4><p>让模型逐步推理，准确率大幅提升</p></div>
+        </button>
+        <button class="skill-btn" onclick="pickSkill(this,2)">
+          <div class="snum">03</div>
+          <div class="st"><h4>约束条件（Constraints）</h4><p>字数、语气、格式、禁用词……</p></div>
+        </button>
+        <button class="skill-btn" onclick="pickSkill(this,3)">
+          <div class="snum">04</div>
+          <div class="st"><h4>分而治之（Task Decomposition）</h4><p>复杂任务拆步骤，每步单独优化</p></div>
+        </button>
+      </div>
+
+      <div class="formula-box">
+        <div class="feq">角色 + 任务 + 上下文 + 约束 + 示例 + 格式</div>
+        <p class="fdesc">缺少任何一项，质量就会打折扣。把 Prompt 当代码写：加约束、加示例、加测试用例。</p>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="cmp-hd" id="cmpHd">01 · 少样本示例（Few-Shot）— 实时对比演示</div>
+      <div class="cmp-grid">
+        <div class="cmp-box bad">
+          <div class="cb-label">❌ 差 Prompt（不加示例）</div>
+          <div class="cb-prompt" id="badPrompt"></div>
+          <div class="cb-result" id="badResult"></div>
+        </div>
+        <div class="cmp-box good">
+          <div class="cb-label">✅ 好 Prompt（加示例）</div>
+          <div class="cb-prompt" id="goodPrompt"></div>
+          <div class="cb-result" id="goodResult"></div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-play" id="btnPlay" onclick="playDemo()">▶ 开始对比演示</button>
+        <button class="btn btn-rst" onclick="resetDemo()">重置</button>
+        <span class="hint" id="playHint"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const SKILLS = [
+  {
+    hd: '01 · 少样本示例（Few-Shot）— 实时对比演示',
+    badP: '帮我分类：今天天气真好',
+    goodP: '情绪: 开心 → 正向\n天气: 下雨了 → 中性\n老板太烦人了 → 负向\n——\n今天天气真好 → ',
+    badR: '这句话表达了对天气的正面态度，是一句描述性陈述句，带有愉快的情感色彩。可以归类为表达积极情绪的句子。（格式不确定，没有按要求分类）',
+    goodR: '正向\n\n（模型从示例中学会了格式和标准，直接给出答案，简洁精准）'
+  },
+  {
+    hd: '02 · 思维链（Chain of Thought）— 实时对比演示',
+    badP: '13 × 7 + 5 等于多少？',
+    goodP: '13 × 7 + 5 等于多少？\n请一步步计算，先算乘法，再算加法。',
+    badR: '96\n\n（有时直接给错误答案。复杂计算时尤其不稳定，因为模型跳步了。）',
+    goodR: '步骤 1：先算乘法\n13 × 7 = 91\n\n步骤 2：再算加法\n91 + 5 = 96\n\n答案：96\n\n（推理过程透明，准确率大幅提升，便于排查错误）'
+  },
+  {
+    hd: '03 · 约束条件（Constraints）— 实时对比演示',
+    badP: '帮我写一个产品描述',
+    goodP: '帮我写产品描述\n· 字数：50 字以内\n· 受众：18-25 岁年轻人\n· 语气：活泼不正式\n· 禁止用"专业"、"卓越"等词',
+    badR: '本产品采用先进的技术理念，具有卓越的性能表现和专业的品质保障。我们致力于为您提供最优质的使用体验……\n\n（又臭又长，语气老气，没有针对任何受众）',
+    goodR: '「每天一杯，不只是续命，是在续你的状态。」\n\n（精准符合所有约束，50 字内，活泼，无禁用词，直接可用）'
+  },
+  {
+    hd: '04 · 分而治之（Task Decomposition）— 实时对比演示',
+    badP: '帮我分析竞品，写方案，再做 PPT 大纲',
+    goodP: '第1步：请分析我们的三个主要竞品（A、B、C）的定价和功能差异\n——（等模型输出后）——\n第2步：基于上面的分析，写差异化策略\n——（等模型输出后）——\n第3步：将方案转成 PPT 大纲',
+    badR: '一、竞品分析：A 产品价格较低、B 产品功能较多、C 产品……\n二、策略建议：我们应该……\n三、PPT 大纲：第一页标题……\n\n（三件事混在一起，每件都浮于表面，质量很差）',
+    goodR: '【第1步仅聚焦竞品分析】\n→ 模型全力分析，输出深度报告\n\n【第2步基于真实分析写策略】\n→ 有血有肉，不是空话\n\n【第3步结构化转 PPT】\n→ 逻辑清晰，可直接使用\n\n每步专注一件事，质量比"一次全问"高 3-5 倍'
+  }
+];
+
+let curSkill = 0, playing = false;
+let badTimer = null, goodTimer = null;
+
+function pickSkill(btn, idx) {
+  document.querySelectorAll('.skill-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  curSkill = idx;
+  resetDemo();
+  document.getElementById('cmpHd').textContent = SKILLS[idx].hd;
+}
+
+function typeText(el, text, delay, done) {
+  let i = 0;
+  const lines = text.split('');
+  el.innerHTML = '';
+  const cur = document.createElement('span');
+  cur.className = 'cursor';
+  el.appendChild(cur);
+
+  function tick() {
+    if (i >= lines.length) {
+      if (cur.parentNode) cur.parentNode.removeChild(cur);
+      if (done) done();
+      return;
+    }
+    const ch = lines[i++];
+    cur.insertAdjacentText('beforebegin', ch);
+    el.scrollTop = el.scrollHeight;
+    const d = ch === '\n' ? delay * 3 : delay;
+    setTimeout(tick, d);
+  }
+  setTimeout(tick, 200);
+}
+
+function playDemo() {
+  if (playing) return;
+  playing = true;
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('playHint').textContent = '模拟 AI 实时生成中……';
+
+  const s = SKILLS[curSkill];
+  document.getElementById('badPrompt').textContent = s.badP;
+  document.getElementById('goodPrompt').textContent = s.goodP;
+
+  let badDone = false, goodDone = false;
+  function check() {
+    if (badDone && goodDone) {
+      playing = false;
+      document.getElementById('playHint').textContent = '演示完成 — 感受到差异了吗？';
+    }
+  }
+
+  typeText(document.getElementById('badResult'), s.badR, 28, () => { badDone=true; check(); });
+  typeText(document.getElementById('goodResult'), s.goodR, 22, () => { goodDone=true; check(); });
+}
+
+function resetDemo() {
+  playing = false;
+  clearTimeout(badTimer); clearTimeout(goodTimer);
+  const s = SKILLS[curSkill];
+  document.getElementById('badPrompt').textContent = '';
+  document.getElementById('goodPrompt').textContent = '';
+  document.getElementById('badResult').innerHTML = '<span style="color:var(--muted);font-size:14px">点击"开始对比演示"查看效果……</span>';
+  document.getElementById('goodResult').innerHTML = '<span style="color:var(--muted);font-size:14px">点击"开始对比演示"查看效果……</span>';
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnPlay').textContent = '▶ 开始对比演示';
+  document.getElementById('playHint').textContent = '';
+}
+
+// 初始化
+pickSkill(document.querySelector('.skill-btn.active'), 0);
+document.getElementById('cmpHd').textContent = SKILLS[0].hd;
+</script>
+</body>
+</html>

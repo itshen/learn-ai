@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>蒸馏的过程</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0; --text: #1c1c1e; --sub: #6b7280;
+  --cyan: #0891b2; --success: #16a34a;
+  --danger: #dc2626; --border: rgba(0,0,0,0.07);
+  --orange: #ea580c; --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px; aspect-ratio: 16/9;
+  background: var(--bg); border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 14px 36px; flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.header h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+.header p  { font-size: 13px; color: var(--sub); margin-top: 2px; }
+.ctrl { display: flex; gap: 10px; align-items: center; }
+.btn {
+  border: none; padding: 10px 24px; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--cyan); color: white; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+.btn-ghost { background: rgba(0,0,0,0.06); color: var(--sub); }
+.btn-ghost:hover { background: rgba(0,0,0,0.1); }
+.prog { font-size: 14px; color: var(--sub); min-width: 60px; text-align: right; }
+
+/* layout */
+.body { flex: 1; display: grid; grid-template-columns: 420px 1fr; gap: 0; overflow: hidden; }
+.panel { padding: 20px 26px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.panel-l { border-right: 1px solid var(--border); }
+
+/* 步骤列表 */
+.tag { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); margin-bottom: 4px; }
+.step-item {
+  display: flex; gap: 14px; align-items: center;
+  padding: 14px 18px; border-radius: 14px; cursor: pointer;
+  background: white; border: 2px solid transparent;
+  transition: all 0.25s; opacity: 0.45;
+}
+.step-item:hover { opacity: 0.75; }
+.step-item.active { border-color: var(--cyan); background: rgba(8,145,178,0.06); opacity: 1; }
+.step-item.done { border-color: rgba(22,163,74,0.4); background: rgba(22,163,74,0.04); opacity: 1; }
+.step-num {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; background: rgba(0,0,0,0.07); color: var(--sub);
+  transition: all 0.25s;
+}
+.step-item.active .step-num { background: var(--cyan); color: white; }
+.step-item.done .step-num { background: var(--success); color: white; font-size: 18px; }
+.step-text h5 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.step-text p  { font-size: 14px; color: var(--sub); line-height: 1.5; }
+
+/* 右侧可视化区 */
+.vis-area {
+  flex: 1; display: flex; flex-direction: column;
+  justify-content: center; padding: 24px 30px; gap: 18px;
+}
+.vis-card {
+  display: none; flex-direction: column; gap: 16px;
+  animation: fadeIn 0.3s ease;
+}
+.vis-card.show { display: flex; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* step 1 — 问题库 */
+.q-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.q-bubble {
+  background: white; border-radius: 12px; border: 1.5px solid var(--border);
+  padding: 12px 16px; font-size: 16px; color: var(--text); line-height: 1.5;
+  position: relative;
+}
+.q-bubble::before { content: 'Q'; position: absolute; top: 8px; right: 12px; font-size: 11px; font-weight: 800; color: var(--cyan); opacity: 0.5; }
+
+/* step 2 — teacher → answer */
+.teacher-row { display: flex; align-items: flex-start; gap: 16px; }
+.teacher-bubble {
+  flex: 1; background: rgba(8,145,178,0.06); border: 1.5px solid rgba(8,145,178,0.2);
+  border-radius: 14px; padding: 16px 18px;
+}
+.teacher-bubble .label { font-size: 12px; font-weight: 700; color: var(--cyan); margin-bottom: 8px; letter-spacing: 0.5px; }
+.teacher-bubble p { font-size: 16px; color: var(--text); line-height: 1.65; }
+.arrow-icon { font-size: 28px; align-self: center; color: var(--sub); }
+
+/* step 3 — 软标签 */
+.soft-demo { display: flex; gap: 20px; }
+.soft-col { flex: 1; }
+.soft-col-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.soft-col-title.bad { color: var(--danger); }
+.soft-col-title.good { color: var(--success); }
+.hard-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.hard-word { font-size: 18px; font-weight: 700; width: 32px; }
+.hard-tag { padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; }
+.hard-tag.yes { background: rgba(22,163,74,0.12); color: var(--success); }
+.hard-tag.no  { background: rgba(220,38,38,0.1);  color: var(--danger); }
+.prob-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.prob-word { font-size: 18px; font-weight: 700; width: 32px; }
+.prob-track { flex: 1; height: 28px; background: rgba(0,0,0,0.07); border-radius: 8px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 10px; transition: width 0.9s ease; }
+.prob-fill span { font-size: 14px; font-weight: 700; color: white; }
+.info-note { font-size: 14px; color: var(--sub); line-height: 1.6; background: white; border-radius: 10px; border: 1px solid var(--border); padding: 12px 14px; }
+
+/* step 4 — student training */
+.training-row { display: flex; align-items: center; gap: 14px; }
+.model-box {
+  flex: 1; border-radius: 14px; padding: 16px 18px; text-align: center;
+}
+.model-box.teacher { background: rgba(124,58,237,0.07); border: 1.5px solid rgba(124,58,237,0.25); }
+.model-box.student { background: rgba(8,145,178,0.07); border: 1.5px solid rgba(8,145,178,0.25); }
+.model-box .icon { font-size: 32px; margin-bottom: 6px; }
+.model-box .mname { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.model-box .msize { font-size: 13px; color: var(--sub); }
+.teach-arrow { font-size: 32px; color: var(--cyan); }
+.data-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.data-pill { padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+.data-pill.q { background: rgba(234,88,12,0.1); color: var(--orange); }
+.data-pill.a { background: rgba(124,58,237,0.1); color: var(--purple); }
+.data-pill.s { background: rgba(8,145,178,0.1); color: var(--cyan); }
+
+/* step 5 — eval */
+.eval-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.eval-card {
+  background: white; border-radius: 12px; border: 1.5px solid var(--border);
+  padding: 14px 16px; text-align: center;
+}
+.eval-card .eval-icon { font-size: 24px; margin-bottom: 6px; }
+.eval-card .eval-label { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.eval-card .eval-desc { font-size: 13px; color: var(--sub); line-height: 1.5; }
+.score-bar-wrap { margin-top: 8px; height: 10px; background: rgba(0,0,0,0.07); border-radius: 5px; overflow: hidden; }
+.score-bar { height: 100%; border-radius: 5px; transition: width 1s ease; }
+
+/* temp callout */
+.temp-box {
+  background: rgba(8,145,178,0.07); border: 1.5px solid rgba(8,145,178,0.2);
+  border-radius: 12px; padding: 14px 18px; font-size: 15px; line-height: 1.65; color: var(--text);
+}
+.temp-box strong { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <h2>蒸馏的<span style="color:var(--cyan)">过程</span></h2>
+      <p>Teacher → Student · 模块九 第 2 页</p>
+    </div>
+    <div class="ctrl">
+      <span class="prog" id="prog">0 / 5</span>
+      <button class="btn btn-ghost" onclick="sdReset()">重置</button>
+      <button class="btn btn-primary" id="btnNext" onclick="sdNext()">下一步 ›</button>
+    </div>
+  </div>
+  <div class="body">
+    <!-- 左侧：步骤 -->
+    <div class="panel panel-l">
+      <div class="tag">蒸馏全流程</div>
+      <div id="stepList"></div>
+    </div>
+
+    <!-- 右侧：对应可视化 -->
+    <div class="vis-area">
+      <!-- 默认提示 -->
+      <div id="visDefault" style="text-align:center;color:var(--sub)">
+        <div style="font-size:48px;margin-bottom:12px">👆</div>
+        <div style="font-size:18px;font-weight:600">点击「下一步」开始演示蒸馏流程</div>
+      </div>
+
+      <!-- Step 1: 准备问题库 -->
+      <div class="vis-card" id="vis1">
+        <div style="font-size:16px;font-weight:700;color:var(--sub)">收集覆盖目标领域的高质量问题——问题质量决定蒸馏效果上限</div>
+        <div class="q-grid">
+          <div class="q-bubble">请解释量子纠缠是什么？</div>
+          <div class="q-bubble">如何用 Python 实现快速排序？</div>
+          <div class="q-bubble">《论语》中"仁"的核心含义是？</div>
+          <div class="q-bubble">黑洞的事件视界是指什么？</div>
+        </div>
+        <div style="font-size:14px;color:var(--sub);background:white;border-radius:10px;border:1px solid var(--border);padding:12px 16px">
+          问题可以人工收集，也可以让大模型自动生成。覆盖越广、质量越高，蒸馏出的学生模型能力越强。
+        </div>
+      </div>
+
+      <!-- Step 2: 教师生成回答 -->
+      <div class="vis-card" id="vis2">
+        <div style="font-size:16px;font-weight:700;color:var(--sub)">旗舰大模型（教师）回答问题，并保留完整推理链</div>
+        <div class="teacher-row">
+          <div class="teacher-bubble">
+            <div class="label">🧑‍🏫 GPT-4 教师模型的回答</div>
+            <p>量子纠缠指两个粒子的量子态相互关联，<strong>无论相距多远，测量其中一个，另一个的状态会瞬间确定</strong>。这并不意味着信息传递速度超光速，因为……（步骤推理继续）</p>
+          </div>
+        </div>
+        <div style="font-size:14px;color:var(--sub);background:white;border-radius:10px;border:1px solid var(--border);padding:12px 16px">
+          保留的不只是最终答案，还有<strong>思维链（Chain of Thought）</strong>——每一步的推理过程，让学生模型能学到"怎么想"而非只背"是什么"。
+        </div>
+      </div>
+
+      <!-- Step 3: 软标签 -->
+      <div class="vis-card" id="vis3">
+        <div style="font-size:16px;font-weight:700;color:var(--sub)">大模型的每个词都对应一个概率分布，而非单一答案</div>
+        <div class="soft-demo">
+          <div class="soft-col">
+            <div class="soft-col-title bad">❌ 硬标签（传统训练）</div>
+            <div class="hard-row"><div class="hard-word">猫</div><div class="hard-tag yes">✓ 正确</div></div>
+            <div class="hard-row"><div class="hard-word">狗</div><div class="hard-tag no">✗ 错误</div></div>
+            <div class="hard-row"><div class="hard-word">兔</div><div class="hard-tag no">✗ 错误</div></div>
+            <div style="font-size:13px;color:var(--sub);margin-top:4px">只有"对错"，丢失了概念间的相似关系</div>
+          </div>
+          <div class="soft-col">
+            <div class="soft-col-title good">✅ 软标签（蒸馏）</div>
+            <div class="prob-row"><div class="prob-word">猫</div><div class="prob-track"><div class="prob-fill" style="width:0%;background:#7c3aed" data-w="72"><span>72%</span></div></div></div>
+            <div class="prob-row"><div class="prob-word">狗</div><div class="prob-track"><div class="prob-fill" style="width:0%;background:#0891b2" data-w="20"><span>20%</span></div></div></div>
+            <div class="prob-row"><div class="prob-word">兔</div><div class="prob-track"><div class="prob-fill" style="width:0%;background:#16a34a" data-w="8"><span>8%</span></div></div></div>
+            <div style="font-size:13px;color:var(--sub);margin-top:4px">保留"狗也有点像"的信息，信息量更丰富</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: 训练学生 -->
+      <div class="vis-card" id="vis4">
+        <div style="font-size:16px;font-weight:700;color:var(--sub)">用"问题 + 教师回答 + 软标签"三合一训练小模型</div>
+        <div class="training-row">
+          <div class="model-box teacher">
+            <div class="icon">🧑‍🏫</div>
+            <div class="mname">教师模型</div>
+            <div class="msize">GPT-4 · ~1TB 权重</div>
+          </div>
+          <div class="teach-arrow">→</div>
+          <div class="model-box student">
+            <div class="icon">🎓</div>
+            <div class="mname">学生模型</div>
+            <div class="msize">7B ~ 32B · 仅 14~65 GB</div>
+          </div>
+        </div>
+        <div style="font-size:15px;color:var(--sub);margin-bottom:4px">训练数据由三部分组成：</div>
+        <div class="data-pills">
+          <div class="data-pill q">📋 原始问题</div>
+          <div class="data-pill a">💬 教师的完整回答 + 推理链</div>
+          <div class="data-pill s">📊 软标签（概率分布）</div>
+        </div>
+      </div>
+
+      <!-- Step 5: 评估迭代 -->
+      <div class="vis-card" id="vis5">
+        <div style="font-size:16px;font-weight:700;color:var(--sub)">在测试集上评估学生模型，并根据结果迭代</div>
+        <div class="eval-grid">
+          <div class="eval-card">
+            <div class="eval-icon">🧮</div>
+            <div class="eval-label">数学推理</div>
+            <div class="eval-desc">MATH benchmark</div>
+            <div class="score-bar-wrap"><div class="score-bar" style="width:0%;background:var(--purple)" data-w="78"></div></div>
+            <div style="font-size:14px;font-weight:700;color:var(--purple);margin-top:6px">78%</div>
+          </div>
+          <div class="eval-card">
+            <div class="eval-icon">💬</div>
+            <div class="eval-label">对话质量</div>
+            <div class="eval-desc">MT-Bench 评分</div>
+            <div class="score-bar-wrap"><div class="score-bar" style="width:0%;background:var(--cyan)" data-w="85"></div></div>
+            <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-top:6px">85%</div>
+          </div>
+          <div class="eval-card">
+            <div class="eval-icon">💻</div>
+            <div class="eval-label">代码生成</div>
+            <div class="eval-desc">HumanEval</div>
+            <div class="score-bar-wrap"><div class="score-bar" style="width:0%;background:var(--success)" data-w="71"></div></div>
+            <div style="font-size:14px;font-weight:700;color:var(--success);margin-top:6px">71%</div>
+          </div>
+        </div>
+        <div class="temp-box">
+          <strong>🌡️ 温度系数（T）：</strong>蒸馏时把 logits ÷ T（如 T=4），让概率更"软"更均匀——原来 95%/3%/2% 变成更分散的分布，帮助学生模型学习概念间的相似关系。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const STEPS = [
+  { title: '准备问题库',         desc: '收集覆盖目标领域的大量问题' },
+  { title: '教师模型生成回答',   desc: '旗舰模型回答并保留推理链' },
+  { title: '生成软标签',         desc: '保存每个词的完整概率分布' },
+  { title: '训练学生模型',       desc: '用问题 + 回答 + 软标签联合训练' },
+  { title: '评估与迭代',         desc: '测试集评估，针对薄弱点补数据' },
+];
+
+let si = 0;
+
+function buildList() {
+  const el = document.getElementById('stepList');
+  el.innerHTML = '';
+  STEPS.forEach((s, i) => {
+    el.innerHTML += `<div class="step-item" id="st${i}" style="margin-bottom:8px">
+      <div class="step-num" id="sn${i}">${i + 1}</div>
+      <div class="step-text"><h5>${s.title}</h5><p>${s.desc}</p></div>
+    </div>`;
+  });
+}
+
+function showVis(idx) {
+  // hide all
+  document.getElementById('visDefault').style.display = 'none';
+  document.querySelectorAll('.vis-card').forEach(el => el.classList.remove('show'));
+  document.getElementById('vis' + idx).classList.add('show');
+  // animate score bars and prob bars if present
+  if (idx === 3) {
+    setTimeout(() => {
+      document.querySelectorAll('.prob-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+    }, 100);
+  }
+  if (idx === 5) {
+    setTimeout(() => {
+      document.querySelectorAll('.score-bar').forEach(el => { el.style.width = el.dataset.w + '%'; });
+    }, 100);
+  }
+}
+
+function sdNext() {
+  if (si >= STEPS.length) return;
+  // mark previous done
+  if (si > 0) {
+    const prev = document.getElementById('st' + (si - 1));
+    prev.classList.remove('active'); prev.classList.add('done');
+    document.getElementById('sn' + (si - 1)).textContent = '✓';
+  }
+  // mark current active
+  const cur = document.getElementById('st' + si);
+  cur.classList.add('active');
+  showVis(si + 1);
+  si++;
+  document.getElementById('prog').textContent = `${si} / ${STEPS.length}`;
+  if (si >= STEPS.length) {
+    const last = document.getElementById('st' + (si - 1));
+    last.classList.remove('active'); last.classList.add('done');
+    document.getElementById('sn' + (si - 1)).textContent = '✓';
+    document.getElementById('btnNext').disabled = true;
+  }
+}
+
+function sdReset() {
+  si = 0;
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('prog').textContent = '0 / 5';
+  document.getElementById('visDefault').style.display = 'block';
+  document.querySelectorAll('.vis-card').forEach(el => el.classList.remove('show'));
+  // reset bars
+  document.querySelectorAll('.prob-fill').forEach(el => { el.style.transition = 'none'; el.style.width = '0%'; setTimeout(() => el.style.transition = 'width 0.9s ease', 50); });
+  document.querySelectorAll('.score-bar').forEach(el => { el.style.transition = 'none'; el.style.width = '0%'; setTimeout(() => el.style.transition = 'width 1s ease', 50); });
+  buildList();
+}
+
+buildList();
+</script>
+</body>
+</html>

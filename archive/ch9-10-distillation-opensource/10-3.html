@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>各厂商开源策略解读</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0; --text: #1c1c1e; --sub: #6b7280;
+  --cyan: #0891b2; --success: #16a34a;
+  --danger: #dc2626; --border: rgba(0,0,0,0.07);
+  --orange: #ea580c; --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px; aspect-ratio: 16/9;
+  background: var(--bg); border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 14px 36px; flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.header h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+.header p  { font-size: 13px; color: var(--sub); margin-top: 2px; }
+.btn-next {
+  background: var(--success); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-next:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+.body { flex: 1; display: grid; grid-template-columns: 1.25fr 1fr; gap: 0; overflow: hidden; }
+.panel { padding: 18px 26px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.panel-l { border-right: 1px solid var(--border); }
+.tag { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--success); }
+
+/* 厂商行 */
+.vendor-list { display: flex; flex-direction: column; gap: 7px; }
+.vt-header {
+  display: grid; grid-template-columns: 110px 110px 1fr;
+  padding: 6px 14px; font-size: 12px; font-weight: 700;
+  color: var(--sub); letter-spacing: 0.5px; border-bottom: 1.5px solid var(--border);
+}
+.vt-row {
+  display: grid; grid-template-columns: 110px 110px 1fr;
+  background: white; border-radius: 11px; border: 1.5px solid var(--border);
+  padding: 11px 14px; align-items: center;
+  opacity: 0; transform: translateX(-14px); transition: opacity 0.35s, transform 0.35s;
+}
+.vt-row.show { opacity: 1; transform: translateX(0); }
+.vendor-name { font-size: 15px; font-weight: 700; }
+.co-badge { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.co-badge.full { background: rgba(22,163,74,0.12); color: var(--success); }
+.co-badge.part { background: rgba(234,88,12,0.12); color: var(--orange); }
+.co-badge.fake { background: rgba(220,38,38,0.10); color: var(--danger); }
+.strategy-text { font-size: 13px; color: var(--sub); line-height: 1.55; padding-left: 10px; }
+.src-label { font-size: 11px; color: rgba(0,0,0,0.3); margin-top: 2px; font-style: italic; }
+
+/* 右侧洞见 */
+.insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.insight-card {
+  background: white; border-radius: 12px; border: 1.5px solid var(--border);
+  padding: 14px 16px; opacity: 0; transition: opacity 0.4s;
+}
+.insight-card.show { opacity: 1; }
+.insight-icon { font-size: 22px; margin-bottom: 6px; }
+.insight-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+.insight-text  { font-size: 13px; color: var(--sub); line-height: 1.6; }
+
+.takeaway {
+  background: rgba(22,163,74,0.08); border: 1.5px solid rgba(22,163,74,0.2);
+  border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 1.7;
+  opacity: 0; transition: opacity 0.4s;
+}
+.takeaway.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <h2>各厂商<span style="color:var(--success)">开源策略</span>解读</h2>
+      <p>没有人"善意开源"——背后都有商业逻辑 · 模块十 第 3 页</p>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="nextStep()">下一步 ›</button>
+  </div>
+  <div class="body">
+    <!-- 左侧：厂商表 -->
+    <div class="panel panel-l">
+      <div class="tag">主要厂商开源策略对比（基于公开资料）</div>
+      <div class="vendor-list">
+        <div class="vt-header">
+          <div>厂商</div><div>开源程度</div><div style="padding-left:10px">背后策略（有据可查）</div>
+        </div>
+
+        <div class="vt-row" id="v0">
+          <div>
+            <div class="vendor-name">Meta</div>
+            <div class="src-label">Llama 3 许可证</div>
+          </div>
+          <div><span class="co-badge part">权重开放</span></div>
+          <div class="strategy-text">自身不做 AI 产品 → 无需垄断模型 → 开源打击 OpenAI/Google 生态优势，同时降低自身 AI 基础设施成本（"commoditizing complements"策略）</div>
+        </div>
+
+        <div class="vt-row" id="v1">
+          <div>
+            <div class="vendor-name">谷歌</div>
+            <div class="src-label">Gemma 官方博客</div>
+          </div>
+          <div><span class="co-badge part">部分开源</span></div>
+          <div class="strategy-text">Gemma（小模型）开源收割开发者生态，Gemini Ultra（大模型）闭源通过 API 和 Google Cloud 变现——两手策略</div>
+        </div>
+
+        <div class="vt-row" id="v2">
+          <div>
+            <div class="vendor-name">Mistral</div>
+            <div class="src-label">Apache 2.0 / The Register</div>
+          </div>
+          <div><span class="co-badge full">真开源</span></div>
+          <div class="strategy-text">基础模型 Apache 2.0（权重可商用、可修改），训练数据不公开。通过企业服务合同变现，不靠 API 锁定用户</div>
+        </div>
+
+        <div class="vt-row" id="v3">
+          <div>
+            <div class="vendor-name">阿里云</div>
+            <div class="src-label">Alibaba CEO 公开表态</div>
+          </div>
+          <div><span class="co-badge part">权重开放</span></div>
+          <div class="strategy-text">CEO 明确表态"持续开源"——建立中文 AI 生态标准 → 企业用 Qwen 微调 → 上阿里云 → 云服务变现</div>
+        </div>
+
+        <div class="vt-row" id="v4">
+          <div>
+            <div class="vendor-name">深度求索</div>
+            <div class="src-label">DeepSeek R1 MIT License</div>
+          </div>
+          <div><span class="co-badge full">MIT 开源</span></div>
+          <div class="strategy-text">DeepSeek R1 采用 MIT License，<strong style="color:var(--success)">允许蒸馏和商用</strong>。开源引爆全球关注 → 极低成本获得媒体曝光 → 建立技术权威性</div>
+        </div>
+
+        <div class="vt-row" id="v5">
+          <div>
+            <div class="vendor-name">OpenAI</div>
+            <div class="src-label">公司转型历史</div>
+          </div>
+          <div><span class="co-badge fake">完全闭源</span></div>
+          <div class="strategy-text">从非营利开源转为商业闭源。最强能力 → API 定价权 → 订阅收入。开源 = 竞争对手可复制，与商业模式根本冲突</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：洞见 -->
+    <div class="panel">
+      <div class="tag">PM 视角洞见</div>
+      <div class="insight-grid">
+        <div class="insight-card" id="ic0">
+          <div class="insight-icon">🏆</div>
+          <div class="insight-title">开源的好处</div>
+          <div class="insight-text">开发者生态、技术影响力、全球研究社区贡献、无需 API 管控</div>
+        </div>
+        <div class="insight-card" id="ic1">
+          <div class="insight-icon">💰</div>
+          <div class="insight-title">闭源的好处</div>
+          <div class="insight-text">模型能力护城河、API 定价权、防止对手直接复制最新技术</div>
+        </div>
+        <div class="insight-card" id="ic2">
+          <div class="insight-icon">🧭</div>
+          <div class="insight-title">趋势</div>
+          <div class="insight-text">越来越多厂商采用"小模型开源、大模型闭源"的双轨策略</div>
+        </div>
+        <div class="insight-card" id="ic3">
+          <div class="insight-icon">🎯</div>
+          <div class="insight-title">选型建议</div>
+          <div class="insight-text">优先考虑开源程度高的模型做基础，节省成本；需要最强能力时再接入闭源 API</div>
+        </div>
+      </div>
+      <div class="takeaway" id="takeaway">
+        <strong>♟️ 开源是策略，不是慈善。</strong><br>
+        读懂厂商的开源逻辑，才能做出最适合自己产品的技术选型。不要被"开源"的标签迷惑。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+let step = 0;
+const VENDORS = 6;
+function nextStep() {
+  step++;
+  if (step <= VENDORS) {
+    document.getElementById('v' + (step - 1)).classList.add('show');
+  }
+  if (step === VENDORS + 1) {
+    ['ic0','ic1','ic2','ic3'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('show'), i * 100);
+    });
+  }
+  if (step === VENDORS + 2) {
+    document.getElementById('takeaway').classList.add('show');
+    document.getElementById('btnNext').disabled = true;
+  }
+}
+</script>
+</body>
+</html>

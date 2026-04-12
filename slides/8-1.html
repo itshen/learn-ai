@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>多轮对话为什么越来越贵？</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--orange:#ea580c;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--red);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--red)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+/* 左栏 */
+.left{padding:20px 26px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow:auto}
+.desc{font-size:18px;color:var(--sub);line-height:1.7}
+.cost-table{width:100%;border-collapse:collapse;font-size:16px}
+.cost-table th{background:var(--surface2);padding:7px 12px;text-align:left;font-size:15px;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border)}
+.cost-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.cost-table tr.highlight td{font-weight:700;background:rgba(220,38,38,.04)}
+.cost-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:15px;font-weight:700;background:rgba(220,38,38,.1);color:var(--red)}
+.slider-area{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;flex-shrink:0}
+.slider-label{display:flex;justify-content:space-between;font-size:16px;color:var(--sub);margin-bottom:6px}
+.slider-label span:last-child{font-weight:700;color:var(--red)}
+input[type=range]{width:100%;accent-color:var(--red);height:4px}
+.summary-row{display:flex;gap:8px;margin-top:8px}
+.summary-item{flex:1;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center}
+.summary-item .big{font-size:20px;font-weight:800;color:var(--red)}
+.summary-item .lbl{font-size:14px;color:var(--muted);margin-top:1px}
+.insight-box{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15);border-radius:10px;padding:10px 14px;font-size:17px;color:var(--text);line-height:1.65}
+.insight-box b{color:var(--red)}
+/* 右栏 */
+.right{padding:20px 26px;display:flex;flex-direction:column;gap:12px}
+.vis-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.vis-header{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:16px;font-weight:700;color:var(--muted)}
+.vis-body{padding:12px 14px;flex:1;overflow-y:auto}
+.turn-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;align-items:center;font-size:15px}
+.turn-label{width:52px;flex-shrink:0;font-weight:600;color:var(--muted);font-size:15px}
+.tok-chip{padding:3px 8px;border-radius:5px;font-size:14px;font-weight:600}
+.tok-chip.sys{background:rgba(91,79,207,.1);color:#5b4fcf}
+.tok-chip.hist{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.tok-chip.user{background:rgba(8,145,178,.1);color:#0891b2}
+.tok-chip.total{color:var(--red);font-weight:700;margin-left:4px}
+.tok-chip.cur{background:rgba(220,38,38,.1);color:var(--red)}
+.takeaway{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);display:flex;gap:8px;flex-shrink:0}
+.takeaway b{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 1 页</div>
+      <div class="title">多轮对话为什么<em>越来越贵</em>？</div>
+    </div>
+    <div style="font-size:16px;color:var(--muted)">拖动滑块模拟费用累积 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">LLM 按<strong>输入 Token 数</strong>计费。每一轮对话，都要把所有历史记录重新发给模型——历史越长，Token 越多，费用越高。</p>
+
+      <div class="slider-area">
+        <div class="slider-label">
+          <span>当前是第几轮对话</span>
+          <span id="turnLabel">第 1 轮</span>
+        </div>
+        <input type="range" min="1" max="10" value="1" oninput="updateTurns(this.value)">
+        <div class="summary-row">
+          <div class="summary-item"><div class="big" id="curInput">—</div><div class="lbl">本轮输入 Token</div></div>
+          <div class="summary-item"><div class="big" id="curCost">—</div><div class="lbl">本轮费用</div></div>
+          <div class="summary-item"><div class="big" id="totalCostSum">—</div><div class="lbl">累计总费用</div></div>
+        </div>
+      </div>
+
+      <div style="font-size:16px;font-weight:700;color:var(--muted)">逐轮费用明细</div>
+      <table class="cost-table">
+        <thead><tr><th>轮次</th><th>新增 Token</th><th>本轮输入</th><th>费用</th></tr></thead>
+        <tbody id="costTableBody"></tbody>
+      </table>
+
+      <div class="insight-box">
+        <b>为什么最后几轮这么贵？</b><br>
+        第 10 轮的输入 = System Prompt + 前 9 轮的所有问答 + 本轮问题。每轮都在给模型"重新背诵一遍整个对话历史"。
+      </div>
+    </div>
+
+    <!-- 右栏：Token 可视化 -->
+    <div class="right">
+      <div class="vis-panel">
+        <div class="vis-header">每轮输入构成可视化（绿色 = 当前轮，灰色 = 历史）</div>
+        <div class="vis-body" id="turnRows"></div>
+      </div>
+      <div class="takeaway">
+        <span>📈</span>
+        <span><b>成本随轮次线性增长。</b> 下一步：KV Cache 如何通过"缓存"把重复计算费用降低 70% 以上。</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const SYS = 200, PER_USER = 80, PER_AI = 150;
+const PRICE = 0.004; // ¥ per 1K token
+
+function buildRows(turns) {
+  const rows = [];
+  for (let i = 1; i <= turns; i++) {
+    const input = SYS + (PER_USER + PER_AI) * (i - 1) + PER_USER;
+    const newTok = i === 1 ? SYS + PER_USER : PER_USER + PER_AI;
+    const cost = (input / 1000 * PRICE).toFixed(4);
+    rows.push({ turn: i, new: newTok, input, cost });
+  }
+  return rows;
+}
+
+function updateTurns(v) {
+  const t = parseInt(v);
+  document.getElementById('turnLabel').textContent = `第 ${t} 轮`;
+  const rows = buildRows(t);
+  const last = rows[t - 1];
+  const totalCost = rows.reduce((s, r) => s + parseFloat(r.cost), 0);
+
+  document.getElementById('curInput').textContent = last.input.toLocaleString() + 'T';
+  document.getElementById('curCost').textContent = '¥' + last.cost;
+  document.getElementById('totalCostSum').textContent = '¥' + totalCost.toFixed(3);
+
+  // 表格
+  const tbody = document.getElementById('costTableBody');
+  tbody.innerHTML = rows.map(r => `
+    <tr class="${r.turn === t ? 'highlight' : ''}">
+      <td>第 ${r.turn} 轮</td>
+      <td>${r.new}</td>
+      <td>${r.input.toLocaleString()}</td>
+      <td>${r.turn === t ? `<span class="cost-badge">¥${r.cost}</span>` : '¥' + r.cost}</td>
+    </tr>
+  `).join('') + `<tr class="highlight"><td colspan="3">合计（${t} 轮）</td><td><span class="cost-badge">¥${totalCost.toFixed(3)}</span></td></tr>`;
+
+  // 可视化
+  const vis = document.getElementById('turnRows');
+  vis.innerHTML = rows.map(r => {
+    let chips = `<span class="turn-label">第${r.turn}轮</span>`;
+    if (r.turn === 1) chips += `<span class="tok-chip sys">Sys ${SYS}T</span>`;
+    for (let j = 1; j < r.turn; j++) chips += `<span class="tok-chip hist">历史${j}</span>`;
+    chips += `<span class="tok-chip ${r.turn === t ? 'cur' : 'user'}">问题 ${PER_USER}T</span>`;
+    chips += `<span class="tok-chip total">→ ${r.input.toLocaleString()}T = ¥${r.cost}</span>`;
+    return `<div class="turn-row">${chips}</div>`;
+  }).join('');
+}
+updateTurns(1);
+</script>
+</body>
+</html>

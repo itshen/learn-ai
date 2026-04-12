@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>第一篇章汇总（上）· 大模型基础</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--amber:#d97706;--green:#16a34a;--red:#dc2626;--purple:#7c3aed;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .2s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+
+.hd{padding:16px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:linear-gradient(135deg,rgba(0,102,255,.05) 0%,transparent 100%)}
+.hd-sub{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.5px;margin-bottom:5px}
+.hd-title{font-size:28px;font-weight:900;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--accent)}
+.hd-right{display:flex;gap:10px;align-items:center}
+.pill{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700}
+.pill-blue{background:rgba(0,102,255,.1);color:var(--accent)}
+.pill-muted{background:var(--surface2);color:var(--muted)}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0;overflow:hidden}
+.col{padding:16px 22px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.col:last-child{border-right:none}
+.col-inner{display:flex;flex-direction:column;gap:12px;transform-origin:top left;}
+.col-hd{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.col-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.col-label{font-size:15px;font-weight:800;color:var(--text)}
+.col-desc{font-size:12px;color:var(--muted)}
+
+/* 卡片 */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+.card-tag{font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
+.card-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px;line-height:1.3}
+.card-body{font-size:14px;color:var(--sub);line-height:1.6}
+.card-body strong{color:var(--text)}
+.card-body .hl{color:var(--accent);font-weight:700}
+.formula{margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:7px;font-family:monospace;font-size:13px;color:var(--text);font-weight:700}
+
+/* 幻觉类型 */
+.halluc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.htype{border-radius:9px;padding:10px 12px;border:1.5px solid transparent}
+.htype .ht-name{font-size:14px;font-weight:800;margin-bottom:3px}
+.htype .ht-desc{font-size:12px;line-height:1.45}
+
+/* 根因 */
+.root-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.root-box{border-radius:10px;padding:11px 13px}
+.rb-label{font-size:11px;font-weight:800;letter-spacing:.4px;margin-bottom:5px}
+.rb-title{font-size:14px;font-weight:800;margin-bottom:4px}
+.rb-body{font-size:13px;line-height:1.5}
+
+/* 底部 */
+.footer{padding:10px 40px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--surface)}
+.footer-msg{font-size:14px;color:var(--sub)}
+.footer-msg strong{color:var(--text)}
+.nav-btns{display:flex;gap:10px}
+.btn{padding:9px 22px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--accent);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-sub">第一篇章 · 总结回顾 · 上半页</div>
+      <div class="hd-title"><em>大模型基础</em> · 它是什么，为何会"幻觉"</div>
+    </div>
+    <div class="hd-right">
+      <span class="pill pill-muted">1 / 2</span>
+      <span class="pill pill-blue">第一篇章完结</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：大模型是什么 -->
+    <div class="col" id="col-left">
+      <div class="col-inner" id="inner-left">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(0,102,255,.1)">🧠</div>
+        <div><div class="col-label">一、大模型是什么</div><div class="col-desc">三个必须掌握的底层认知</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--amber)">训练本质</div>
+        <div class="card-title">LLM = 超大型"概率预测机器"</div>
+        <div class="card-body">训练 = 在<strong>海量文本</strong>上反复预测下一个 Token，参数记住的是<strong>统计规律</strong>，不是"理解"。推理时参数冻结，只做条件概率计算。</div>
+        <div class="formula">P( 下一个 Token | 所有已知 Token )</div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--accent)">Token & 上下文窗口</div>
+        <div class="card-title">Token ≠ 字 · Context Window 是"桌面"</div>
+        <div class="card-body">中文每字约 1-2 Token，英文每词约 1 Token。<span class="hl">Context Window</span> 决定模型能"看到"多少——超出就截断，永久消失。<br><br>当前主流窗口：Qwen 3.6（1M）、Kimi K2.5（200K）、Claude 4.6（200K）、GPT-5.4（128K）</div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--purple)">演进路径</div>
+        <div class="card-title">Base → SFT → Chat 三阶段</div>
+        <div class="card-body">Base Model（续写文字）→ SFT 指令微调（学会对话格式）→ Chat API（模拟多轮对话）。<br><br>你每次调用 API，本质是在<strong>构造一个精心设计的 Message List</strong>，让模型"续写"出你想要的内容。</div>
+        <div class="formula">[system] + [user/assistant …] + [user_now]</div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+
+    <!-- 右栏：幻觉 -->
+    <div class="col" id="col-right">
+      <div class="col-inner" id="inner-right">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(220,38,38,.1)">👻</div>
+        <div><div class="col-label">二、幻觉：LLM 的先天局限</div><div class="col-desc">不可消除，只能缓解</div></div>
+      </div>
+
+      <div class="halluc-grid">
+        <div class="htype" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="ht-name" style="color:var(--red)">事实性幻觉</div>
+          <div class="ht-desc" style="color:var(--sub)">捏造不存在的事实、数据、引用</div>
+        </div>
+        <div class="htype" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="ht-name" style="color:var(--red)">来源幻觉</div>
+          <div class="ht-desc" style="color:var(--sub)">引用了不存在的论文/链接/作者</div>
+        </div>
+        <div class="htype" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="ht-name" style="color:var(--red)">推理幻觉</div>
+          <div class="ht-desc" style="color:var(--sub)">前提正确但推理步骤出错</div>
+        </div>
+        <div class="htype" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="ht-name" style="color:var(--red)">代码幻觉</div>
+          <div class="ht-desc" style="color:var(--sub)">调用不存在的 API / 函数</div>
+        </div>
+      </div>
+
+      <div class="root-row">
+        <div class="root-box" style="background:rgba(215,119,6,.07);border:1px solid rgba(215,119,6,.2)">
+          <div class="rb-label" style="color:var(--amber)">根因一</div>
+          <div class="rb-title" style="color:var(--text)">参数知识有误</div>
+          <div class="rb-body" style="color:var(--sub)">训练数据里本来就有错误信息；知识截止日期后的内容一无所知。</div>
+        </div>
+        <div class="root-box" style="background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2)">
+          <div class="rb-label" style="color:var(--purple)">根因二</div>
+          <div class="rb-title" style="color:var(--text)">上下文理解偏差</div>
+          <div class="rb-body" style="color:var(--sub)">Prompt 不清晰，模型"猜"意图；上下文矛盾时选择"最可能"而非"最准确"的续写。</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,102,255,.05);border:1px solid rgba(0,102,255,.15);border-radius:14px;padding:16px 18px;flex-shrink:0">
+        <div style="font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.5px;margin-bottom:8px">关键认知</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:15px;color:var(--text);line-height:1.55">→ 幻觉<strong>不可完全消除</strong>，因为它是"概率预测"的必然产物</div>
+          <div style="font-size:15px;color:var(--text);line-height:1.55">→ PreTraining 后参数<strong>冻结</strong>，无法自动更新知识，这是幻觉的根本原因</div>
+          <div style="font-size:15px;color:var(--text);line-height:1.55">→ 正确做法：用工程手段<strong>缓解</strong>，而非指望模型"更聪明"后消失</div>
+        </div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-msg">第一篇章汇总 · 上半页 · <strong>下一页：缓解策略 + AI PM 认知框架</strong></div>
+    <div class="nav-btns">
+      <button class="btn btn-s" onclick="location.href='llm-story.html'">返回目录</button>
+      <button class="btn btn-p" onclick="location.href='summary-1b.html'">下一页：缓解策略 →</button>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+function fitCol(colId, innerId) {
+  const col = document.getElementById(colId);
+  const inner = document.getElementById(innerId);
+  if (!col || !inner) return;
+  inner.style.transform = '';
+  inner.style.width = '';
+  const availH = col.clientHeight;
+  const contentH = inner.scrollHeight;
+  if (contentH > availH) {
+    const scale = availH / contentH;
+    inner.style.transform = `scale(${scale})`;
+    inner.style.width = (100 / scale) + '%';
+  }
+}
+function fitAll() {
+  fitCol('col-left', 'inner-left');
+  fitCol('col-right', 'inner-right');
+}
+window.addEventListener('load', fitAll);
+window.addEventListener('resize', fitAll);
+</script>
+</body>
+</html>

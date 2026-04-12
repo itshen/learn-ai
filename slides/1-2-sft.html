@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Chat Template + SFT · 从补全到真正会说话</title>
+<script src="../global-attn.js"></script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --amber: #d97706;
+  --success: #16a34a;
+  --danger: #e53e3e;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+.header {
+  padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  background-color: var(--bg-color);
+}
+.title-area h2 { font-size: 22px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; filter: none; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left-panel {
+  width: 38%; padding: 28px 32px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto;
+}
+.step-label {
+  font-size: 11px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.big-claim { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1.5; }
+.em { color: var(--accent); }
+.em-g { color: var(--success); }
+.desc-text { font-size: 15px; color: var(--text-sub); line-height: 1.8; }
+
+.flow-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  opacity: 0; transform: translateY(6px);
+  transition: all 0.4s ease;
+}
+.flow-step.show { opacity: 1; transform: translateY(0); }
+.flow-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+  background: rgba(0,102,255,0.1); color: var(--accent);
+  border: 1px solid rgba(0,102,255,0.2);
+}
+.flow-content { flex: 1; }
+.flow-title { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 3px; }
+.flow-desc { font-size: 13px; color: var(--text-sub); line-height: 1.65; }
+
+.result-badge {
+  border-radius: 12px; padding: 14px 16px; text-align: center;
+  font-size: 17px; font-weight: 800;
+  opacity: 0; transition: opacity 0.5s;
+}
+.result-badge.show { opacity: 1; }
+.result-badge.green { background: rgba(22,163,74,0.08); color: var(--success); border: 1px solid rgba(22,163,74,0.2); }
+
+/* ── Right ── */
+.right-panel {
+  flex: 1; padding: 28px 36px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+.tabs {
+  display: flex; gap: 6px;
+}
+.tab-btn {
+  padding: 7px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  border: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer; background: white; color: var(--text-sub);
+  transition: all 0.15s;
+}
+.tab-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+.tab-pane { display: none; flex: 1; flex-direction: column; gap: 14px; }
+.tab-pane.active { display: flex; }
+
+/* Chat Template 展示 */
+.template-box {
+  background: white; border-radius: 12px; padding: 20px 24px;
+  border: 1px solid rgba(0,0,0,0.07);
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 13px; line-height: 2;
+  flex: 1;
+  overflow-x: auto;
+}
+.tk-im-start { color: var(--amber); font-weight: 700; }
+.tk-role-system { color: var(--purple); font-weight: 700; }
+.tk-role-user { color: var(--accent); font-weight: 700; }
+.tk-role-ai { color: var(--success); font-weight: 700; }
+.tk-im-end { color: var(--amber); font-weight: 700; }
+.tk-plain { color: var(--text-main); }
+.tk-note {
+  display: inline-block; margin-left: 12px;
+  font-size: 11px; color: var(--text-sub);
+  font-family: -apple-system, sans-serif;
+  font-weight: 600;
+}
+.template-row {
+  opacity: 0; transform: translateY(4px);
+  transition: all 0.35s ease;
+  display: block;
+}
+.template-row.show { opacity: 1; transform: translateY(0); }
+
+/* SFT 对比 */
+.compare-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1;
+}
+.compare-col {
+  border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.compare-col.before { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); }
+.compare-col.after { background: rgba(22,163,74,0.04); border: 1px solid rgba(22,163,74,0.15); }
+.col-label { font-size: 12px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.3px; }
+.chat-bubble {
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; line-height: 1.65;
+}
+.bubble-user { background: rgba(0,102,255,0.08); color: var(--accent); font-weight: 600; }
+.bubble-ai-bad { background: rgba(229,62,62,0.07); color: #7f1d1d; }
+.bubble-ai-good { background: rgba(22,163,74,0.08); color: #14532d; font-weight: 600; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+
+  <div class="header">
+    <div class="title-area">
+      <h2>Chat Template + SFT：大模型终于学会「说话」</h2>
+      <p>从补全机器到对话助手，差的就是这套训练范式</p>
+    </div>
+    <button class="btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="main-area">
+
+    <!-- Left -->
+    <div class="left-panel">
+      <div>
+        <div class="step-label">从补全到对话的演进</div>
+        <div class="big-claim">
+          OpenAI 约定好一套格式，<br>
+          然后<span class="em">专门针对这套格式</span><br>
+          再训练模型——<br>
+          <span class="em-g">大模型就真的会说话了</span>
+        </div>
+      </div>
+
+      <div class="flow-step" id="fs1">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <div class="flow-title">统一对话格式（Chat Template）</div>
+          <div class="flow-desc">借鉴 Jinja 模板语言，定义 special token：&lt;|im_start|&gt; / &lt;|im_end|&gt; 包裹每条消息</div>
+        </div>
+      </div>
+
+      <div class="flow-step" id="fs2">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <div class="flow-title">按格式组装所有消息</div>
+          <div class="flow-desc">system / user / assistant 三种角色，拼成一段没有换行的文本，送给模型</div>
+        </div>
+      </div>
+
+      <div class="flow-step" id="fs3">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <div class="flow-title">SFT（指令微调）</div>
+          <div class="flow-desc">用海量「格式化对话数据」继续训练模型——模型学会了在这套格式下做助理，而不只是续写文本</div>
+        </div>
+      </div>
+
+      <div class="flow-step" id="fs4">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <div class="flow-title">大力出奇迹（Scale Up）</div>
+          <div class="flow-desc">模型越来越大，训练数据越来越多——GPT-3 → ChatGPT → GPT-4，效果指数级提升</div>
+        </div>
+      </div>
+
+      <div class="result-badge green" id="resultBadge">
+        这一刻，「补全机器」进化成了「对话助手」
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="right-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="section-title">Chat Template 与 SFT 对比</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="setTab('template')">Chat Template</button>
+          <button class="tab-btn" onclick="setTab('compare')">SFT 前后对比</button>
+        </div>
+      </div>
+
+      <!-- Tab: Chat Template -->
+      <div class="tab-pane active" id="tabTemplate">
+        <div class="template-box">
+          <span class="template-row show" id="tr0">
+            <span class="tk-im-start">&lt;|im_start|&gt;</span><span class="tk-role-system">system</span><span class="tk-note">← 系统提示词角色标记</span>
+          </span>
+          <span class="template-row" id="tr1">
+            <span class="tk-plain">你是一个有帮助的 AI 助手。</span><span class="tk-note">← System Prompt 内容</span>
+          </span>
+          <span class="template-row" id="tr2">
+            <span class="tk-im-end">&lt;|im_end|&gt;</span><span class="tk-note">← 结束标记</span>
+          </span>
+          <br>
+          <span class="template-row" id="tr3">
+            <span class="tk-im-start">&lt;|im_start|&gt;</span><span class="tk-role-user">user</span><span class="tk-note">← 用户消息开始</span>
+          </span>
+          <span class="template-row" id="tr4">
+            <span class="tk-plain">紫霞仙子是谁？</span>
+          </span>
+          <span class="template-row" id="tr5">
+            <span class="tk-im-end">&lt;|im_end|&gt;</span>
+          </span>
+          <br>
+          <span class="template-row" id="tr6">
+            <span class="tk-im-start">&lt;|im_start|&gt;</span><span class="tk-role-ai">assistant</span><span class="tk-note">← 模型从这里开始补全</span>
+          </span>
+          <span class="template-row" id="tr7">
+            <span style="color:#d1d5db;font-style:italic;">（模型补全区域）</span><span class="tk-note" style="color:var(--success);">← SFT 训练模型如何在此处输出</span>
+          </span>
+          <span class="template-row" id="tr8">
+            <span class="tk-im-end">&lt;|im_end|&gt;</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Tab: SFT 对比 -->
+      <div class="tab-pane" id="tabCompare">
+        <div class="compare-grid">
+          <div class="compare-col before">
+            <div class="col-label">SFT 之前（Base 模型）</div>
+            <div class="chat-bubble bubble-user">用户：紫霞仙子是谁？</div>
+            <div class="chat-bubble bubble-ai-bad">
+              紫霞仙子是哥哥，哥哥你喜欢我，你说你喜欢我……<br>
+              <span style="font-size:12px;color:#9b1c1c;margin-top:4px;display:block;">（继续按语料风格续写，完全不像在回答问题）</span>
+            </div>
+          </div>
+          <div class="compare-col after">
+            <div class="col-label">SFT 之后（Chat 模型）</div>
+            <div class="chat-bubble bubble-user">用户：紫霞仙子是谁？</div>
+            <div class="chat-bubble bubble-ai-good">
+              紫霞仙子是电影《大话西游》中的人物，由朱茵饰演。她是至尊宝命中注定的爱人，为了他付出了一切。<br>
+              <span style="font-size:12px;color:#15803d;margin-top:4px;display:block;">（懂得什么是回答，以助理身份作答）</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:14px 18px;">
+          <div style="font-size:14px;color:var(--text-main);line-height:1.8;">
+            SFT（Supervised Fine-Tuning）本质上还是 Token 预测——只是训练数据换成了<strong>「格式化对话 + 高质量回答」</strong>。<br>
+            模型学会了在 &lt;|im_start|&gt;assistant 之后，输出像样的回答而不是续写语料。
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let step = 0;
+const TEMPLATE_ROWS = ['tr1','tr2','tr3','tr4','tr5','tr6','tr7','tr8'];
+let trIdx = 0;
+let trTimer = null;
+
+function setTab(t) {
+  ['template','compare'].forEach(id => {
+    document.getElementById('tab' + id[0].toUpperCase() + id.slice(1)).classList.toggle('active', id === t);
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['template','compare'][i] === t);
+  });
+}
+
+function nextStep() {
+  step++;
+  const btn = document.getElementById('nextBtn');
+
+  if (step === 1) {
+    document.getElementById('fs1').classList.add('show');
+    // 开始逐行显示 template
+    btn.disabled = true;
+    trTimer = setInterval(() => {
+      if (trIdx >= TEMPLATE_ROWS.length) {
+        clearInterval(trTimer);
+        btn.disabled = false;
+        return;
+      }
+      document.getElementById(TEMPLATE_ROWS[trIdx]).classList.add('show');
+      trIdx++;
+    }, 220);
+  }
+  else if (step === 2) {
+    document.getElementById('fs2').classList.add('show');
+  }
+  else if (step === 3) {
+    document.getElementById('fs3').classList.add('show');
+    setTab('compare');
+  }
+  else if (step === 4) {
+    document.getElementById('fs4').classList.add('show');
+    document.getElementById('resultBadge').classList.add('show');
+    btn.textContent = '完成';
+    btn.onclick = null;
+  }
+}
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>第二篇章汇总（上）· AI 工程化</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--amber:#d97706;--green:#16a34a;--red:#dc2626;--purple:#7c3aed;--cyan:#0891b2;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .2s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+
+.hd{padding:16px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:linear-gradient(135deg,rgba(234,88,12,.05) 0%,transparent 100%)}
+.hd-sub{font-size:13px;font-weight:800;color:var(--orange);letter-spacing:.5px;margin-bottom:5px}
+.hd-title{font-size:28px;font-weight:900;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.hd-right{display:flex;gap:10px;align-items:center}
+.pill{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700}
+.pill-orange{background:rgba(234,88,12,.1);color:var(--orange)}
+.pill-muted{background:var(--surface2);color:var(--muted)}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0;overflow:hidden}
+.col{padding:16px 22px;display:flex;flex-direction:column;gap:10px;overflow:hidden;border-right:1px solid var(--border)}
+.col:last-child{border-right:none}
+/* 用 zoom 等比缩放使内容自适应高度 */
+.col-inner{display:flex;flex-direction:column;gap:10px;transform-origin:top left;/* zoom via JS */}
+.col-hd{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.col-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.col-label{font-size:15px;font-weight:800;color:var(--text)}
+.col-desc{font-size:12px;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+.card-tag{font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
+.card-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px;line-height:1.3}
+.card-body{font-size:14px;color:var(--sub);line-height:1.6}
+.card-body strong{color:var(--text)}
+.card-body .hl{font-weight:700}
+
+/* 策略行 */
+.strat-row{display:flex;flex-direction:column;gap:5px}
+.sr{display:flex;gap:8px;align-items:flex-start;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.45}
+.sr-tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;min-width:66px;text-align:center;flex-shrink:0;margin-top:1px}
+.sr-body{color:var(--sub)}
+.sr-body strong{color:var(--text)}
+
+/* 工具链路 */
+.chain{display:flex;flex-direction:column;gap:4px}
+.ch-row{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;font-size:13px}
+.ch-num{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;background:var(--surface2);color:var(--muted)}
+.ch-body{color:var(--sub);line-height:1.4}
+.ch-body strong{color:var(--text)}
+
+/* Agent 能力格 */
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ab-box{border-radius:9px;padding:10px 12px;border:1.5px solid transparent}
+.ab-name{font-size:14px;font-weight:800;margin-bottom:3px}
+.ab-body{font-size:12px;color:var(--sub);line-height:1.45}
+
+.footer{padding:10px 40px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--surface)}
+.footer-msg{font-size:14px;color:var(--sub)}
+.footer-msg strong{color:var(--text)}
+.nav-btns{display:flex;gap:10px}
+.btn{padding:9px 22px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--orange);color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-sub">第二篇章 · 总结回顾 · 上半页</div>
+      <div class="hd-title"><em>AI 工程化</em> · Prompt 工程 + Agent 设计</div>
+    </div>
+    <div class="hd-right">
+      <span class="pill pill-muted">1 / 2</span>
+      <span class="pill pill-orange">第二篇章</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：上下文 + Prompt -->
+    <div class="col" id="col-left">
+      <div class="col-inner" id="inner-left">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(8,145,178,.1)">📐</div>
+        <div><div class="col-label">一、上下文 & Prompt 工程</div><div class="col-desc">设计 Message List 的核心技能</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--cyan)">上下文溢出三策略</div>
+        <div class="card-title">桌面有限，精心管理</div>
+        <div class="strat-row" style="margin-top:4px">
+          <div class="sr" style="background:rgba(220,38,38,.05)">
+            <span class="sr-tag" style="background:rgba(220,38,38,.1);color:var(--red)">截断</span>
+            <span class="sr-body">简单，但早期信息<strong>永久丢失</strong>，适合短对话工具</span>
+          </div>
+          <div class="sr" style="background:rgba(215,119,6,.05)">
+            <span class="sr-tag" style="background:rgba(215,119,6,.1);color:var(--amber)">摘要压缩</span>
+            <span class="sr-body">平衡之选，需额外 LLM 调用，适合长期对话</span>
+          </div>
+          <div class="sr" style="background:rgba(8,145,178,.05)">
+            <span class="sr-tag" style="background:rgba(8,145,178,.1);color:var(--cyan)">语义检索</span>
+            <span class="sr-body">最精准，需向量系统，Token 消耗最优</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--purple)">Prompt 六要素 + 四进阶技巧</div>
+        <div class="card-title">把 Prompt 当代码写</div>
+        <div class="card-body">
+          <strong>六要素：</strong>角色 + 任务 + 上下文 + 约束 + 示例 + 格式<br><br>
+          <strong>四进阶：</strong>Few-Shot（示例学格式）、Chain of Thought（逐步推理）、Constraints（字数/语气/禁用词）、Task Decomposition（拆步骤）
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--orange)">输出格式取舍原则</div>
+        <div class="card-title">根据场景选格式</div>
+        <div class="card-body">
+          流式展示用户侧 → <span class="hl" style="color:var(--purple)">XML / 纯文本</span>（可增量解析）<br>
+          后端程序消费 → <span class="hl" style="color:var(--amber)">YAML / JSON</span>（YAML 省 15-30% Token）<br>
+          文档/富文本展示 → <span class="hl" style="color:var(--green)">Markdown</span>（渲染友好）
+        </div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+
+    <!-- 右栏：Agent 工程 -->
+    <div class="col" id="col-right">
+      <div class="col-inner" id="inner-right">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(234,88,12,.1)">🤖</div>
+        <div><div class="col-label">二、Agent 工程</div><div class="col-desc">让 AI 从"说"到"做"</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--orange)">Agent 四大核心能力</div>
+        <div class="ab-grid" style="margin-top:4px">
+          <div class="ab-box" style="background:rgba(234,88,12,.05);border-color:rgba(234,88,12,.2)">
+            <div class="ab-name" style="color:var(--orange)">🧭 Plan 规划</div>
+            <div class="ab-body">把复杂任务拆解为可执行步骤</div>
+          </div>
+          <div class="ab-box" style="background:rgba(8,145,178,.05);border-color:rgba(8,145,178,.2)">
+            <div class="ab-name" style="color:var(--cyan)">🔧 Tool Use</div>
+            <div class="ab-body">调用搜索、代码执行、数据库、API</div>
+          </div>
+          <div class="ab-box" style="background:rgba(22,163,74,.05);border-color:rgba(22,163,74,.2)">
+            <div class="ab-name" style="color:var(--green)">🗃️ Memory 记忆</div>
+            <div class="ab-body">短期上下文 + 长期向量数据库</div>
+          </div>
+          <div class="ab-box" style="background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.2)">
+            <div class="ab-name" style="color:var(--purple)">🔄 Act / Reflect</div>
+            <div class="ab-body">执行后观察，失败则自我纠错</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--cyan)">工具调用的真相</div>
+        <div class="card-title">模型只是输出了格式化文字</div>
+        <div class="chain">
+          <div class="ch-row" style="background:rgba(8,145,178,.05)">
+            <div class="ch-num" style="background:rgba(8,145,178,.15);color:var(--cyan)">1</div>
+            <div class="ch-body">System Prompt 预定义工具列表，告知模型可用工具</div>
+          </div>
+          <div class="ch-row" style="background:rgba(8,145,178,.05)">
+            <div class="ch-num" style="background:rgba(8,145,178,.15);color:var(--cyan)">2</div>
+            <div class="ch-body">模型<strong>预测出</strong>一段 JSON 文字（不是真调用）</div>
+          </div>
+          <div class="ch-row" style="background:rgba(8,145,178,.05)">
+            <div class="ch-num" style="background:rgba(8,145,178,.15);color:var(--cyan)">3</div>
+            <div class="ch-body"><strong>框架代码</strong>解析 JSON → 真正调用 API → 结果注回上下文</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag" style="color:var(--purple)">Skill + 脚手架</div>
+        <div class="card-title">让 Agent 可靠运行</div>
+        <div class="card-body">
+          <strong>Skill</strong> = 流程说明 + 工具调用指引，让 ReAct 循环尽可能短且高效<br><br>
+          <strong>脚手架</strong> = 超时/重试 + 最大步数限制 + 输入输出验证 + 状态机 + 可观测性（日志）。<br>没有脚手架的 Agent 在生产环境不可靠。
+        </div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-msg">第二篇章汇总 · 上半页 · <strong>下一页：成本优化 + AI PM 综合认知</strong></div>
+    <div class="nav-btns">
+      <button class="btn btn-s" onclick="location.href='llm-story.html'">返回目录</button>
+      <button class="btn btn-p" onclick="location.href='summary-2b.html'">下一页：成本优化 →</button>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+function fitCol(colId, innerId) {
+  const col = document.getElementById(colId);
+  const inner = document.getElementById(innerId);
+  if (!col || !inner) return;
+  inner.style.transform = '';
+  const availH = col.clientHeight;
+  const contentH = inner.scrollHeight;
+  if (contentH > availH) {
+    const scale = availH / contentH;
+    inner.style.transform = `scale(${scale})`;
+    inner.style.width = (100 / scale) + '%';
+  }
+}
+function fitAll() {
+  fitCol('col-left', 'inner-left');
+  fitCol('col-right', 'inner-right');
+}
+window.addEventListener('load', fitAll);
+window.addEventListener('resize', fitAll);
+</script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>显式缓存：一行代码保证命中</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93;--purple:#5b4fcf;--orange:#ea580c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:13px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:14px;font-weight:800;color:var(--orange)}
+.title{font-size:25px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--green)}
+.body{flex:1;display:grid;grid-template-columns:420px 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:18px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+
+.problem-card{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.2);border-radius:12px;padding:13px 16px}
+.problem-card h4{font-size:15px;font-weight:800;color:var(--red);margin-bottom:8px}
+.node{width:62px;height:40px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;transition:all .5s}
+.node.has-cache{background:rgba(22,163,74,.12);border:1.5px solid rgba(22,163,74,.3);color:var(--green)}
+.node.no-cache{background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.2);color:var(--red)}
+.node.active{box-shadow:0 0 0 3px rgba(0,102,255,.4);transform:scale(1.08)}
+.lb{padding:5px 8px;background:rgba(91,79,207,.1);border-radius:7px;font-size:11px;font-weight:800;color:var(--purple);text-align:center;flex-shrink:0;white-space:nowrap}
+.arrow{font-size:16px;color:var(--muted);flex-shrink:0}
+.nodes-row{display:flex;gap:4px;flex-shrink:0}
+.problem-card p{font-size:13px;color:var(--sub);line-height:1.6}
+.problem-card p b{color:var(--text)}
+
+.solution-card{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.2);border-radius:12px;padding:13px 16px;flex-shrink:0}
+.solution-card h4{font-size:15px;font-weight:800;color:var(--green);margin-bottom:6px}
+.solution-card p{font-size:14px;color:var(--sub);line-height:1.65}
+.solution-card p b{color:var(--text)}
+.solution-card code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px;font-family:monospace;color:var(--purple)}
+
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
+.cmp-card{border-radius:10px;padding:10px 12px}
+.cmp-card.bad{background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.18)}
+.cmp-card.good{background:rgba(22,163,74,.04);border:1px solid rgba(22,163,74,.18)}
+.cmp-card h5{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.cmp-card.bad h5{color:var(--red)}
+.cmp-card.good h5{color:var(--green)}
+.cmp-card p{font-size:12.5px;color:var(--sub);line-height:1.55}
+.cmp-card p b{color:var(--text)}
+.cmp-card code{background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:11px;font-family:monospace}
+
+/* ── 右栏 ── */
+.right{padding:16px 22px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+
+/* 平台切换 */
+.platform-tabs{display:flex;gap:6px;flex-shrink:0}
+.ptab{padding:5px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s}
+.ptab:hover{border-color:rgba(0,102,255,.3)}
+.ptab.active{border-color:var(--accent);background:rgba(0,102,255,.06);color:var(--accent)}
+
+/* 代码块 */
+.code-panel{background:#1e1b2e;border-radius:12px;padding:14px 16px;flex-shrink:0;position:relative;overflow:hidden}
+.code-panel pre{font-family:'Cascadia Code','Fira Code','SF Mono',Menlo,monospace;font-size:13px;line-height:1.85;color:#cdd6f4;white-space:pre;overflow-x:auto;margin:0}
+.code-panel .c{color:#6c7086;font-style:italic}
+.code-panel .s{color:#a6e3a1}
+.code-panel .k{color:#cba6f7}
+.code-panel .n{color:#89dceb}
+.code-panel .hl{background:rgba(203,166,247,.15);border-left:3px solid #cba6f7;display:block;margin:0 -16px;padding:1px 16px 1px 13px;}
+.copy-btn{position:absolute;top:10px;right:12px;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#89b4fa;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.copy-btn:hover{background:rgba(255,255,255,.12)}
+
+/* 参数说明 */
+.params-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}
+.param-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center}
+.param-box .pv{font-size:18px;font-weight:900;color:var(--accent)}
+.param-box .pk{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+.param-box .pd{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.4}
+
+/* 模拟命中演示 */
+.sim-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.sim-title{font-size:14px;font-weight:800;color:var(--text);flex-shrink:0}
+.sim-body{flex:1;display:flex;gap:12px;overflow:hidden}
+.sim-col{flex:1;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.sim-col-head{font-size:12px;font-weight:800;text-align:center;padding:4px 8px;border-radius:6px;flex-shrink:0}
+.sim-col-head.bad{background:rgba(220,38,38,.1);color:var(--red)}
+.sim-col-head.good{background:rgba(22,163,74,.1);color:var(--green)}
+.req-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.req-item{padding:6px 10px;border-radius:7px;font-size:12.5px;line-height:1.5;flex-shrink:0;transition:all .3s}
+.req-item.miss{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.18);color:var(--text)}
+.req-item.hit{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.18);color:var(--text)}
+.sim-stats{display:flex;gap:8px;flex-shrink:0}
+.sim-stat{flex:1;text-align:center;padding:6px;background:var(--surface2);border-radius:8px}
+.sim-stat .ssv{font-size:18px;font-weight:900}
+.sim-stat .ssl{font-size:11px;color:var(--muted);font-weight:700}
+.sim-btn-row{display:flex;gap:8px;flex-shrink:0}
+.sim-btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.sim-btn.primary{background:var(--accent);color:white}
+.sim-btn.reset{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+
+.takeaway{background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.18);border-radius:9px;padding:9px 14px;font-size:14px;color:var(--text);flex-shrink:0;line-height:1.55}
+.takeaway b{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 3 页</div>
+      <div class="title">显式缓存：<em>一行代码，保证命中</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">生产环境必须用显式缓存 · 隐式缓存在分布式架构下不可靠</div>
+  </div>
+  <div class="body">
+
+    <!-- ── 左栏 ── -->
+    <div class="left">
+
+      <!-- 问题：分布式路由 -->
+      <div class="problem-card">
+        <h4>⚠️ 隐式缓存为什么在生产环境不可靠？</h4>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="lb">你的请求</div>
+            <div class="arrow">→</div>
+            <div class="lb">负载均衡</div>
+            <div class="arrow">→</div>
+            <span style="font-size:11px;color:var(--muted)">随机路由到其中一个节点：</span>
+          </div>
+          <div style="display:flex;gap:6px;padding-left:4px">
+            <div class="node has-cache" id="nodeA">节点A<br>有缓存</div>
+            <div class="node no-cache" id="nodeB">节点B<br>无缓存</div>
+            <div class="node no-cache" id="nodeC">节点C<br>无缓存</div>
+          </div>
+        </div>
+        <p>云端 LLM 跑在<b>多台 GPU 节点</b>上，每次请求随机路由。节点 A 有你的缓存，节点 B/C 没有——命中纯靠运气，<b>实际命中率 &lt;30%</b>。</p>
+      </div>
+
+      <!-- 解决方案 -->
+      <div class="solution-card">
+        <h4>✅ 显式缓存：主动标记锚点</h4>
+        <p>在 API 请求里加一行 <code>cache_control</code>，平台<b>保证把请求路由到有缓存的节点</b>。不依赖随机路由，命中率接近 <b>100%</b>。</p>
+      </div>
+
+      <!-- 对比 -->
+      <div class="compare-grid">
+        <div class="cmp-card bad">
+          <h5>隐式缓存（自动）</h5>
+          <p>无需改代码<br>不保证命中<br>折扣：标准价 <b>20%</b><br>分布式下 MISS 率高</p>
+        </div>
+        <div class="cmp-card good">
+          <h5>显式缓存（推荐）</h5>
+          <p>加一行 <code>cache_control</code><br>平台保证路由命中<br>折扣：标准价 <b>10%</b><br>省 <b>90%</b> 输入成本</p>
+        </div>
+      </div>
+
+      <!-- 分布式动画按钮 -->
+      <button onclick="runDistSim()" style="padding:7px 16px;border-radius:8px;background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.25);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">
+        模拟分布式路由 →
+      </button>
+    </div>
+
+    <!-- ── 右栏 ── -->
+    <div class="right">
+
+      <!-- 平台切换 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <div class="platform-tabs">
+          <button class="ptab active" onclick="switchPlatform('claude')">Anthropic Claude</button>
+          <button class="ptab" onclick="switchPlatform('qwen')">阿里云 Qwen</button>
+          <button class="ptab" onclick="switchPlatform('openai')">OpenAI</button>
+        </div>
+        <button class="sim-btn primary" id="btnSim" onclick="runHitSim()" style="padding:5px 14px;font-size:13px">▶ 模拟命中对比</button>
+      </div>
+
+      <!-- 代码块 -->
+      <div class="code-panel" id="codePanel">
+        <button class="copy-btn" onclick="copyCode()">复制</button>
+        <div id="codeContent"></div>
+      </div>
+
+      <!-- 参数说明 -->
+      <div class="params-grid" id="paramsGrid"></div>
+
+      <!-- 命中模拟 -->
+      <div class="sim-area">
+        <div class="sim-title">模拟 10 次请求：隐式 vs 显式缓存命中对比</div>
+        <div class="sim-body">
+          <div class="sim-col">
+            <div class="sim-col-head bad">隐式缓存（随机路由）</div>
+            <div class="req-log" id="implicitLog"></div>
+          </div>
+          <div class="sim-col">
+            <div class="sim-col-head good">显式缓存（保证路由）</div>
+            <div class="req-log" id="explicitLog"></div>
+          </div>
+        </div>
+        <div class="sim-stats">
+          <div class="sim-stat"><div class="ssv" id="implicitHits" style="color:var(--red)">—</div><div class="ssl">隐式命中次数</div></div>
+          <div class="sim-stat"><div class="ssv" id="explicitHits" style="color:var(--green)">—</div><div class="ssl">显式命中次数</div></div>
+          <div class="sim-stat"><div class="ssv" id="costSaved" style="color:var(--accent)">—</div><div class="ssl">显式节省成本</div></div>
+        </div>
+      </div>
+
+      <div class="takeaway"><b>工程结论：</b>生产环境必须用显式缓存。把省钱的希望寄托在随机路由上，相当于靠运气省钱——不可靠，也不专业。</div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// ── 平台代码 ──
+const PLATFORMS = {
+  claude: {
+    params: [
+      { v: '×1.25', k: '写入成本', d: '首次缓存时的额外费用' },
+      { v: '×0.1',  k: '命中成本', d: '命中后省 90% 输入费用' },
+      { v: '5 分钟', k: '有效期', d: '命中后自动续期' },
+    ],
+    code: `<span class="c"># Anthropic Python SDK</span>
+response = client.messages.create(
+  model=<span class="s">"claude-sonnet-4-6"</span>,
+  system=[{
+    <span class="n">"type"</span>: <span class="s">"text"</span>,
+    <span class="n">"text"</span>: long_system_prompt,
+<span class="hl">    <span class="k">"cache_control"</span>: {<span class="n">"type"</span>: <span class="s">"ephemeral"</span>}  <span class="c"># ← 显式锚点</span>
+</span>  }],
+  messages=conversation_history
+)
+
+<span class="c"># 检查命中（response.usage）</span>
+print(response.usage.cache_read_input_tokens)   <span class="c"># > 0 = 命中</span>
+print(response.usage.cache_creation_input_tokens) <span class="c"># > 0 = 写入</span>`
+  },
+  qwen: {
+    params: [
+      { v: '×1.25', k: '写入成本', d: '首次缓存时的额外费用' },
+      { v: '×0.1',  k: '命中成本', d: '命中后省 90% 输入费用' },
+      { v: '1024T', k: '最低门槛', d: '至少 1024 Token 才可缓存' },
+    ],
+    code: `<span class="c"># DashScope / OpenAI 兼容接口</span>
+messages = [{
+  <span class="n">"role"</span>: <span class="s">"system"</span>,
+  <span class="n">"content"</span>: [{
+    <span class="n">"type"</span>: <span class="s">"text"</span>,
+    <span class="n">"text"</span>: long_system_prompt,
+<span class="hl">    <span class="k">"cache_control"</span>: {<span class="n">"type"</span>: <span class="s">"ephemeral"</span>}  <span class="c"># ← 显式锚点</span>
+</span>  }]
+}]
+client.chat.completions.create(
+  model=<span class="s">"qwen-plus"</span>, messages=messages
+)
+
+<span class="c"># 支持：qwen-plus · qwen-flash · qwen-turbo</span>
+<span class="c"># 检查命中：usage.prompt_cache_hit_tokens > 0</span>`
+  },
+  openai: {
+    params: [
+      { v: '×1.0',  k: '写入成本', d: '无额外写入费用（自动）' },
+      { v: '×0.5',  k: '命中成本', d: '命中后省 50% 输入费用' },
+      { v: '自动',   k: '触发方式', d: 'Prompt ≥ 1024T 自动缓存' },
+    ],
+    code: `<span class="c"># OpenAI Python SDK — Prompt Caching（自动）</span>
+response = client.chat.completions.create(
+  model=<span class="s">"gpt-4o"</span>,
+  messages=[{
+    <span class="n">"role"</span>: <span class="s">"system"</span>,
+    <span class="c"># 保持 System Prompt 完全不变即可自动缓存</span>
+    <span class="n">"content"</span>: long_system_prompt
+  }] + conversation_history
+)
+
+<span class="c"># OpenAI 隐式缓存，无需 cache_control</span>
+<span class="c"># 检查命中：usage.prompt_tokens_details.cached_tokens</span>
+<span class="c">⚠️  分布式场景下命中率约 30-50%，不如 Claude/Qwen 稳定</span>`
+  }
+};
+
+let curPlatform = 'claude';
+
+function switchPlatform(p) {
+  curPlatform = p;
+  document.querySelectorAll('.ptab').forEach((btn, i) => {
+    const keys = ['claude','qwen','openai'];
+    btn.classList.toggle('active', keys[i] === p);
+  });
+  renderPlatform(p);
+  // 重置模拟
+  resetSim();
+}
+
+function renderPlatform(p) {
+  const pl = PLATFORMS[p];
+  document.getElementById('codeContent').innerHTML = '<pre>' + pl.code + '</pre>';
+  document.getElementById('paramsGrid').innerHTML = pl.params.map(pm => `
+    <div class="param-box">
+      <div class="pv">${pm.v}</div>
+      <div class="pk">${pm.k}</div>
+      <div class="pd">${pm.d}</div>
+    </div>`).join('');
+}
+
+function copyCode() {
+  const text = document.getElementById('codeContent').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ 已复制';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  });
+}
+
+// ── 分布式路由动画 ──
+let distTimer = null;
+const NODES = ['nodeA','nodeB','nodeC'];
+function runDistSim() {
+  let count = 0;
+  if (distTimer) clearInterval(distTimer);
+  NODES.forEach(id => document.getElementById(id).classList.remove('active'));
+  distTimer = setInterval(() => {
+    NODES.forEach(id => document.getElementById(id).classList.remove('active'));
+    const picked = NODES[Math.floor(Math.random() * NODES.length)];
+    document.getElementById(picked).classList.add('active');
+    count++;
+    if (count >= 8) { clearInterval(distTimer); distTimer = null; }
+  }, 500);
+}
+
+// ── 命中模拟 ──
+const IMPLICIT_HIT_RATE = 0.28; // 隐式 ~28% 命中率
+const COST_PER_TOK = 10; // 单位成本（相对值）
+const CACHE_DISCOUNT = 0.1;
+
+let simRunning = false;
+
+function resetSim() {
+  ['implicitLog','explicitLog'].forEach(id => document.getElementById(id).innerHTML = '');
+  ['implicitHits','explicitHits','costSaved'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('btnSim').textContent = '▶ 模拟命中对比';
+  document.getElementById('btnSim').disabled = false;
+  simRunning = false;
+}
+
+function runHitSim() {
+  if (simRunning) return;
+  resetSim();
+  simRunning = true;
+  document.getElementById('btnSim').disabled = true;
+  document.getElementById('btnSim').textContent = '运行中…';
+
+  const TOTAL = 10;
+  let implicitHits = 0, explicitHits = 0;
+  let step = 0;
+
+  const timer = setInterval(() => {
+    if (step >= TOTAL) {
+      clearInterval(timer);
+      const saved = Math.round((explicitHits - implicitHits) * COST_PER_TOK * (1 - CACHE_DISCOUNT));
+      document.getElementById('implicitHits').textContent = implicitHits + ' / ' + TOTAL;
+      document.getElementById('explicitHits').textContent = explicitHits + ' / ' + TOTAL;
+      document.getElementById('costSaved').textContent = '节省 ' + saved + '%';
+      document.getElementById('btnSim').textContent = '▶ 再次模拟';
+      document.getElementById('btnSim').disabled = false;
+      simRunning = false;
+      return;
+    }
+
+    step++;
+    const req = '第 ' + step + ' 次请求';
+
+    // 隐式：随机命中
+    const iHit = Math.random() < IMPLICIT_HIT_RATE;
+    if (iHit) implicitHits++;
+    const iItem = document.createElement('div');
+    iItem.className = 'req-item ' + (iHit ? 'hit' : 'miss');
+    iItem.innerHTML = req + (iHit
+      ? ' <b style="color:var(--green)">✓ 命中</b> → 省 90%'
+      : ` <b style="color:var(--red)">✗ MISS</b> → 全量计算（路由到节点${['B','C'][Math.floor(Math.random()*2)]}）`);
+    document.getElementById('implicitLog').appendChild(iItem);
+    document.getElementById('implicitLog').scrollTop = 99999;
+    document.getElementById('implicitHits').textContent = implicitHits + ' / ' + step;
+
+    // 显式：保证命中（仅首次写入）
+    const eHit = step > 1;
+    if (eHit) explicitHits++;
+    const eItem = document.createElement('div');
+    eItem.className = 'req-item ' + (eHit ? 'hit' : 'miss');
+    eItem.innerHTML = req + (eHit
+      ? ' <b style="color:var(--green)">✓ 命中</b> → 省 90%（平台保证路由）'
+      : ' <b style="color:var(--accent)">⚡ 写入缓存</b> → 首次写入 ×1.25');
+    document.getElementById('explicitLog').appendChild(eItem);
+    document.getElementById('explicitLog').scrollTop = 99999;
+    document.getElementById('explicitHits').textContent = explicitHits + ' / ' + step;
+
+  }, 400);
+}
+
+// 初始化
+renderPlatform('claude');
+</script>
+</body>
+</html>

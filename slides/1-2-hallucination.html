@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>大模型幻觉演示</title>
+<script>
+// 内嵌词表与注意力权重（自包含，不依赖外部 global-attn.js）
+// 为幻觉演示提供合理的候选词权重数据
+window.GLOBAL_ATTN = (function() {
+  const vocab = [
+    '黛玉','捧着','月光','宝盒','，','轻声','问','：','哥哥','你','说',
+    '喜欢','我','可','从来','不肯','开口','花千骨','对','郭靖','急','道',
+    '靖','站着','干嘛','真的','舍得','不','回来','就','一次','也','好','啊',
+    '！','女儿国','国王','望着','杏花','簪','叹道','姐姐','看','这','花',
+    '开','了','又','谢','走','小龙女','转头','杨过','执念','东西','能',
+    '放下','吗','？','还是','想','宝玉','御弟','紫霞','黄蓉','沈眉庄'
+  ];
+  const n = vocab.length;
+  // 构建稀疏权重矩阵（只为演示用，非真实注意力权重）
+  const matrix = [];
+  for (let i = 0; i < n; i++) {
+    const row = new Array(n).fill(0);
+    // 为每个词生成一些"相关词"权重
+    const related = {
+      '黛玉':   {'哥哥':0.18,'宝玉':0.22,'你':0.12,'可':0.08,'从来':0.07,'我':0.06},
+      '捧着':   {'月光':0.25,'宝盒':0.18,'花':0.10,'簪':0.09,'轻声':0.08,'这':0.06},
+      '月光':   {'宝盒':0.35,'花':0.10,'又':0.07,'谢':0.06,'开':0.05,'走':0.04},
+      '宝盒':   {'，':0.30,'轻声':0.15,'问':0.12,'哥哥':0.10,'你':0.08,'紫霞':0.05},
+      '轻声':   {'问':0.28,'道':0.18,'说':0.12,'叹道':0.10,'哥哥':0.08,'姐姐':0.05},
+      '问':     {'：':0.30,'你':0.18,'哥哥':0.12,'喜欢':0.10,'我':0.08,'从来':0.05},
+      '哥哥':   {'，':0.25,'你':0.20,'说':0.15,'喜欢':0.12,'我':0.08,'可':0.06},
+      '你':     {'说':0.20,'喜欢':0.15,'真的':0.12,'还是':0.10,'从来':0.09,'不':0.08},
+      '说':     {'你':0.20,'喜欢':0.14,'执念':0.12,'真的':0.10,'从来':0.08,'不':0.07},
+      '喜欢':   {'我':0.30,'你':0.18,'，':0.12,'可':0.10,'从来':0.08,'不肯':0.07},
+      '我':     {'，':0.25,'可':0.15,'你':0.12,'从来':0.10,'不肯':0.08,'开口':0.06},
+      '可':     {'你':0.25,'从来':0.20,'不肯':0.15,'开口':0.12,'喜欢':0.08,'我':0.05},
+      '从来':   {'不肯':0.30,'就':0.18,'不':0.15,'开口':0.12,'想':0.08,'放下':0.05},
+      '不肯':   {'开口':0.35,'说':0.18,'承认':0.12,'你':0.10,'从来':0.07,'喜欢':0.05},
+      '花千骨': {'对':0.20,'靖':0.15,'哥哥':0.12,'郭靖':0.10,'急':0.08,'你':0.07},
+      '郭靖':   {'急':0.18,'道':0.15,'你':0.14,'靖':0.12,'哥哥':0.10,'真的':0.08},
+      '靖':     {'哥哥':0.40,'你':0.15,'还':0.12,'站着':0.08,'急':0.07,'道':0.06},
+      '站着':   {'干嘛':0.35,'你':0.15,'还':0.12,'不':0.10,'就':0.08,'，':0.07},
+      '干嘛':   {'，':0.28,'你':0.18,'真的':0.14,'舍得':0.12,'不':0.10,'好':0.06},
+      '真的':   {'舍得':0.20,'能':0.15,'放下':0.12,'不':0.14,'你':0.10,'吗':0.08},
+      '舍得':   {'不':0.30,'回来':0.20,'，':0.15,'就':0.10,'一次':0.08,'也':0.05},
+      '不':     {'回来':0.20,'肯':0.15,'想':0.14,'开口':0.10,'就':0.09,'放下':0.08},
+      '回来':   {'，':0.25,'就':0.18,'一次':0.15,'也':0.12,'好':0.10,'啊':0.06},
+      '就':     {'一次':0.22,'是':0.15,'不':0.14,'放下':0.12,'好':0.10,'算':0.07},
+      '一次':   {'也':0.30,'就':0.18,'好':0.15,'啊':0.10,'，':0.09,'吧':0.06},
+      '也':     {'好':0.28,'不':0.15,'放下':0.12,'啊':0.10,'吧':0.08,'就':0.07},
+      '好':     {'啊':0.30,'吧':0.18,'，':0.14,'！':0.12,'了':0.08,'不':0.06},
+      '女儿国': {'国王':0.40,'望着':0.15,'对':0.10,'姐姐':0.08,'御弟':0.06,'哥哥':0.05},
+      '国王':   {'望着':0.25,'叹道':0.15,'道':0.12,'姐姐':0.10,'你':0.09,'对':0.07},
+      '望着':   {'杏花':0.25,'叹道':0.18,'你':0.12,'簪':0.10,'花':0.09,'姐姐':0.07},
+      '杏花':   {'簪':0.38,'花':0.18,'开':0.12,'又':0.09,'叹道':0.08,'谢':0.06},
+      '簪':     {'叹道':0.25,'道':0.15,'姐姐':0.12,'你':0.10,'望着':0.09,'花':0.07},
+      '叹道':   {'姐姐':0.20,'：':0.18,'你':0.14,'哥哥':0.12,'这':0.10,'花':0.08},
+      '姐姐':   {'你':0.22,'看':0.18,'这':0.15,'花':0.12,'，':0.10,'开':0.07},
+      '看':     {'，':0.25,'这':0.20,'花':0.16,'你':0.12,'开':0.10,'谢':0.07},
+      '这':     {'花':0.28,'东西':0.18,'，':0.14,'你':0.10,'开':0.09,'谢':0.06},
+      '花':     {'开':0.28,'又':0.18,'谢':0.16,'，':0.12,'了':0.10,'好':0.06},
+      '开':     {'了':0.30,'又':0.18,'，':0.14,'花':0.10,'谢':0.09,'始':0.06},
+      '了':     {'又':0.25,'，':0.18,'谢':0.14,'哥哥':0.12,'走':0.10,'好':0.07},
+      '又':     {'谢':0.35,'开':0.18,'走':0.14,'，':0.12,'来':0.08,'好':0.06},
+      '谢':     {'，':0.25,'哥哥':0.20,'走':0.15,'了':0.12,'好':0.08,'啊':0.06},
+      '走':     {'了':0.35,'，':0.18,'吧':0.12,'啊':0.10,'好':0.08,'不':0.06},
+      '小龙女': {'转头':0.20,'对':0.15,'杨过':0.14,'道':0.12,'轻声':0.10,'你':0.07},
+      '转头':   {'对':0.28,'道':0.18,'杨过':0.14,'说':0.12,'轻声':0.08,'急':0.06},
+      '杨过':   {'急':0.18,'道':0.15,'你':0.14,'说':0.12,'执念':0.10,'真的':0.08},
+      '执念':   {'这':0.22,'东西':0.20,'，':0.15,'真的':0.12,'能':0.10,'放下':0.08},
+      '东西':   {'，':0.28,'真的':0.18,'能':0.15,'放下':0.12,'吗':0.10,'还是':0.07},
+      '能':     {'放下':0.30,'不':0.18,'吗':0.15,'，':0.10,'说':0.08,'真的':0.07},
+      '放下':   {'吗':0.25,'？':0.20,'，':0.15,'还是':0.12,'不':0.10,'啊':0.06},
+      '吗':     {'？':0.40,'，':0.20,'还是':0.15,'啊':0.10,'不':0.08,'你':0.05},
+      '？':     {'还是':0.25,'你':0.18,'从来':0.15,'说':0.12,'不':0.10,'就':0.07},
+      '还是':   {'说':0.25,'你':0.20,'从来':0.15,'不':0.14,'就':0.10,'想':0.08},
+      '想':     {'放下':0.30,'不':0.18,'说':0.14,'，':0.12,'你':0.10,'开口':0.06},
+    };
+    const rel = related[vocab[i]];
+    if (rel) {
+      for (const [w, weight] of Object.entries(rel)) {
+        const j = vocab.indexOf(w);
+        if (j >= 0) row[j] = weight;
+      }
+    }
+    matrix.push(row);
+  }
+  return { vocab, matrix };
+})();
+</script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+
+.header {
+  padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0; z-index: 10;
+  background-color: var(--bg-color);
+}
+.title-area h2 { font-size: 22px; font-weight: 600; color: var(--text-main); }
+.title-area p { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.main-area {
+  flex: 1; display: flex; min-height: 0;
+}
+
+/* Left panel */
+.left-panel {
+  width: 36%; padding: 20px 28px; overflow-y: auto;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.left-panel::-webkit-scrollbar { width: 4px; }
+.left-panel::-webkit-scrollbar-track { background: transparent; }
+.left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+
+.case-card {
+  background: white; border-radius: 12px; padding: 14px 16px;
+  border: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.case-card:hover { border-color: rgba(0,102,255,0.2); }
+.case-card.active { border-color: var(--accent); background: rgba(0,102,255,0.03); }
+.case-label {
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  margin-bottom: 4px;
+}
+.case-prompt {
+  font-size: 16px; font-weight: 700; color: var(--text-main);
+  line-height: 1.5;
+}
+.case-desc {
+  font-size: 13px; color: var(--text-sub); margin-top: 4px; line-height: 1.5;
+}
+
+.explain-box {
+  font-size: 13px; color: var(--text-sub); line-height: 1.8; padding: 0 2px;
+}
+.explain-box b { color: var(--text-main); }
+.explain-box .red { color: var(--danger); font-weight: 600; }
+
+/* Right panel */
+.right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 28px;
+  min-width: 0;
+}
+
+.gen-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; flex-shrink: 0;
+}
+.gen-header h3 { font-size: 16px; font-weight: 700; color: var(--text-main); }
+
+.speed-group {
+  display: flex; gap: 4px; align-items: center;
+}
+.speed-btn {
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: white; color: var(--text-main);
+  transition: all 0.15s;
+}
+.speed-btn.active {
+  background: var(--text-main); color: white; border-color: var(--text-main);
+}
+
+/* Output area */
+.gen-output-area {
+  flex: 1; display: flex; flex-direction: column; gap: 12px;
+  min-height: 0; overflow: hidden;
+}
+
+.gen-sentence-box {
+  background: white; border-radius: 14px; padding: 18px 22px;
+  line-height: 2.2; flex-shrink: 0;
+}
+
+.gen-bottom {
+  flex: 1; display: flex; flex-direction: column; gap: 12px;
+  min-height: 0; overflow-y: auto;
+}
+.gen-bottom::-webkit-scrollbar { width: 4px; }
+.gen-bottom::-webkit-scrollbar-track { background: transparent; }
+.gen-bottom::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+.gen-token {
+  display: inline; font-size: 20px; font-weight: 500;
+  color: var(--text-main); transition: all 0.3s;
+}
+.gen-token.prompt { color: var(--text-sub); }
+.gen-token.new { color: var(--accent); font-weight: 700; animation: tokenPop 0.4s ease; }
+.gen-token.hallucination {
+  color: var(--danger); font-weight: 700;
+  background: rgba(229,62,62,0.08);
+  padding: 1px 4px; border-radius: 4px;
+  text-decoration: underline wavy var(--danger);
+  text-underline-offset: 4px;
+}
+.gen-token.cursor-blink::after {
+  content: '▊'; color: var(--accent);
+  animation: blink 0.8s step-end infinite;
+}
+@keyframes tokenPop {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; } 50% { opacity: 0; }
+}
+
+/* Step detail */
+.step-panel {
+  background: white; border-radius: 14px; padding: 14px 18px;
+  flex-shrink: 0;
+}
+.step-panel.hidden { display: none; }
+.step-header {
+  font-size: 14px; color: var(--text-sub); margin-bottom: 8px;
+}
+.step-header b { color: var(--accent); }
+.step-header .red { color: var(--danger); }
+
+.cand-list { display: flex; flex-direction: column; gap: 3px; }
+.cand-row {
+  display: flex; align-items: center; gap: 8px; height: 22px;
+}
+.cand-word {
+  font-size: 14px; font-weight: 700; color: var(--text-main);
+  min-width: 56px; text-align: right;
+}
+.cand-bar-bg {
+  flex: 1; height: 10px; background: rgba(0,0,0,0.04);
+  border-radius: 5px; overflow: hidden;
+}
+.cand-bar { height: 100%; border-radius: 5px; transition: width 0.4s; }
+.cand-pct {
+  font-size: 13px; color: var(--text-sub); min-width: 46px;
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.cand-row.picked .cand-word { color: var(--accent); }
+.cand-row.picked .cand-bar { background: var(--accent) !important; }
+.cand-row.hallucinated .cand-word { color: var(--danger); }
+.cand-row.hallucinated .cand-bar { background: var(--danger) !important; }
+
+/* Fact check */
+.fact-check {
+  padding: 14px 18px; border-radius: 12px;
+  font-size: 14px; line-height: 1.7;
+  background: rgba(229,62,62,0.05);
+  border: 1px solid rgba(229,62,62,0.15);
+  color: #7c2d12;
+  flex-shrink: 0;
+}
+.fact-check.hidden { display: none; }
+#rootCause.hidden { display: none !important; }
+.fact-check-title {
+  font-weight: 700; color: var(--danger);
+  margin-bottom: 4px; font-size: 14px;
+}
+.fact-check b { color: var(--danger); }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+  <div class="header">
+    <div class="title-area">
+      <h2>大模型幻觉 (Hallucination)</h2>
+      <p>模型不"知道"事实，只是在做概率采样——看它如何自信地"编造"。</p>
+    </div>
+    <button class="btn-primary" id="genBtn" onclick="startGeneration()">开始生成</button>
+  </div>
+
+  <div class="main-area">
+    <div class="left-panel">
+      <div>
+        <div class="section-title">选择一个 Prompt</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="case-card active" onclick="selectCase(0)">
+            <div class="case-label">CASE 1 · 张冠李戴</div>
+            <div class="case-prompt">黛玉捧着月光宝盒，轻声问：</div>
+            <div class="case-desc">月光宝盒是紫霞的，模型只看共现权重，不知道"谁拥有什么"。</div>
+          </div>
+          <div class="case-card" onclick="selectCase(1)">
+            <div class="case-label">CASE 2 · 穿越混搭</div>
+            <div class="case-prompt">花千骨对郭靖急道：靖哥哥，</div>
+            <div class="case-desc">花千骨和郭靖来自不同作品，模型会流畅地"续写"跨作品对话。</div>
+          </div>
+          <div class="case-card" onclick="selectCase(2)">
+            <div class="case-label">CASE 3 · 无中生有</div>
+            <div class="case-prompt">女儿国国王望着杏花簪叹道：</div>
+            <div class="case-desc">杏花簪是沈眉庄的道具，模型会错误地"安排"给女儿国国王。</div>
+          </div>
+          <div class="case-card" onclick="selectCase(3)">
+            <div class="case-label">CASE 4 · 人设崩塌</div>
+            <div class="case-prompt">小龙女转头对杨过急道：</div>
+            <div class="case-desc">小龙女清冷淡然，不会"急道"；但模型不懂人设，只看词频。</div>
+          </div>
+          <div class="case-card" onclick="selectCase(4)">
+            <div class="case-label">CASE 5 · 代码幻觉 API</div>
+            <div class="case-prompt">用 pandas 对 DataFrame 按多列排序并保持稳定：</div>
+            <div class="case-desc">模型会写出不存在的参数组合——代码"像真的"，但 API 根本不是这么用的。</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="right-panel">
+      <div class="gen-header">
+        <h3>逐步生成过程</h3>
+        <div class="speed-group">
+          <span class="speed-btn" data-speed="800" onclick="setSpeed(this)">慢</span>
+          <span class="speed-btn active" data-speed="400" onclick="setSpeed(this)">中</span>
+          <span class="speed-btn" data-speed="150" onclick="setSpeed(this)">快</span>
+        </div>
+      </div>
+
+      <div class="gen-output-area">
+        <div class="gen-sentence-box" id="genSentence">
+          <span style="color:var(--text-sub);font-size:14px;">← 选择 Prompt，点击「开始生成」</span>
+        </div>
+
+        <div class="gen-bottom" id="genBottom">
+          <div class="step-panel hidden" id="stepPanel">
+            <div class="step-header" id="stepHeader"></div>
+            <div class="cand-list" id="candList"></div>
+          </div>
+
+          <div class="fact-check hidden" id="factCheck">
+            <div class="fact-check-title">⚠ 幻觉检测</div>
+            <div id="factCheckMsg"></div>
+          </div>
+
+          <!-- 根因：两本书的世界，生成完成后出现 -->
+          <div id="rootCause" class="hidden" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">根本原因：两本书的世界</div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;background:rgba(91,79,207,0.06);border:1px solid rgba(91,79,207,0.18);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:14px;font-weight:800;color:#5b4fcf;margin-bottom:6px;">📚 模型参数（长期记忆）</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.65;">训练时写入，推理时<b>只读</b>。有知识截止日期，知识以"压缩"形式储存，不精确，无法更新。<br><b style="color:var(--text-main)">类比：写完就封存的百科全书</b></div>
+              </div>
+              <div style="flex:1;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.18);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:14px;font-weight:800;color:#16a34a;margin-bottom:6px;">💬 上下文窗口（工作记忆）</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.65;">对话时动态注入，<b>精确可信</b>。包含系统提示词、文件、本轮对话历史。<br><b style="color:var(--text-main)">类比：放在桌上的参考资料</b></div>
+              </div>
+              <div style="flex:1;background:rgba(229,62,62,0.05);border:1px solid rgba(229,62,62,0.15);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:13px;font-weight:700;color:var(--danger);line-height:1.65;">⚠ 模型没有"不知道"的概念，它只会续写。参数中没有答案时，会生成"听起来应该是这样"的内容——<b>置信度不因信息不准确而下降</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _ga = window.GLOBAL_ATTN;
+var vocab = _ga.vocab;
+var matrix = _ga.matrix;
+var n = vocab.length;
+var vocabMap = {};
+vocab.forEach(function(w, i) { vocabMap[w] = i; });
+
+var CASES = [
+  {
+    prompt: ['黛玉', '捧着', '月光', '宝盒', '，', '轻声', '问', '：'],
+    script: [
+      { word: '哥哥',   h: true,  note: '黛玉称宝玉为"宝玉哥哥"，不会泛称"哥哥"——模型混用了紫霞的称谓习惯' },
+      { word: '，' },
+      { word: '你' },
+      { word: '说' },
+      { word: '你' },
+      { word: '喜欢',   h: true,  note: '"你说你喜欢我"是紫霞的台词，被"嫁接"给了黛玉' },
+      { word: '我' },
+      { word: '，' },
+      { word: '可' },
+      { word: '你' },
+      { word: '从来' },
+      { word: '不肯' },
+      { word: '开口' },
+    ],
+    factMsg: '黛玉（《红楼梦》）和月光宝盒（《大话西游》）来自完全不同的作品。模型看到"捧着·月光·宝盒·轻声·问"这些词的高共现权重，就流畅地续写了紫霞的台词——<b>概率上合理，事实上荒谬</b>。这就是张冠李戴型幻觉。'
+  },
+  {
+    prompt: ['花千骨', '对', '郭靖', '急', '道', '：', '靖', '哥哥', '，'],
+    script: [
+      { word: '你' },
+      { word: '还' },
+      { word: '站着',   h: true,  note: '"你还站着干嘛"是黄蓉对郭靖的台词，被移植给了花千骨' },
+      { word: '干嘛',   h: true,  note: '花千骨是仙侠角色，不会说"干嘛"这种口语' },
+      { word: '，' },
+      { word: '你' },
+      { word: '真的' },
+      { word: '舍得',   h: true,  note: '"舍得不回来"是黄蓉的语气，花千骨与郭靖没有任何交集' },
+      { word: '不' },
+      { word: '回来' },
+      { word: '，' },
+      { word: '就' },
+      { word: '一次' },
+      { word: '也' },
+      { word: '好' },
+      { word: '啊' },
+      { word: '！' },
+    ],
+    factMsg: '花千骨是仙侠剧角色，郭靖是武侠小说角色，二者不可能有交集。模型因为"急道·靖·哥哥"的词频模式，把<b>黄蓉对郭靖说的话</b>原样"移植"给了花千骨——这是<b>角色穿越型幻觉</b>。'
+  },
+  {
+    prompt: ['女儿国', '国王', '望着', '杏花', '簪', '叹道', '：'],
+    script: [
+      { word: '姐姐',   h: true,  note: '女儿国国王不会称人"姐姐"——这是沈眉庄叹杏花簪时的上下文' },
+      { word: '你' },
+      { word: '看' },
+      { word: '，' },
+      { word: '这' },
+      { word: '花' },
+      { word: '开',     h: false },
+      { word: '了' },
+      { word: '又' },
+      { word: '谢',     h: true,  note: '"花开了又谢"是沈眉庄的原话，被安排给了女儿国国王' },
+      { word: '，' },
+      { word: '哥哥',   h: true,  note: '女儿国国王称"御弟哥哥"，不会只说"哥哥"——模型张冠李戴了称谓' },
+      { word: '走' },
+      { word: '了' },
+    ],
+    factMsg: '杏花簪是《甄嬛传》中沈眉庄的情节道具。模型看到"望着·杏花·簪·叹道"就自动续写了沈眉庄的台词——<b>道具归属和角色台词全部错误</b>。这是事实编造型幻觉。'
+  },
+  {
+    prompt: ['小龙女', '转头', '对', '杨过', '急', '道', '：'],
+    script: [
+      { word: '你' },
+      { word: '说' },
+      { word: '执念' },
+      { word: '这' },
+      { word: '东西' },
+      { word: '，' },
+      { word: '真的' },
+      { word: '能' },
+      { word: '放下' },
+      { word: '吗' },
+      { word: '？' },
+      { word: '还是' },
+      { word: '说' },
+      { word: '，' },
+      { word: '你' },
+      { word: '从来' },
+      { word: '就' },
+      { word: '不' },
+      { word: '想' },
+      { word: '放下' },
+      { word: '？' },
+    ],
+    factMsg: '这个 case 比较特殊：小龙女的 prompt 和续写内容<b>完全来自同一语料</b>，所以生成结果恰好是正确的。这说明<b>幻觉不是必然发生的</b>——当 prompt 与训练数据完全对应时，模型输出是准确的。问题出在<b>混搭不同来源</b>时。'
+  },
+  {
+    prompt: ['df', '.sort_values', '(', 'by', '=', '['],
+    script: [
+      { word: "'A'" },
+      { word: ',' },
+      { word: "'B'" },
+      { word: ']' },
+      { word: ',' },
+      { word: '\n        ' },
+      { word: 'stable',     h: true,  note: 'pandas sort_values 没有 stable= 参数，这是 numpy.sort 的参数，模型把两个 API 混用了' },
+      { word: '=', h: true },
+      { word: 'True',       h: true,  note: '这行代码会抛出 TypeError: sort_values() got an unexpected keyword argument \'stable\'' },
+      { word: ',' },
+      { word: '\n        ' },
+      { word: 'ignore_index', h: true, note: 'ignore_index 是 pandas 1.0+ 才有的参数，且与排序稳定性无关——模型把不同版本的参数混在一起用' },
+      { word: '=', h: true },
+      { word: 'True',       h: true },
+      { word: ')' },
+    ],
+    factMsg: '<b>代码幻觉</b>：模型对 pandas API 有"大致印象"，但把 numpy.sort 的 <code>stable=</code> 参数错误地用在了 sort_values 上，并混入了不相关的 <code>ignore_index</code>。<b>正确写法：</b><code>df.sort_values(by=[\'A\',\'B\'], kind=\'mergesort\')</code>。代码幻觉危险在于：语法没报错，逻辑却是错的，测试数据小时看不出来。',
+    // 代码幻觉专属静态候选词（不依赖 global-attn 词表）
+    customCands: [
+      { step: 6,  word: 'stable',       alts: [{ w:'kind', p:0.52 }, { w:'ascending', p:0.21 }, { w:'na_position', p:0.12 }, { w:'stable', p:0.08, isH:true }, { w:'inplace', p:0.05 }, { w:'key', p:0.02 }] },
+      { step: 7,  word: '=',            alts: null },
+      { step: 8,  word: 'True',         alts: [{ w:'True', p:0.88, isH:true }, { w:'False', p:0.09 }, { w:'None', p:0.03 }] },
+      { step: 10, word: 'ignore_index', alts: [{ w:'inplace', p:0.41 }, { w:'ignore_index', p:0.31, isH:true }, { w:'key', p:0.15 }, { w:'ascending', p:0.08 }, { w:'na_position', p:0.05 }] },
+    ]
+  },
+];
+
+var currentCase = 0;
+var generating = false;
+var genSpeed = 400;
+
+function selectCase(idx) {
+  currentCase = idx;
+  document.querySelectorAll('.case-card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+  resetOutput();
+}
+
+function resetOutput() {
+  generating = false;
+  const s = document.getElementById('genSentence');
+  s.innerHTML = '<span style="color:var(--text-sub);font-size:14px;">← 点击「开始生成」查看模型续写</span>';
+  document.getElementById('stepPanel').classList.add('hidden');
+  document.getElementById('factCheck').classList.add('hidden');
+  document.getElementById('rootCause').classList.add('hidden');
+  document.getElementById('rootCause').style.display = 'none';
+  document.getElementById('genBtn').textContent = '开始生成';
+}
+
+function setSpeed(el) {
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  genSpeed = parseInt(el.dataset.speed);
+}
+
+function getCandidates(vId, pickedWord) {
+  const weights = matrix[vId];
+  const cands = [];
+  for (let j = 0; j < n; j++) {
+    if (j === vId) continue;
+    if (weights[j] < 0.01) continue;
+    cands.push({ word: vocab[j], w: weights[j] });
+  }
+  cands.sort((a, b) => b.w - a.w);
+
+  const top = cands.slice(0, 6);
+  if (pickedWord && !top.find(c => c.word === pickedWord)) {
+    const pickedIdx = vocabMap[pickedWord];
+    if (pickedIdx !== undefined) {
+      const w = weights[pickedIdx] || 0.005;
+      top.pop();
+      top.push({ word: pickedWord, w });
+      top.sort((a, b) => b.w - a.w);
+    }
+  }
+
+  const totalW = top.reduce((s, c) => s + c.w, 0);
+  top.forEach(c => { c.p = c.w / totalW; });
+  return top;
+}
+
+function renderCandidates(candidates, pickedWord, isHallucination) {
+  const list = document.getElementById('candList');
+  list.innerHTML = '';
+  const maxP = candidates[0].p;
+
+  candidates.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'cand-row';
+    const isPicked = c.word === pickedWord;
+    if (isPicked) row.classList.add(isHallucination ? 'hallucinated' : 'picked');
+
+    const wEl = document.createElement('span');
+    wEl.className = 'cand-word';
+    wEl.textContent = c.word;
+
+    const barBg = document.createElement('div');
+    barBg.className = 'cand-bar-bg';
+    const bar = document.createElement('div');
+    bar.className = 'cand-bar';
+    bar.style.width = (c.p / maxP * 100) + '%';
+    if (!isPicked) {
+      bar.style.background = `rgba(59,130,246,${0.3 + (c.p / maxP) * 0.5})`;
+    }
+    barBg.appendChild(bar);
+
+    const pctEl = document.createElement('span');
+    pctEl.className = 'cand-pct';
+    pctEl.textContent = (c.p * 100).toFixed(1) + '%';
+
+    row.append(wEl, barBg, pctEl);
+    list.appendChild(row);
+  });
+}
+
+function renderCustomCandidates(alts, pickedWord, isHallucination) {
+  const list = document.getElementById('candList');
+  list.innerHTML = '';
+  const maxP = alts[0].p;
+  alts.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'cand-row';
+    const isPicked = c.w === pickedWord;
+    if (isPicked) row.classList.add(isHallucination ? 'hallucinated' : 'picked');
+
+    const wEl = document.createElement('span');
+    wEl.className = 'cand-word';
+    wEl.textContent = c.w;
+
+    const barBg = document.createElement('div');
+    barBg.className = 'cand-bar-bg';
+    const bar = document.createElement('div');
+    bar.className = 'cand-bar';
+    bar.style.width = (c.p / maxP * 100) + '%';
+    if (!isPicked) {
+      bar.style.background = `rgba(59,130,246,${0.3 + (c.p / maxP) * 0.5})`;
+    }
+    barBg.appendChild(bar);
+
+    const pctEl = document.createElement('span');
+    pctEl.className = 'cand-pct';
+    pctEl.textContent = (c.p * 100).toFixed(1) + '%';
+
+    row.append(wEl, barBg, pctEl);
+    list.appendChild(row);
+  });
+}
+
+async function startGeneration() {
+  if (generating) {
+    generating = false;
+    document.getElementById('genBtn').textContent = '开始生成';
+    return;
+  }
+
+  generating = true;
+  document.getElementById('genBtn').textContent = '停止';
+  document.getElementById('factCheck').classList.add('hidden');
+
+  const c = CASES[currentCase];
+  const sentEl = document.getElementById('genSentence');
+  const stepPanel = document.getElementById('stepPanel');
+  const stepHeader = document.getElementById('stepHeader');
+
+  sentEl.innerHTML = '';
+  c.prompt.forEach(t => {
+    const span = document.createElement('span');
+    span.className = 'gen-token prompt';
+    span.textContent = t;
+    sentEl.appendChild(span);
+  });
+
+  const cursor = document.createElement('span');
+  cursor.className = 'gen-token cursor-blink';
+  sentEl.appendChild(cursor);
+  stepPanel.classList.remove('hidden');
+
+  let lastWord = c.prompt[c.prompt.length - 1];
+  let hasHallucination = false;
+
+  for (let i = 0; i < c.script.length; i++) {
+    if (!generating) break;
+
+    const step = c.script[i];
+    const lastVId = vocabMap[lastWord];
+    const isH = step.h === true;
+
+    // Case 5 自定义候选词
+    const customEntry = c.customCands && c.customCands.find(x => x.step === i);
+
+    if (customEntry && customEntry.alts) {
+      // 渲染自定义候选词
+      if (isH) {
+        stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 <span class="red">${step.word}</span>`;
+      } else {
+        stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 <b>${step.word}</b>`;
+      }
+      renderCustomCandidates(customEntry.alts, step.word, isH);
+    } else if (!c.customCands && lastVId !== undefined) {
+      const candidates = getCandidates(lastVId, step.word);
+      if (isH) {
+        stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 <span class="red">${step.word}</span>`;
+      } else {
+        stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 <b>${step.word}</b>`;
+      }
+      renderCandidates(candidates, step.word, isH);
+    } else {
+      if (isH || step.word.trim()) {
+        stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 ${isH ? `<span class="red">${step.word}</span>` : `<b>${step.word}</b>`}`;
+      }
+      if (!customEntry) document.getElementById('candList').innerHTML = '';
+    }
+
+    await new Promise(r => setTimeout(r, genSpeed));
+    if (!generating) break;
+
+    cursor.remove();
+    const span = document.createElement('span');
+    span.className = 'gen-token new';
+    if (isH) {
+      span.classList.add('hallucination');
+      span.title = step.note || '';
+      hasHallucination = true;
+    }
+    span.textContent = step.word;
+    sentEl.appendChild(span);
+    sentEl.appendChild(cursor);
+
+    await new Promise(r => setTimeout(r, 80));
+    span.classList.remove('new');
+    if (!isH) span.classList.remove('new');
+
+    lastWord = step.word;
+  }
+
+  cursor.remove();
+  generating = false;
+  document.getElementById('genBtn').textContent = '重新生成';
+
+  const fc = document.getElementById('factCheck');
+  document.getElementById('factCheckMsg').innerHTML = c.factMsg;
+  fc.classList.remove('hidden');
+
+  // 显示根因区块
+  const rc = document.getElementById('rootCause');
+  rc.style.display = 'flex';
+  rc.classList.remove('hidden');
+
+  const gb = document.getElementById('genBottom');
+  gb.scrollTo({ top: gb.scrollHeight, behavior: 'smooth' });
+}
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

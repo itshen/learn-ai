@@ -1,0 +1,5 @@
+.DS_Store
+*.command
+start.py
+.env
+node_modules/

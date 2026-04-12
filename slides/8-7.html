@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>语义层优化：不要把上下文窗口当垃圾桶</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:11px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:14px;font-weight:800;color:var(--red)}
+.title{font-size:23px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:14px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+
+.problem-box{background:rgba(91,79,207,.06);border:1px solid rgba(91,79,207,.2);border-radius:10px;padding:10px 14px;flex-shrink:0}
+.problem-box .pb-title{font-size:15px;font-weight:800;color:var(--purple);margin-bottom:5px}
+.problem-row{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--sub);line-height:1.5;margin-bottom:4px}
+.problem-row b{color:var(--text)}
+
+.strat-list{display:flex;flex-direction:column;gap:6px;flex:1}
+.strat-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;transition:all .18s;width:100%}
+.strat-btn:hover{border-color:rgba(91,79,207,.3)}
+.strat-btn.active{border-color:var(--purple);background:rgba(91,79,207,.04);box-shadow:0 2px 10px rgba(91,79,207,.1)}
+.sn{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--muted);flex-shrink:0;transition:all .18s}
+.strat-btn.active .sn{background:var(--purple);color:white}
+.si h5{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.si p{font-size:14px;color:var(--sub)}
+.saving{margin-left:auto;font-size:16px;font-weight:900;flex-shrink:0}
+
+/* ── 右栏 ── */
+.right{padding:14px 20px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.demo-title{font-size:18px;font-weight:800;color:var(--text);flex-shrink:0}
+.demo-area{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+
+/* === 策略1：Few-Shot 动态检索 === */
+.fewshot-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.fs-col{display:flex;flex-direction:column;gap:6px}
+.fs-col-title{font-size:14px;font-weight:700;padding:5px 10px;border-radius:6px;text-align:center;flex-shrink:0}
+.fs-col-title.bad{background:rgba(220,38,38,.1);color:var(--red)}
+.fs-col-title.good{background:rgba(22,163,74,.1);color:var(--green)}
+.case-pool{flex:1;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.case-item{padding:7px 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;color:var(--sub);line-height:1.4;cursor:default;transition:all .3s;flex-shrink:0}
+.case-item .ci-q{font-weight:700;color:var(--text);font-size:13px}
+.case-item.selected{border-color:var(--green);background:rgba(22,163,74,.06);color:var(--green)}
+.case-item.greyed{opacity:.3}
+.prompt-box{flex:1;background:#1e1e2e;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12.5px;color:#cdd6f4;overflow-y:auto;line-height:1.6;white-space:pre-wrap}
+.prompt-box .p-sys{color:#cba6f7}
+.prompt-box .p-case{color:#a6e3a1}
+.prompt-box .p-user{color:#89b4fa}
+.tok-bar{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tok-track{flex:1;height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.tok-fill{height:100%;border-radius:5px;transition:width .6s ease}
+.tok-num{font-size:14px;font-weight:800;min-width:70px;text-align:right}
+.btn-sim{padding:7px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-primary{background:var(--purple);color:white}
+.btn-reset{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+
+/* === 策略2：文档压缩 === */
+.compress-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.doc-box{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.75;color:var(--sub);overflow-y:auto;background:var(--surface)}
+.doc-box .keep{color:var(--text);font-weight:500}
+.doc-box .drop{color:rgba(220,38,38,.35);text-decoration:line-through;transition:all .4s}
+.doc-box .drop.hidden{display:none}
+.compress-ctrl{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-label{font-size:14px;font-weight:700;color:var(--muted);white-space:nowrap}
+input[type=range]{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--purple) 0%,var(--purple) var(--pct,30%),var(--surface2) var(--pct,30%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--purple);box-shadow:0 2px 6px rgba(91,79,207,.35);cursor:pointer}
+
+/* === 策略3：注意力热图 === */
+.attn-wrap{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.attn-prompt{display:flex;flex-direction:column;gap:5px;flex:1;overflow-y:auto}
+.attn-seg{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:2px solid transparent;cursor:grab;transition:all .3s;user-select:none}
+.attn-seg:active{cursor:grabbing;transform:scale(0.98)}
+.attn-label{font-size:15px;font-weight:800;min-width:90px;flex-shrink:0}
+.attn-content{font-size:14px;color:var(--sub);flex:1;line-height:1.4}
+.attn-heat{width:70px;height:24px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;transition:all .4s}
+.attn-note{font-size:13px;padding:7px 12px;border-radius:8px;text-align:center;flex-shrink:0;font-weight:600}
+
+/* 通用 */
+.stat-row{display:flex;gap:8px;flex-shrink:0}
+.stat-box{flex:1;border-radius:8px;padding:8px 10px;text-align:center}
+.stat-box .sv{font-size:24px;font-weight:900;transition:all .4s}
+.stat-box .sl{font-size:12px;font-weight:700;margin-top:1px}
+.stat-box.good{background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2)}
+.stat-box.good .sv{color:var(--green)}
+.stat-box.bad{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2)}
+.stat-box.bad .sv{color:var(--red)}
+.stat-box.neutral{background:var(--surface);border:1px solid var(--border)}
+.stat-box.neutral .sv{color:var(--purple)}
+.sl{color:var(--muted)}
+
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 8 页</div>
+      <div class="title">语义层优化：<em>不要把上下文窗口当垃圾桶</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">信息密度越高 → 注意力越集中 → 效果越好</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <div class="problem-box">
+        <div class="pb-title">为什么不能无限塞内容？</div>
+        <div class="problem-row">① <b>贵而慢</b>：注意力复杂度 O(N²)，Prompt 翻倍 → 计算翻四倍</div>
+        <div class="problem-row">② <b>效果差</b>：模型对中间内容注意力最弱，关键信息被淹没</div>
+      </div>
+
+      <div class="strat-list">
+        <button class="strat-btn active" onclick="pickStrat(this,0)">
+          <div class="sn">1</div>
+          <div class="si">
+            <h5>动态 Few-Shot：别硬编码案例</h5>
+            <p>用向量检索，每次只取最相关的 3 条</p>
+          </div>
+          <div class="saving" style="color:var(--green)">省 87.5%</div>
+        </button>
+        <button class="strat-btn" onclick="pickStrat(this,1)">
+          <div class="sn">2</div>
+          <div class="si">
+            <h5>长文档：先压缩再喂给 AI</h5>
+            <p>LLMLingua-2 过滤冗余，保留语义核心</p>
+          </div>
+          <div class="saving" style="color:var(--purple)">压缩 5-20x</div>
+        </button>
+        <button class="strat-btn" onclick="pickStrat(this,2)">
+          <div class="sn">3</div>
+          <div class="si">
+            <h5>关键信息放首尾，别放中间</h5>
+            <p>利用模型注意力的"首尾偏好"特性</p>
+          </div>
+          <div class="saving" style="color:var(--cyan)">效果↑↑</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="demo-title" id="demoTitle">动态 Few-Shot：Text-to-SQL 演示</div>
+      <div class="demo-area" id="demoArea"></div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// ── 策略1：动态 Few-Shot ──
+const ALL_CASES = [
+  { q: 'Q: 查询 2024 年销售额最高的 5 个产品', sim: 0.95, sql: 'SELECT p.name, SUM(o.amount) AS sales\nFROM orders o JOIN products p ON...\nORDER BY sales DESC LIMIT 5' },
+  { q: 'Q: 按地区统计本月订单总量', sim: 0.78, sql: 'SELECT region, COUNT(*) AS cnt\nFROM orders WHERE MONTH(...)' },
+  { q: 'Q: 找出退款率超过 5% 的商品', sim: 0.62, sql: 'SELECT product_id, refund_rate\nFROM (...) WHERE refund_rate > 0.05' },
+  { q: 'Q: 查询活跃用户的平均消费金额', sim: 0.51, sql: 'SELECT AVG(total) FROM orders\nWHERE user_id IN (SELECT ...)' },
+  { q: 'Q: 统计每个类别的库存数量', sim: 0.38, sql: 'SELECT category, SUM(stock) FROM products GROUP BY category' },
+  { q: 'Q: 查询最近 7 天新注册用户数', sim: 0.29, sql: 'SELECT COUNT(*) FROM users WHERE created_at > NOW()-7' },
+];
+
+function renderFewShot() {
+  return `
+  <div class="fewshot-wrap">
+    <div class="fs-col">
+      <div class="fs-col-title bad">案例库（20 个固定案例）</div>
+      <div class="case-pool" id="casePool">
+        ${ALL_CASES.map((c,i)=>`
+          <div class="case-item" id="ci${i}">
+            <div class="ci-q">${c.q}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">相关度 ${Math.round(c.sim*100)}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="tok-bar">
+        <span style="font-size:13px;font-weight:700;color:var(--muted)">旧方案</span>
+        <div class="tok-track"><div class="tok-fill" style="width:100%;background:var(--red)"></div></div>
+        <span class="tok-num" style="color:var(--red)">4,000 T</span>
+      </div>
+    </div>
+    <div class="fs-col">
+      <div class="fs-col-title good">注入 Prompt（动态检索 Top-3）</div>
+      <pre class="prompt-box" id="promptBox"><span class="p-sys">System: 你是 SQL 专家。</span>
+
+<span style="color:var(--muted)">← 点击"开始检索"
+   模拟向量匹配过程</span></pre>
+      <div class="tok-bar">
+        <span style="font-size:13px;font-weight:700;color:var(--muted)">新方案</span>
+        <div class="tok-track"><div class="tok-fill" id="newTokBar" style="width:0%;background:var(--green)"></div></div>
+        <span class="tok-num" id="newTokNum" style="color:var(--green)">0 T</span>
+      </div>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-box bad"><div class="sv">4,000</div><div class="sl">旧方案 Token</div></div>
+    <div class="stat-box neutral"><div class="sv" id="fsSave">—</div><div class="sl">节省比例</div></div>
+    <div class="stat-box good"><div class="sv" id="fsSpeed">—</div><div class="sl">响应速度</div></div>
+    <div class="stat-box neutral" style="background:rgba(22,163,74,.04);border-color:rgba(22,163,74,.2)">
+      <div class="sv" style="color:var(--green)" id="fsAcc">—</div><div class="sl">准确率变化</div></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button class="btn-sim btn-primary" id="btnSim" onclick="runFewShot()">▶ 开始检索</button>
+    <button class="btn-sim btn-reset" onclick="resetFewShot()">重置</button>
+    <span style="font-size:13px;color:var(--muted);align-self:center">用户问：查询本月各地区销售额 Top-5 产品</span>
+  </div>`;
+}
+
+let fsStep = 0, fsTimer = null;
+function runFewShot() {
+  const btn = document.getElementById('btnSim');
+  if (fsStep >= 3) return;
+  btn.disabled = true;
+
+  const sorted = [...ALL_CASES].sort((a,b)=>b.sim-a.sim);
+  let delay = 0;
+  const selected = [];
+
+  sorted.forEach((c, rank) => {
+    const origIdx = ALL_CASES.indexOf(c);
+    setTimeout(() => {
+      const el = document.getElementById('ci'+origIdx);
+      if (rank < 3) {
+        el.classList.add('selected');
+        selected.push(c);
+        updatePromptBox(selected);
+        const tok = 120 + selected.length * 130;
+        const pct = Math.round(tok / 4000 * 100);
+        document.getElementById('newTokBar').style.width = pct + '%';
+        document.getElementById('newTokNum').textContent = tok + ' T';
+        if (selected.length === 3) {
+          document.getElementById('fsSave').textContent = '87.5%';
+          document.getElementById('fsSave').classList.add('pop');
+          document.getElementById('fsSpeed').textContent = '3x↑';
+          document.getElementById('fsAcc').textContent = '↑更高';
+          btn.disabled = false;
+          btn.textContent = '✓ 完成';
+        }
+      } else {
+        el.classList.add('greyed');
+      }
+    }, delay);
+    delay += rank < 3 ? 600 : 200;
+  });
+}
+
+function updatePromptBox(cases) {
+  const box = document.getElementById('promptBox');
+  let html = `<span class="p-sys">System: 你是 SQL 专家。</span>\n\n`;
+  cases.forEach((c,i) => {
+    html += `<span class="p-case">/* 案例 ${i+1}（相关度 ${Math.round(c.sim*100)}%）*/\n${c.q}\nSQL: ${c.sql}</span>\n\n`;
+  });
+  html += `<span class="p-user">User: 查询本月各地区销售额 Top-5 产品</span>`;
+  box.innerHTML = html;
+  box.scrollTop = box.scrollHeight;
+}
+
+function resetFewShot() {
+  ALL_CASES.forEach((_,i) => {
+    const el = document.getElementById('ci'+i);
+    if (el) { el.classList.remove('selected','greyed'); }
+  });
+  document.getElementById('promptBox').innerHTML = `<span class="p-sys">System: 你是 SQL 专家。</span>\n\n<span style="color:var(--muted)">← 点击"开始检索"\n   模拟向量匹配过程</span>`;
+  document.getElementById('newTokBar').style.width = '0%';
+  document.getElementById('newTokNum').textContent = '0 T';
+  document.getElementById('fsSave').textContent = '—';
+  document.getElementById('fsSpeed').textContent = '—';
+  document.getElementById('fsAcc').textContent = '—';
+  const btn = document.getElementById('btnSim');
+  btn.disabled = false;
+  btn.textContent = '▶ 开始检索';
+}
+
+// ── 策略2：文档压缩 ──
+// 4个档次，每档右侧显示对应阶段的压缩结果，核心4条数据永远保留
+
+// 左侧原文（带高亮标注哪些词/句会被压缩）
+const ORIG_PARAS = [
+  // [段落HTML, 在哪个档次开始在左侧显示删除线]
+  { html: '免责声明：本报告<span id="del-00">仅供参考</span>，不构成投资建议，<span id="del-01">不对任何损失负责</span>。', delAt: 2 },
+  { html: '核心结论：2024Q3 营收同比增长 <b>23.5%</b>，超市场预期 <b>8 个百分点</b>。', delAt: 99 }, // 永远保留
+  { html: '<span id="del-20">众所周知，</span>宏观经济环境<span id="del-21">复杂多变，</span>各行业均面临<span id="del-22">不同程度的</span>挑战与机遇。', delAt: 1 },
+  { html: '毛利率提升 <b>2.1pp</b> 至 <b>61.3%</b>，主要受益于高毛利 SaaS 业务占比提升。', delAt: 99 }, // 永远保留
+  { html: '<span id="del-40">正如我们在上季度报告中提到的，以及在多次路演中反复强调的……</span>', delAt: 2 },
+  { html: '经营现金流净额 <b>12.8 亿元</b>，同比增长 <b>41%</b>，<span id="del-51">现金储备充裕。</span>', delAt: 99 }, // 永远保留
+  { html: '<span id="del-60">感谢各位投资者长期以来的关注与支持，我们将继续努力创造价值……</span>', delAt: 2 },
+  { html: '下季度指引：营收 <b>42-45 亿元</b>，Non-GAAP 净利率 <b>18-20%</b>。', delAt: 99 }, // 永远保留
+];
+
+// 右侧4个档次的结果（对应滑块位置 1/2/3/4）
+const COMPRESS_LEVELS = [
+  // 档次0：不压缩（原文）
+  {
+    label: '1x（不压缩）',
+    tok: 10000, savePct: 0,
+    titleColor: 'var(--sub)',
+    desc: '原始文档，含大量冗余词汇和无效句子',
+    html: `<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">免责声明：本报告仅供参考，不构成投资建议，不对任何损失负责。</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>核心结论：2024Q3 营收同比增长 23.5%，超市场预期 8 个百分点。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">众所周知，宏观经济环境复杂多变，各行业均面临不同程度的挑战与机遇。</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>毛利率提升 2.1pp 至 61.3%，主要受益于高毛利 SaaS 业务占比提升。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">正如我们在上季度报告中提到的，以及在多次路演中反复强调的……</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>经营现金流净额 12.8 亿元，同比增长 41%，现金储备充裕。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">感谢各位投资者长期以来的关注与支持，我们将继续努力创造价值……</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>下季度指引：营收 42-45 亿元，Non-GAAP 净利率 18-20%。</b></p>`
+  },
+  // 档次1：轻度压缩 —— 删掉冗余词汇（"众所周知"、"复杂多变"、"不同程度的"等副词/套话词）
+  {
+    label: '3x（轻度）',
+    tok: 3800, savePct: 62,
+    titleColor: 'var(--amber)',
+    desc: '第一步：删掉冗余副词和套话短语，语义不变',
+    html: `<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">免责声明：本报告仅供参考，不构成投资建议，不对任何损失负责。</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>核心结论：2024Q3 营收同比增长 23.5%，超市场预期 8 个百分点。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">宏观经济环境面临挑战与机遇。<span style="color:var(--amber);font-size:12px">←「众所周知」「复杂多变」「不同程度的」已删</span></p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>毛利率提升 2.1pp 至 61.3%，主要受益于高毛利 SaaS 业务占比提升。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">正如我们在上季度报告中提到的，以及在多次路演中反复强调的……</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>经营现金流净额 12.8 亿元，同比增长 41%，现金储备充裕。</b></p>
+<p style="margin-bottom:8px;color:var(--sub);line-height:1.75">感谢各位投资者长期以来的关注与支持，我们将继续努力创造价值……</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>下季度指引：营收 42-45 亿元，Non-GAAP 净利率 18-20%。</b></p>`
+  },
+  // 档次2：中度压缩 —— 删掉整段冗余句（免责声明、路演套话、感谢语）
+  {
+    label: '7x（中度）',
+    tok: 1500, savePct: 85,
+    titleColor: 'var(--orange)',
+    desc: '第二步：删掉整句无效段落（免责声明、感谢语、套话段）',
+    html: `<p style="margin-bottom:6px;color:rgba(220,38,38,.4);text-decoration:line-through;font-size:13px;line-height:1.6">免责声明：本报告仅供参考…… ← 整段删除</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>核心结论：2024Q3 营收同比增长 23.5%，超市场预期 8 个百分点。</b></p>
+<p style="margin-bottom:6px;color:rgba(220,38,38,.4);text-decoration:line-through;font-size:13px;line-height:1.6">宏观经济环境面临挑战与机遇。← 无实质信息，删除</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>毛利率提升 2.1pp 至 61.3%，主要受益于高毛利 SaaS 业务占比提升。</b></p>
+<p style="margin-bottom:6px;color:rgba(220,38,38,.4);text-decoration:line-through;font-size:13px;line-height:1.6">正如我们在上季度报告中提到的…… ← 整段删除</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>经营现金流净额 12.8 亿元，同比增长 41%，现金储备充裕。</b></p>
+<p style="margin-bottom:6px;color:rgba(220,38,38,.4);text-decoration:line-through;font-size:13px;line-height:1.6">感谢各位投资者长期以来的关注…… ← 整段删除</p>
+<p style="margin-bottom:8px;color:var(--text);line-height:1.75"><b>下季度指引：营收 42-45 亿元，Non-GAAP 净利率 18-20%。</b></p>`
+  },
+  // 档次3：激进压缩 —— 重组为极简列表，核心4条数据完整保留
+  {
+    label: '20x（激进）',
+    tok: 520, savePct: 95,
+    titleColor: 'var(--green)',
+    desc: '第三步：重组为极简列表，核心数据 100% 保留',
+    html: `<p style="margin-bottom:10px;font-size:13px;color:var(--muted)">↓ 压缩为结构化摘要，信息密度最大：</p>
+<div style="background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:10px 14px;line-height:2;font-size:15px;color:var(--text)">
+• 营收同比 +23.5%，超预期 8pp<br>
+• 毛利率 61.3%（+2.1pp），SaaS 占比提升<br>
+• 经营现金流 12.8亿，同比 +41%<br>
+• Q4指引：营收 42-45亿，Non-GAAP利润率 18-20%
+</div>
+<p style="margin-top:8px;font-size:13px;color:var(--green);font-weight:700">✓ 4条核心数据完整保留，冗余内容全部过滤</p>`
+  },
+];
+
+function renderCompress() {
+  return `
+  <div style="font-size:14px;color:var(--sub);flex-shrink:0">拖动滑块体验 LLMLingua-2 压缩层次：<b style="color:var(--purple)">先删词 → 再删句 → 最后重组为列表。核心数据永远保留。</b></div>
+  <div class="compress-wrap">
+    <div class="fs-col">
+      <div class="fs-col-title bad">原始文档（含大量冗余）</div>
+      <div class="doc-box" id="docOriginal">
+        ${ORIG_PARAS.map((p,i) => `<p style="margin-bottom:7px;line-height:1.7;transition:all .4s" id="orig${i}">${p.html}</p>`).join('')}
+      </div>
+      <div class="tok-bar">
+        <div class="tok-track"><div class="tok-fill" style="width:100%;background:var(--red)"></div></div>
+        <span class="tok-num" style="color:var(--red)">10,000 T</span>
+      </div>
+    </div>
+    <div class="fs-col">
+      <div class="fs-col-title good" id="compTitle">压缩后（LLMLingua-2）—— 不压缩</div>
+      <div class="doc-box" id="docCompressed" style="transition:opacity .3s"></div>
+      <div class="tok-bar">
+        <div class="tok-track"><div class="tok-fill" id="compBar" style="width:100%;background:var(--sub)"></div></div>
+        <span class="tok-num" id="compTok" style="color:var(--sub)">10,000 T</span>
+      </div>
+    </div>
+  </div>
+  <div class="compress-ctrl">
+    <div class="slider-row">
+      <span class="slider-label">压缩力度</span>
+      <input type="range" id="compSlider" min="0" max="3" value="0" step="1" oninput="onCompress(this)" style="--pct:0%">
+      <span style="font-size:14px;font-weight:800;color:var(--purple);min-width:120px" id="compRatio">1x（不压缩）</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 2px;margin-top:-4px">
+      <span>原文</span><span>轻度（删词）</span><span>中度（删句）</span><span>激进（列表）</span>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-box bad"><div class="sv">10,000</div><div class="sl">原始 Token</div></div>
+    <div class="stat-box neutral"><div class="sv" id="compRemain">10,000</div><div class="sl">压缩后 Token</div></div>
+    <div class="stat-box neutral"><div class="sv" id="compSave" style="color:var(--sub)">0%</div><div class="sl">压缩率</div></div>
+    <div class="stat-box neutral" style="background:rgba(91,79,207,.04);border-color:rgba(91,79,207,.2)">
+      <div class="sv" style="color:var(--purple)">BERT</div><div class="sl">双向注意力压缩</div></div>
+  </div>`;
+}
+
+function onCompress(slider) {
+  const val = +slider.value; // 0/1/2/3
+  const pct = (val / 3 * 100).toFixed(0);
+  slider.style.setProperty('--pct', pct + '%');
+
+  const lv = COMPRESS_LEVELS[val];
+
+  // 右侧：切换内容
+  const compBox = document.getElementById('docCompressed');
+  compBox.style.opacity = '0';
+  setTimeout(() => {
+    compBox.innerHTML = lv.html;
+    compBox.style.opacity = '1';
+  }, 150);
+
+  // 右侧标题
+  document.getElementById('compTitle').textContent = `压缩后（LLMLingua-2）—— ${lv.label}`;
+  document.getElementById('compTitle').style.color = lv.titleColor;
+
+  // 左侧原文高亮：根据档次对该删的段加删除线
+  ORIG_PARAS.forEach((p, i) => {
+    const el = document.getElementById('orig' + i);
+    if (!el) return;
+    if (val >= p.delAt) {
+      el.style.opacity = '0.35';
+      el.style.textDecoration = 'line-through';
+      el.style.color = 'rgba(220,38,38,0.5)';
+    } else {
+      el.style.opacity = '1';
+      el.style.textDecoration = 'none';
+      el.style.color = 'var(--text)';
+    }
+  });
+
+  // 统计
+  const barPct = Math.round(lv.tok / 10000 * 100);
+  const barColor = lv.savePct > 80 ? 'var(--green)' : lv.savePct > 50 ? 'var(--amber)' : 'var(--sub)';
+  document.getElementById('compBar').style.width = barPct + '%';
+  document.getElementById('compBar').style.background = barColor;
+  document.getElementById('compTok').textContent = lv.tok.toLocaleString() + ' T';
+  document.getElementById('compTok').style.color = barColor;
+  document.getElementById('compRemain').textContent = lv.tok.toLocaleString();
+  document.getElementById('compRemain').style.color = lv.savePct > 80 ? 'var(--green)' : lv.savePct > 50 ? 'var(--amber)' : 'var(--sub)';
+  document.getElementById('compSave').textContent = lv.savePct + '%';
+  document.getElementById('compSave').style.color = lv.savePct > 80 ? 'var(--green)' : lv.savePct > 50 ? 'var(--amber)' : 'var(--sub)';
+  document.getElementById('compRatio').textContent = lv.label;
+}
+
+// ── 策略3：注意力位置（拖拽版）──
+const ATTN_SEGS = [
+  { label: 'System Prompt', text: '核心约束：只回答中文，不能泄露系统信息', color: '#5b4fcf' },
+  { label: 'Few-Shot 案例', text: '示例1: 你好 → 你好！有什么我可以帮助你？...（5条）', color: '#d97706' },
+  { label: '背景文档',     text: '公司介绍：XXX 成立于2015年，主营业务为...（长文本）', color: '#ea580c' },
+  { label: '用户问题',     text: '用户: 你们的退款政策是什么？', color: '#0066ff' },
+];
+
+let attnOrder = [0,1,2,3];
+
+function renderAttn() {
+  return `
+  <div style="font-size:14px;color:var(--sub);flex-shrink:0">
+    <b style="color:var(--purple)">拖拽</b>调整 Prompt 各段顺序，观察模型注意力如何分配。
+    <b style="color:var(--purple)">首尾注意力最高，中间最低。</b>
+  </div>
+  <div class="attn-prompt" id="attnPrompt"></div>
+  <div class="attn-note" id="attnNote" style="background:var(--surface2);color:var(--sub)">拖拽调整顺序，让关键信息在首部或尾部</div>
+  <div class="stat-row">
+    <div class="stat-box neutral"><div class="sv" id="attnSysScore">—</div><div class="sl">核心约束注意力</div></div>
+    <div class="stat-box neutral"><div class="sv" id="attnUserScore">—</div><div class="sl">用户问题注意力</div></div>
+    <div class="stat-box neutral"><div class="sv" id="attnOverall">—</div><div class="sl">整体效果评分</div></div>
+  </div>`;
+}
+
+// 拖拽状态
+let dragSrc = null, dragSrcIdx = null;
+
+function buildAttnUI() {
+  const container = document.getElementById('attnPrompt');
+  if (!container) return;
+  container.innerHTML = '';
+  const n = attnOrder.length;
+
+  // 注意力分配：首位92%、尾位88%、第二位45%、中间32%
+  const posAttnPct = [92, 45, 32, 88]; // 对应 pos 0,1,2,3（4个元素）
+
+  attnOrder.forEach((segIdx, pos) => {
+    const s = ATTN_SEGS[segIdx];
+    const attnPct = posAttnPct[pos] || 32;
+    const heatColor = attnPct > 80 ? '#16a34a' : attnPct > 50 ? '#d97706' : '#dc2626';
+    const heatLabel = attnPct > 80 ? '高' : attnPct > 50 ? '中' : '低';
+
+    const div = document.createElement('div');
+    div.className = 'attn-seg';
+    div.style.cssText = `border-color:${s.color}40;background:${s.color}08;cursor:grab;transition:opacity .2s,transform .15s`;
+    div.draggable = true;
+    div.dataset.pos = pos;
+
+    div.innerHTML = `
+      <div style="font-size:18px;color:${s.color}55;flex-shrink:0;cursor:grab" title="拖拽排序">⠿</div>
+      <div class="attn-label" style="color:${s.color}">${s.label}</div>
+      <div class="attn-content">${s.text}</div>
+      <div class="attn-heat" style="background:${heatColor}">${attnPct}% ${heatLabel}</div>
+    `;
+
+    div.addEventListener('dragstart', e => {
+      dragSrc = div;
+      dragSrcIdx = pos;
+      setTimeout(() => div.style.opacity = '0.4', 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => {
+      div.style.opacity = '1';
+      container.querySelectorAll('.attn-seg').forEach(el => el.classList.remove('drag-over'));
+    });
+    div.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.querySelectorAll('.attn-seg').forEach(el => el.classList.remove('drag-over'));
+      div.classList.add('drag-over');
+    });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      const targetPos = +div.dataset.pos;
+      if (dragSrcIdx !== null && dragSrcIdx !== targetPos) {
+        // 交换两段
+        [attnOrder[dragSrcIdx], attnOrder[targetPos]] = [attnOrder[targetPos], attnOrder[dragSrcIdx]];
+        buildAttnUI();
+      }
+    });
+
+    container.appendChild(div);
+  });
+
+  // 添加 drag-over 样式
+  if (!document.getElementById('drag-style')) {
+    const st = document.createElement('style');
+    st.id = 'drag-style';
+    st.textContent = '.attn-seg.drag-over{outline:2.5px dashed var(--purple);background:rgba(91,79,207,.07)!important;transform:scale(1.01)}';
+    document.head.appendChild(st);
+  }
+
+  updateAttnStats();
+}
+
+function updateAttnStats() {
+  const sysPos  = attnOrder.indexOf(0); // System Prompt
+  const userPos = attnOrder.indexOf(3); // 用户问题
+  const n = attnOrder.length;
+  const posAttnPct = [92, 45, 32, 88];
+
+  const sysA  = posAttnPct[sysPos]  || 32;
+  const userA = posAttnPct[userPos] || 32;
+  const overall = Math.round((sysA + userA) / 2);
+
+  document.getElementById('attnSysScore').textContent = sysA + '%';
+  document.getElementById('attnSysScore').style.color = sysA > 70 ? 'var(--green)' : sysA > 50 ? 'var(--orange)' : 'var(--red)';
+  document.getElementById('attnUserScore').textContent = userA + '%';
+  document.getElementById('attnUserScore').style.color = userA > 70 ? 'var(--green)' : userA > 50 ? 'var(--orange)' : 'var(--red)';
+  document.getElementById('attnOverall').textContent = overall > 70 ? '优秀' : overall > 50 ? '一般' : '较差';
+  document.getElementById('attnOverall').style.color = overall > 70 ? 'var(--green)' : overall > 50 ? 'var(--orange)' : 'var(--red)';
+
+  const note = document.getElementById('attnNote');
+  if (overall > 70) {
+    note.style.background = 'rgba(22,163,74,.08)';
+    note.style.color = 'var(--green)';
+    note.textContent = '✓ 核心信息在首尾，模型注意力集中，效果最优！';
+  } else if (sysPos >= 1 && sysPos <= 2) {
+    note.style.background = 'rgba(220,38,38,.06)';
+    note.style.color = 'var(--red)';
+    note.textContent = '✗ 核心约束被埋在中间，模型可能忽视！拖到首位试试。';
+  } else {
+    note.style.background = 'rgba(234,88,12,.06)';
+    note.style.color = 'var(--orange)';
+    note.textContent = '△ 还可以优化，尝试把用户问题拖到最后。';
+  }
+}
+
+// ── 主控制 ──
+let curStrat = 0;
+function pickStrat(btn, idx) {
+  document.querySelectorAll('.strat-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  curStrat = idx;
+  const titles = ['动态 Few-Shot：Text-to-SQL 演示','长文档压缩：LLMLingua-2 实战演示','关键信息位置：点击↑↓调整顺序'];
+  document.getElementById('demoTitle').textContent = titles[idx];
+  const area = document.getElementById('demoArea');
+  if (idx === 0) {
+    area.innerHTML = renderFewShot();
+  } else if (idx === 1) {
+    area.innerHTML = renderCompress();
+    setTimeout(() => {
+      // 初始化右侧内容（档次0）
+      document.getElementById('docCompressed').innerHTML = COMPRESS_LEVELS[0].html;
+    }, 50);
+  } else {
+    attnOrder = [0,1,2,3];
+    area.innerHTML = renderAttn();
+    setTimeout(buildAttnUI, 50);
+  }
+}
+
+pickStrat(document.querySelector('.strat-btn'), 0);
+</script>
+</body>
+</html>

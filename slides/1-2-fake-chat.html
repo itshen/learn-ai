@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>伪造聊天记录 · OpenAI 的最初实验</title>
+<script src="../global-attn.js"></script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --amber: #d97706;
+  --success: #16a34a;
+  --danger: #e53e3e;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+.header {
+  padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  background-color: var(--bg-color);
+}
+.title-area h2 { font-size: 22px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; filter: none; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left-panel {
+  width: 38%; padding: 28px 32px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto;
+}
+.step-label {
+  font-size: 11px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.big-claim { font-size: 26px; font-weight: 800; color: var(--text-main); line-height: 1.45; }
+.em { color: var(--accent); }
+.desc-text { font-size: 15px; color: var(--text-sub); line-height: 1.8; }
+
+.step-card {
+  border-radius: 12px; padding: 14px 16px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: white;
+  opacity: 0; transform: translateY(6px);
+  transition: all 0.4s ease;
+}
+.step-card.show { opacity: 1; transform: translateY(0); }
+.step-card .num {
+  font-size: 11px; font-weight: 800; color: var(--accent);
+  letter-spacing: 0.4px; margin-bottom: 5px;
+}
+.step-card .content { font-size: 14px; color: var(--text-main); line-height: 1.7; }
+
+.wow-badge {
+  background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2);
+  border-radius: 12px; padding: 14px 16px;
+  font-size: 18px; font-weight: 800; color: var(--amber);
+  text-align: center;
+  opacity: 0; transition: opacity 0.5s;
+}
+.wow-badge.show { opacity: 1; }
+
+/* ── Right ── */
+.right-panel {
+  flex: 1; padding: 28px 36px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+
+/* 对话演示 */
+.chat-demo {
+  background: white; border-radius: 14px; padding: 24px 28px;
+  border: 1px solid rgba(0,0,0,0.07);
+  display: flex; flex-direction: column; gap: 14px;
+  flex: 1; overflow-y: auto;
+}
+
+.raw-text-box {
+  background: rgba(0,0,0,0.03); border-radius: 10px; padding: 16px 18px;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 14px; line-height: 1.85; color: var(--text-main);
+  opacity: 0; transform: translateY(4px);
+  transition: all 0.4s;
+}
+.raw-text-box.show { opacity: 1; transform: translateY(0); }
+.rt-user { color: var(--accent); font-weight: 700; }
+.rt-ai { color: var(--success); font-weight: 700; }
+
+.arrow-label {
+  text-align: center; font-size: 13px; font-weight: 700; color: var(--text-sub);
+  opacity: 0; transition: opacity 0.4s;
+}
+.arrow-label.show { opacity: 1; }
+
+.typing-output {
+  background: rgba(22,163,74,0.05); border: 1px solid rgba(22,163,74,0.15);
+  border-radius: 10px; padding: 16px 18px;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 14px; line-height: 1.85;
+  opacity: 0; transition: opacity 0.4s;
+  min-height: 60px;
+}
+.typing-output.show { opacity: 1; }
+.cursor-blink {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--success); vertical-align: text-bottom;
+  animation: blink 0.9s step-start infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.round2-label {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.3px; margin-top: 4px;
+  opacity: 0; transition: opacity 0.4s;
+}
+.round2-label.show { opacity: 1; }
+
+.next-prompt-box {
+  background: rgba(0,0,0,0.03); border-radius: 10px; padding: 16px 18px;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 14px; line-height: 1.85;
+  opacity: 0; transform: translateY(4px);
+  transition: all 0.4s;
+}
+.next-prompt-box.show { opacity: 1; transform: translateY(0); }
+.next-prompt-box .rt-ai { color: var(--success); font-weight: 700; }
+.next-prompt-box .rt-user { color: var(--accent); font-weight: 700; }
+.next-prompt-box .incomplete { color: var(--danger); font-style: italic; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+
+  <div class="header">
+    <div class="title-area">
+      <h2>OpenAI 的最初实验：伪造聊天记录</h2>
+      <p>把补全机器变成聊天机器人，就差这一个小技巧</p>
+    </div>
+    <button class="btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="main-area">
+
+    <!-- Left -->
+    <div class="left-panel">
+      <div>
+        <div class="step-label">OpenAI 发现了什么</div>
+        <div class="big-claim">
+          大模型的本质是补全，<br>
+          那如果我<span class="em">伪造</span>一段<br>
+          聊天记录让它补全呢？
+        </div>
+      </div>
+
+      <div class="desc-text">
+        你不是只会一个一个字往后吐吗？<br>
+        那我就构造一个格式——「这是一段没写完的聊天记录，你来续写助理的部分。」
+      </div>
+
+      <div class="step-card" id="sc1">
+        <div class="num">第一步</div>
+        <div class="content">
+          拼出一段「假的聊天记录」：<br>
+          用户发了什么，然后助理那一栏故意留空
+        </div>
+      </div>
+
+      <div class="step-card" id="sc2">
+        <div class="num">第二步</div>
+        <div class="content">
+          把整段文字喂给 Base 模型——<br>
+          它只会做一件事：<strong>从结尾处开始补全</strong>
+        </div>
+      </div>
+
+      <div class="step-card" id="sc3">
+        <div class="num">第三步</div>
+        <div class="content">
+          用户再说一句话，就把「上一轮回答 + 新问题」<br>
+          重新拼成更长的待补全文本，继续送给模型
+        </div>
+      </div>
+
+      <div class="wow-badge" id="wowBadge">
+        诶，你别说，大模型补得有模有样！！！
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="right-panel">
+      <div class="section-title">第一轮：模型看到什么？补了什么？</div>
+
+      <div class="chat-demo">
+        <!-- 原始拼接文本 -->
+        <div class="raw-text-box" id="rawBox1">
+          <span class="rt-user">用户：</span>紫霞仙子是谁？<br>
+          <span class="rt-ai">助理：</span><span id="cursor1" class="cursor-blink" style="display:none;"></span>
+        </div>
+
+        <div class="arrow-label" id="arrow1">↓ 模型从「助理：」后面开始补全</div>
+
+        <!-- 第一轮输出 -->
+        <div class="typing-output" id="out1">
+          <span class="rt-ai">助理补出来：</span><span id="out1Text"></span><span class="cursor-blink" id="cur1" style="display:none;"></span>
+        </div>
+
+        <!-- 第二轮 -->
+        <div class="round2-label" id="r2label">第二轮：用户再说一句，把第一轮答案拼进去继续送</div>
+
+        <div class="next-prompt-box" id="rawBox2">
+          <span class="rt-user">用户：</span>紫霞仙子是谁？<br>
+          <span class="rt-ai">助理：</span><span id="prevAnswer"></span><br>
+          <span class="rt-user">用户：</span>她爱的人是谁？<br>
+          <span class="rt-ai">助理：</span><span class="incomplete" id="cursor2"></span>
+        </div>
+
+        <div class="typing-output" id="out2" style="margin-top:0;">
+          <span class="rt-ai">助理补出来：</span><span id="out2Text"></span><span class="cursor-blink" id="cur2" style="display:none;"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let step = 0;
+const ANSWER1 = '紫霞仙子是《大话西游》中的角色，至尊宝最深爱的人。';
+const ANSWER2 = '她爱的人是至尊宝，为了他甘愿用鲜血开启月光宝盒。';
+let typingIdx = 0;
+let typingTimer = null;
+
+function typeText(targetId, text, cursorId, onDone) {
+  let idx = 0;
+  const el = document.getElementById(targetId);
+  const cur = document.getElementById(cursorId);
+  if (cur) cur.style.display = 'inline-block';
+  const timer = setInterval(() => {
+    if (idx >= text.length) {
+      clearInterval(timer);
+      if (cur) cur.style.display = 'none';
+      if (onDone) onDone();
+      return;
+    }
+    el.textContent += text[idx];
+    idx++;
+  }, 45);
+  return timer;
+}
+
+function nextStep() {
+  step++;
+  const btn = document.getElementById('nextBtn');
+
+  if (step === 1) {
+    document.getElementById('sc1').classList.add('show');
+    document.getElementById('rawBox1').classList.add('show');
+    document.getElementById('cursor1').style.display = 'inline-block';
+    setTimeout(() => document.getElementById('cursor1').style.display = 'none', 800);
+  }
+  else if (step === 2) {
+    document.getElementById('sc2').classList.add('show');
+    document.getElementById('arrow1').classList.add('show');
+    document.getElementById('out1').classList.add('show');
+    document.getElementById('cur1').style.display = 'inline-block';
+    btn.disabled = true;
+    typeText('out1Text', ANSWER1, 'cur1', () => {
+      document.getElementById('prevAnswer').textContent = ANSWER1;
+      btn.disabled = false;
+    });
+  }
+  else if (step === 3) {
+    document.getElementById('sc3').classList.add('show');
+    document.getElementById('r2label').classList.add('show');
+    document.getElementById('rawBox2').classList.add('show');
+  }
+  else if (step === 4) {
+    document.getElementById('out2').classList.add('show');
+    btn.disabled = true;
+    document.getElementById('cursor2').textContent = '▌';
+    setTimeout(() => {
+      document.getElementById('cursor2').textContent = '';
+      typeText('out2Text', ANSWER2, 'cur2', () => {
+        document.getElementById('wowBadge').classList.add('show');
+        btn.disabled = false;
+        btn.textContent = '完成';
+        btn.onclick = null;
+      });
+    }, 400);
+  }
+}
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>上下文溢出：三种处理策略</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--amber:#d97706;--green:#16a34a;--red:#dc2626;--purple:#5b4fcf;--muted:#8e8e93;--orange:#ea580c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:14px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--amber)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--amber)}
+.body{flex:1;display:grid;grid-template-columns:400px 1fr;min-height:0}
+
+/* 左栏 */
+.left{padding:18px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.desc{font-size:17px;color:var(--sub);line-height:1.65;flex-shrink:0}
+
+.strat-list{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.strat-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;text-align:left;width:100%}
+.strat-btn:hover{border-color:rgba(0,0,0,.15)}
+.strat-btn.active{box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.strat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.sb{flex:1}
+.sb h4{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.sb p{font-size:14px;color:var(--muted)}
+.strat-verdict{font-size:13px;font-weight:800;padding:3px 9px;border-radius:5px;flex-shrink:0}
+
+/* pros/cons */
+.pros-box{flex:1;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.pros-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase}
+.pros-items{display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.pi{display:flex;gap:8px;align-items:flex-start;font-size:16px;line-height:1.5;padding:5px 0}
+.pi.pro{color:var(--green)}.pi.con{color:var(--red)}
+.pi-icon{flex-shrink:0;margin-top:1px;font-size:16px}
+
+/* 右栏 */
+.right{padding:18px 24px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.demo-hd{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0}
+
+.vis-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.vis-bar{padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.vis-bar-title{font-size:15px;font-weight:700;color:var(--muted)}
+.vis-body{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+
+/* 消息气泡 */
+.msg{padding:10px 14px;border-radius:10px;font-size:16px;line-height:1.6;opacity:0;transform:translateY(8px);transition:all .35s ease;flex-shrink:0}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg.sys{background:rgba(91,79,207,.1);color:#5b4fcf;font-weight:600}
+.msg.user{background:rgba(8,145,178,.1);color:#0891b2}
+.msg.ai{background:rgba(22,163,74,.1);color:var(--green)}
+.msg.summary{background:rgba(215,119,6,.1);color:var(--amber);font-weight:600}
+.msg.dropped{background:var(--surface2);color:var(--muted);text-decoration:line-through;opacity:0}
+.msg.dropped.show{opacity:.4}
+.msg.rag{background:rgba(91,79,207,.08);color:#5b4fcf}
+.msg.warning{background:rgba(220,38,38,.07);color:var(--red);font-size:15px;font-weight:600;border-radius:8px}
+.msg.ok{background:rgba(22,163,74,.07);color:var(--green);font-size:15px;font-weight:600;border-radius:8px}
+
+.ctrl-row{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.btn{padding:9px 20px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-p{background:var(--amber);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.35;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.hint{font-size:13px;color:var(--muted)}
+
+.scene-box{background:rgba(0,102,255,.05);border:1px solid rgba(0,102,255,.15);border-radius:10px;padding:9px 13px;font-size:15px;color:var(--text);line-height:1.6;flex-shrink:0}
+.scene-box b{color:var(--accent)}
+
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块五 · 上下文工程 · 第 2 页</div>
+      <div class="hd-title">上下文溢出：<em>三种处理策略</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击策略 → 右侧逐步演示效果</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">对话越来越长超出窗口时，工程上有三种主流处理方式，各有利弊。</p>
+
+      <div class="strat-list">
+        <button class="strat-btn active" onclick="pickStrat(this,0)" id="sb0">
+          <div class="strat-icon" style="background:rgba(220,38,38,.1)">✂️</div>
+          <div class="sb"><h4>直接截断</h4><p>丢掉最早的对话轮次</p></div>
+          <span class="strat-verdict" style="background:rgba(220,38,38,.1);color:var(--red)">简单粗暴</span>
+        </button>
+        <button class="strat-btn" onclick="pickStrat(this,1)" id="sb1">
+          <div class="strat-icon" style="background:rgba(215,119,6,.1)">📝</div>
+          <div class="sb"><h4>摘要压缩</h4><p>历史先总结再存，保留要点</p></div>
+          <span class="strat-verdict" style="background:rgba(215,119,6,.1);color:var(--amber)">平衡之选</span>
+        </button>
+        <button class="strat-btn" onclick="pickStrat(this,2)" id="sb2">
+          <div class="strat-icon" style="background:rgba(91,79,207,.1)">🎯</div>
+          <div class="sb"><h4>选择性保留</h4><p>语义检索，只注入相关历史</p></div>
+          <span class="strat-verdict" style="background:rgba(91,79,207,.1);color:var(--purple)">最精准</span>
+        </button>
+      </div>
+
+      <div class="pros-box">
+        <div class="pros-title" id="prosTitle">优缺点分析</div>
+        <div class="pros-items" id="prosItems"></div>
+      </div>
+
+      <div class="scene-box" id="sceneBox"></div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="demo-hd" id="demoHd">演示：直接截断效果</div>
+      <div class="vis-wrap">
+        <div class="vis-bar">
+          <span class="vis-bar-title" id="visTitle">用户在第 1 轮说了自己的名字……</span>
+          <span style="font-size:13px;color:var(--muted)" id="stepHint">点击"下一步"开始</span>
+        </div>
+        <div class="vis-body" id="visBody"></div>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-p" id="btnNext" onclick="nextStep()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="resetDemo()">重置</button>
+        <span class="hint" id="ctrlHint"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const STRATS = [
+  {
+    color: 'var(--red)',
+    demoHd: '演示：直接截断的代价',
+    pros: [
+      {text:'实现简单，零额外成本', pro:true},
+      {text:'适合短对话、单次任务场景', pro:true},
+      {text:'早期信息完全丢失，对话不连贯', pro:false},
+      {text:'可能截掉第 1 轮说的重要信息', pro:false},
+    ],
+    scene: '<b>适用：</b>查天气/翻译等单次工具型对话，对话历史不重要的场景。',
+    steps: [
+      { cls:'user', text:'第 1 轮 用户：你好，我叫小明，在上海工作，想学 Python', title:'用户第 1 轮说了名字……' },
+      { cls:'ai',   text:'第 1 轮 AI：你好小明！Python 很适合入门，推荐从基础语法开始。', title:'AI 正常回复……' },
+      { cls:'user', text:'第 2 轮 用户：上海有好的线下课吗？', title:'第 2 轮继续……' },
+      { cls:'ai',   text:'第 2 轮 AI：上海有几家不错的机构，如……', title:'对话越来越长……' },
+      { cls:'user', text:'第 3 轮 用户：哪里学函数比较好？', title:'窗口快满了……' },
+      { cls:'dropped', text:'✂️ 第 1-2 轮已被截断丢弃（窗口已满）', title:'⚠️ 窗口溢出，截断第 1-2 轮！', warn:true },
+      { cls:'user', text:'第 4 轮 用户：我之前说我叫什么？', title:'用户问起名字……' },
+      { cls:'warning', text:'❌ AI：对不起，我没有找到你的姓名信息……（"小明"已永久消失）', title:'糟糕！信息已丢失！', warn:true },
+    ]
+  },
+  {
+    color: 'var(--amber)',
+    demoHd: '演示：摘要压缩保留关键信息',
+    pros: [
+      {text:'大幅压缩历史 Token，显著节省成本', pro:true},
+      {text:'保留了关键信息（人名、背景、偏好）', pro:true},
+      {text:'需要额外 LLM 调用生成摘要（有成本）', pro:false},
+      {text:'摘要本身可能有信息损耗（细节丢失）', pro:false},
+    ],
+    scene: '<b>适用：</b>长期学习对话、客服系统，需要记住用户身份的场景，对话超过 20 轮时效果明显。',
+    steps: [
+      { cls:'user',    text:'第 1-5 轮：用户小明与 AI 深入讨论 Python 基础、函数、闭包……', title:'对话积累了 5 轮……' },
+      { cls:'ai',      text:'检测到历史超过阈值，触发摘要压缩……', title:'触发自动摘要……' },
+      { cls:'summary', text:'📝 [历史摘要 · 约 200T] 用户叫小明，上海，目标学 Python。已完成基础语法，正学函数/闭包，对线下课有兴趣。', title:'摘要生成完成（200 Token 替代 2000 Token）' },
+      { cls:'user',    text:'第 6 轮 用户：闭包是什么意思？', title:'用户继续提问……' },
+      { cls:'ai',      text:'根据你的学习进度（你之前学过函数），闭包就是函数"记住了定义时的变量环境"……', title:'AI 记住了上下文！' },
+      { cls:'ok',      text:'✅ 摘要保留了"小明、上海、Python、函数"，对话连贯，成本降低 90%', title:'摘要策略成功！' },
+    ]
+  },
+  {
+    color: 'var(--purple)',
+    demoHd: '演示：语义检索只注入相关历史',
+    pros: [
+      {text:'Token 使用最优，精准注入相关历史', pro:true},
+      {text:'回答质量高，模型不被无关历史干扰', pro:true},
+      {text:'实现复杂，需要 Memory 向量检索系统', pro:false},
+      {text:'可能漏掉关联不强但重要的隐性上下文', pro:false},
+    ],
+    scene: '<b>适用：</b>复杂 Agent 系统、超长对话（>100 轮）、需要精准记忆的垂直应用。',
+    steps: [
+      { cls:'dropped', text:'第 1-5 轮：关于 Python 基础的讨论（已向量化存入 Memory）', title:'历史对话全部向量化存储……' },
+      { cls:'dropped', text:'第 6-9 轮：关于列表、字典的讨论（已存入 Memory）', title:'更多历史向量化……' },
+      { cls:'user',    text:'第 N 轮 用户：闭包和装饰器有什么区别？', title:'用户提出新问题……' },
+      { cls:'rag',     text:'🔍 Memory 检索中…… 语义最相关：第6轮（函数作用域）、第8轮（装饰器）', title:'语义检索找到相关历史！' },
+      { cls:'ai',      text:'根据我们之前关于闭包（第6轮）和装饰器（第8轮）的讨论……（95 轮历史，只注入 2 轮）', title:'只注入最相关的 2 轮！' },
+      { cls:'ok',      text:'🎯 100 轮对话中只取 2 轮注入，Token 消耗降低 98%，回答更精准', title:'选择性保留大获全胜！' },
+    ]
+  }
+];
+
+let curStrat = 0, curStep = 0, stepTimer = null;
+const colors = ['var(--red)', 'var(--amber)', 'var(--purple)'];
+
+function pickStrat(btn, idx) {
+  document.querySelectorAll('.strat-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === idx);
+    b.style.borderColor = i === idx ? colors[idx] : '';
+    b.style.background = i === idx ? '' : '';
+  });
+  curStrat = idx;
+  resetDemo();
+  renderPros();
+}
+
+function renderPros() {
+  const s = STRATS[curStrat];
+  document.getElementById('prosTitle').textContent = '优缺点分析';
+  document.getElementById('prosItems').innerHTML = s.pros.map(p =>
+    `<div class="pi ${p.pro?'pro':'con'}"><span class="pi-icon">${p.pro?'✅':'❌'}</span><span>${p.text}</span></div>`
+  ).join('');
+  document.getElementById('sceneBox').innerHTML = s.scene;
+  document.getElementById('demoHd').textContent = s.demoHd;
+}
+
+function nextStep() {
+  const s = STRATS[curStrat];
+  if (curStep >= s.steps.length) return;
+  const step = s.steps[curStep];
+  const body = document.getElementById('visBody');
+
+  const el = document.createElement('div');
+  el.className = 'msg ' + step.cls;
+  el.textContent = step.text;
+  body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  body.scrollTop = body.scrollHeight;
+
+  document.getElementById('visTitle').textContent = step.title;
+  curStep++;
+
+  const pct = Math.round(curStep / s.steps.length * 100);
+  document.getElementById('stepHint').textContent = `${curStep} / ${s.steps.length}`;
+  document.getElementById('ctrlHint').textContent = curStep >= s.steps.length ? '演示完成，点重置再来一次' : `第 ${curStep} 步`;
+
+  if (curStep >= s.steps.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 完成';
+  }
+}
+
+function resetDemo() {
+  clearInterval(stepTimer);
+  curStep = 0;
+  document.getElementById('visBody').innerHTML = '';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  document.getElementById('visTitle').textContent = '点击"下一步"逐步演示……';
+  document.getElementById('stepHint').textContent = '';
+  document.getElementById('ctrlHint').textContent = '';
+}
+
+// 初始化
+pickStrat(document.getElementById('sb0'), 0);
+</script>
+</body>
+</html>

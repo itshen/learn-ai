@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 产品从入门到精通 · 完整课程目录</title>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --text: #1c1c1e;
+  --sub: #8e8e93;
+  --accent: #0066ff;
+  --success: #16a34a;
+  --amber: #d97706;
+  --purple: #7c3aed;
+  --danger: #e53e3e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.header {
+  padding: 16px 36px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.header-left h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+.header-left p  { font-size: 12px; color: var(--sub); margin-top: 2px; }
+
+.btn-start {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.btn-start:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ── 左侧章节信息 ── */
+.chapter-info {
+  width: 280px; flex-shrink: 0;
+  padding: 24px 28px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 20px;
+}
+.chapter-tag {
+  display: inline-block; font-size: 11px; font-weight: 800;
+  padding: 4px 10px; border-radius: 6px; letter-spacing: 0.4px;
+  background: rgba(0,102,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,102,255,0.15);
+}
+.chapter-title { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.4; }
+.chapter-desc  { font-size: 13px; color: var(--sub); line-height: 1.7; }
+
+.chapter-stats {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.stat-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text);
+}
+.stat-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.section-list { display: flex; flex-direction: column; gap: 6px; }
+.section-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; color: var(--sub);
+  border: 1px solid transparent;
+}
+.section-item.active {
+  background: rgba(0,102,255,0.06);
+  border-color: rgba(0,102,255,0.15);
+  color: var(--accent);
+}
+.section-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+  background: rgba(0,0,0,0.06); color: var(--sub);
+}
+.section-item.active .section-num { background: var(--accent); color: white; }
+
+/* ── 右侧页面列表 ── */
+.pages-area {
+  flex: 1; padding: 20px 28px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.section-header {
+  font-size: 11px; font-weight: 800; color: var(--sub);
+  letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 12px 0 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-header::after {
+  content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.07);
+}
+.section-header:first-child { padding-top: 0; }
+
+.page-row {
+  display: flex; align-items: center; gap: 12px;
+  background: white; border-radius: 12px; padding: 12px 16px;
+  border: 1.5px solid rgba(0,0,0,0.07);
+  cursor: pointer; transition: all 0.15s;
+  text-decoration: none;
+}
+.page-row:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(0,102,255,0.08);
+  transform: translateX(3px);
+}
+.page-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,0,0,0.05); color: var(--sub);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.page-info { flex: 1; min-width: 0; }
+.page-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.page-desc  { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.page-badges { display: flex; gap: 5px; flex-shrink: 0; }
+.badge {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px;
+}
+.page-arrow { color: #ccc; font-size: 16px; flex-shrink: 0; transition: color 0.15s; }
+.page-row:hover .page-arrow { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div class="header-left">
+      <h2>AI 产品从入门到精通 · 完整课程目录</h2>
+      <p>开篇 2 页 + 正课 39 页（第一篇章 15 页 · 大模型基础 ｜ 第二篇章 24 页 · AI 工程化）</p>
+    </div>
+    <button class="btn-start" onclick="location.href='0-intro.html'">
+      开始讲授 →
+    </button>
+  </div>
+
+  <div class="body">
+
+    <!-- 左侧：章节概览 -->
+    <div class="chapter-info">
+      <div>
+        <div class="chapter-tag">完整课程</div>
+        <div class="chapter-title" style="margin-top:8px;">AI 产品<br>从入门到精通</div>
+        <div class="chapter-desc" style="margin-top:10px;">
+          两大篇章：从大模型底层原理到 AI 工程化落地，帮 AI 产品经理建立完整认知与实战能力体系。
+        </div>
+      </div>
+
+      <div class="section-list">
+        <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:2px;">第一篇章 · 大模型基础</div>
+        <div class="section-item active">
+          <div class="section-num">1</div>
+          <span>Token 与训练原理</span>
+        </div>
+        <div class="section-item active">
+          <div class="section-num">2</div>
+          <span>GPT 跃进 · 从补全到对话</span>
+        </div>
+        <div class="section-item active">
+          <div class="section-num">3</div>
+          <span>幻觉成因与 4 种缓解方案</span>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--purple);letter-spacing:0.4px;text-transform:uppercase;margin-top:8px;margin-bottom:2px;">第二篇章 · AI 工程化</div>
+        <a href="story-2.html" class="section-item active" style="border-color:rgba(124,58,237,.15);color:var(--purple);text-decoration:none;">
+          <div class="section-num" style="background:rgba(124,58,237,.1);color:var(--purple)">4</div>
+          <span>上下文 + Prompt 工程 →</span>
+        </a>
+        <a href="story-2.html" class="section-item active" style="border-color:rgba(124,58,237,.15);color:var(--purple);text-decoration:none;">
+          <div class="section-num" style="background:rgba(124,58,237,.1);color:var(--purple)">5</div>
+          <span>Agent 设计与安全防御 →</span>
+        </a>
+        <a href="story-2.html" class="section-item active" style="border-color:rgba(124,58,237,.15);color:var(--purple);text-decoration:none;">
+          <div class="section-num" style="background:rgba(124,58,237,.1);color:var(--purple)">6</div>
+          <span>成本优化五层体系 →</span>
+        </a>
+      </div>
+
+      <div style="background:rgba(0,102,255,0.05);border:1px solid rgba(0,102,255,0.15);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:800;color:var(--accent);margin-bottom:4px;">讲师提示</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.65;">
+          点击右侧任意页跳转，或点击<b>「开始讲授」</b>按顺序逐页播放。<br>
+          每页右上角有「下一步 →」控制节奏。
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：页面列表 -->
+    <div class="pages-area">
+
+      <div class="section-header">开篇</div>
+
+      <a class="page-row" href="0-intro.html">
+        <div class="page-num" style="background:rgba(220,38,38,0.08);color:#dc2626;">0</div>
+        <div class="page-info">
+          <div class="page-title">我们在哪里？达克鲁宁效应</div>
+          <div class="page-desc">用达克鲁宁曲线定位学员当前位置，明确课程目标：从愚昧之巅走向平稳高原</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">开篇</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="0-why.html">
+        <div class="page-num" style="background:rgba(220,38,38,0.08);color:#dc2626;">0</div>
+        <div class="page-info">
+          <div class="page-title">为什么要花时间讲原理？</div>
+          <div class="page-desc">AI 所有工程化操作本质都是对 message list 的处理——理解它，才能真正看懂所有方案</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">开篇</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">基础原理</div>
+
+      <a class="page-row" href="training-data.html">
+        <div class="page-num">1</div>
+        <div class="page-info">
+          <div class="page-title">AI 的"食物"：训练数据</div>
+          <div class="page-desc">15T Token 是什么概念？语料构成可视化 + 数据规模直觉滑块</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="train-vs-infer.html">
+        <div class="page-num">2</div>
+        <div class="page-info">
+          <div class="page-title">训练 vs 推理：两个完全不同的过程</div>
+          <div class="page-desc">对话不是学习，参数冻结，按 Token 计费——AI 产品必懂的底层逻辑</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">概念</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-vocab.html">
+        <div class="page-num">3</div>
+        <div class="page-info">
+          <div class="page-title">词表与训练</div>
+          <div class="page-desc">从语料到词间矩阵，Token 化 + 注意力权重交互演示</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-base.html">
+        <div class="page-num">4</div>
+        <div class="page-info">
+          <div class="page-title">Base 模型：Token 推 Token 机器</div>
+          <div class="page-desc">训练结束后得到什么？逐步生成 + 概率分布实时更新</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">动画</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-gpt.html">
+        <div class="page-num">5</div>
+        <div class="page-info">
+          <div class="page-title">GPT 的跃进：PreTraining 改变一切</div>
+          <div class="page-desc">CNN / RNN / BERT / GPT 四种算法可交互对比，记忆衰减可视化</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">从补全到对话</div>
+
+      <a class="page-row" href="1-2-api.html">
+        <div class="page-num">6</div>
+        <div class="page-info">
+          <div class="page-title">chat/completions 之谜</div>
+          <div class="page-desc">明明是对话，为什么 API 叫"补全"？打字机动画解读</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">动画</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-fake-chat.html">
+        <div class="page-num">7</div>
+        <div class="page-info">
+          <div class="page-title">伪造聊天记录</div>
+          <div class="page-desc">OpenAI 最初的实验：把补全机器变成聊天机器人</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">动画</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-sft.html">
+        <div class="page-num">8</div>
+        <div class="page-info">
+          <div class="page-title">Chat Template + SFT</div>
+          <div class="page-desc">Jinja 格式、指令微调，大模型终于学会"说话"</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">SFT 对比</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">提示词为什么够用</div>
+
+      <a class="page-row" href="1-2-prompt-power.html">
+        <div class="page-num">9</div>
+        <div class="page-info">
+          <div class="page-title">上下文窗口是关键</div>
+          <div class="page-desc">提示词为什么够用？Token 截断可视化，无需重新训练</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">幻觉与应对方案</div>
+
+      <a class="page-row" href="1-2-hallucination.html">
+        <div class="page-num">10</div>
+        <div class="page-info">
+          <div class="page-title">大模型幻觉演示</div>
+          <div class="page-desc">三类典型幻觉：事实错误 / 自信编造 / 知识截止</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">案例</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-mitigation-prompt.html">
+        <div class="page-num">11</div>
+        <div class="page-info">
+          <div class="page-title">应对方案 1：Prompt Engineering</div>
+          <div class="page-desc">约束指令 + 局限性：模型不知道自己不知道什么</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">含局限性</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-mitigation-rag.html">
+        <div class="page-num">12</div>
+        <div class="page-info">
+          <div class="page-title">应对方案 2：RAG 检索增强生成</div>
+          <div class="page-desc">真实文档注入上下文，5步交互流程动画，对比有无 RAG 的差异</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">含局限性</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="rag-advanced.html">
+        <div class="page-num">13</div>
+        <div class="page-info">
+          <div class="page-title">RAG 的代价与优化策略</div>
+          <div class="page-desc">成本分析表 + 关键词触发 / 模型路由 / 语义缓存 / 精准切块四种策略</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dbeafe;color:#1d4ed8;">PM 进阶</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-mitigation-temp.html">
+        <div class="page-num">14</div>
+        <div class="page-info">
+          <div class="page-title">应对方案 3：Temperature & Top-P</div>
+          <div class="page-desc">拖动滑块，实时看概率分布和输出变化</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">含局限性</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="1-2-mitigation-eval.html">
+        <div class="page-num">15</div>
+        <div class="page-info">
+          <div class="page-title">应对方案 4：评测 + 人工审核（HILT）</div>
+          <div class="page-desc">外部纠错层，冷启动阶段兜底策略</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef9c3;color:#a16207;">含局限性</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="summary-1.html" style="border-color:rgba(0,102,255,.25);background:rgba(0,102,255,.03)">
+        <div class="page-num" style="background:rgba(0,102,255,.12);color:#0066ff">★1</div>
+        <div class="page-info">
+          <div class="page-title" style="color:#0066ff">第一篇章汇总（上）· 大模型是什么 + 幻觉</div>
+          <div class="page-desc">训练本质 / Token / Base→SFT→Chat / 四种幻觉类型与根因</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:rgba(0,102,255,.1);color:#0066ff;">篇章汇总</span>
+        </div>
+        <span class="page-arrow" style="color:#0066ff">›</span>
+      </a>
+
+      <a class="page-row" href="summary-1b.html" style="border-color:rgba(0,102,255,.25);background:rgba(0,102,255,.03)">
+        <div class="page-num" style="background:rgba(0,102,255,.12);color:#0066ff">★2</div>
+        <div class="page-info">
+          <div class="page-title" style="color:#0066ff">第一篇章汇总（下）· 缓解策略 + AI PM 决策框架</div>
+          <div class="page-desc">四种缓解策略对比 / 常见误区清单 / 方案选择判断矩阵</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:rgba(0,102,255,.1);color:#0066ff;">篇章汇总</span>
+        </div>
+        <span class="page-arrow" style="color:#0066ff">›</span>
+      </a>
+
+      <!-- ════ 第二篇章：AI 工程化 ════ -->
+      <div id="ch2" class="section-header" style="background:rgba(147,51,234,.06);color:#7c3aed;border-color:rgba(147,51,234,.2);margin-top:6px">──── 第二篇章：AI 工程化 ────</div>
+
+      <div class="section-header">上下文工程</div>
+
+      <a class="page-row" href="5-1.html">
+        <div class="page-num">16</div>
+        <div class="page-info">
+          <div class="page-title">上下文窗口：AI 的工作记忆</div>
+          <div class="page-desc">窗口构成可视化，拖动模拟溢出效果，主流模型容量对比</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="5-2.html">
+        <div class="page-num">17</div>
+        <div class="page-info">
+          <div class="page-title">上下文溢出：三种处理策略</div>
+          <div class="page-desc">直接截断 / 摘要压缩 / 选择性保留，可视化对比每种策略的利弊</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">Prompt Engineering</div>
+
+      <a class="page-row" href="6-0a.html">
+        <div class="page-num">18</div>
+        <div class="page-info">
+          <div class="page-title">为什么大模型选择 Markdown</div>
+          <div class="page-desc">纯文本模型 + 排版需求 = MD 成为首选，逐步推演 HTML/Word/LaTeX 为何不行</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">动画</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="6-0b.html">
+        <div class="page-num">19</div>
+        <div class="page-info">
+          <div class="page-title">Markdown 语法与工程化渲染</div>
+          <div class="page-desc">常用语法速查 + 实时编辑器 + marked.js / react-markdown / markdown-it 渲染方案</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="6-1.html">
+        <div class="page-num">20</div>
+        <div class="page-info">
+          <div class="page-title">你说什么，它就变什么</div>
+          <div class="page-desc">五种角色实时切换，输出格式控制，System Prompt 核心原理</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="6-2.html">
+        <div class="page-num">21</div>
+        <div class="page-info">
+          <div class="page-title">Prompt 进阶技巧</div>
+          <div class="page-desc">Few-Shot / CoT / 约束条件 / 任务拆解，好坏对比交互演示</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="6-3.html">
+        <div class="page-num">22</div>
+        <div class="page-info">
+          <div class="page-title">输出格式取舍</div>
+          <div class="page-desc">纯文本 / JSON / Markdown / YAML / XML — 场景适配度对比，Token 消耗与解析难度权衡</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="6-4.html">
+        <div class="page-num">23</div>
+        <div class="page-info">
+          <div class="page-title">流式返回与格式配合</div>
+          <div class="page-desc">JSON 等全文才能解析 / MD 逐字显示 / XML 捕获标签即渲染 — 动态演示三者差异</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="prompt-attack.html">
+        <div class="page-num">24</div>
+        <div class="page-info">
+          <div class="page-title">Prompt Injection：为什么会被攻击</div>
+          <div class="page-desc">SQL 注入类比 → Message List 本质 → 缺乏参数化 → 5 大攻击类型概览</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">安全</span>
+          <span class="badge" style="background:#dcfce7;color:#15803d;">步进</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="prompt-attack-cases.html">
+        <div class="page-num">25</div>
+        <div class="page-info">
+          <div class="page-title">Prompt Injection：12 个攻击案例</div>
+          <div class="page-desc">越权指令 / 角色扮演 / Few-Shot / 结构注入 / 隐喻伪装，每案例中招版 vs 防御版</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">安全</span>
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="prompt-defense.html">
+        <div class="page-num">26</div>
+        <div class="page-info">
+          <div class="page-title">Prompt 防御：TiedStory 三层拦截实战</div>
+          <div class="page-desc">输入层正则 → 提示词层约束 → 输出层泄漏检测 → 前端+二次审核，可模拟攻击全链路</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">实战</span>
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">Agent 工程</div>
+
+      <a class="page-row" href="7-1.html">
+        <div class="page-num">27</div>
+        <div class="page-info">
+          <div class="page-title">Agent：能干活的 AI</div>
+          <div class="page-desc">四大能力 Plan / Tool / Memory / Act，点击查看真实案例</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="7-2.html">
+        <div class="page-num">28</div>
+        <div class="page-info">
+          <div class="page-title">工具调用的秘密</div>
+          <div class="page-desc">模型输出 JSON → 框架解析执行 → 结果注回，四步流程可视化</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="7-3.html">
+        <div class="page-num">29</div>
+        <div class="page-info">
+          <div class="page-title">ReAct 实战：查询天气完整链路</div>
+          <div class="page-desc">Thought / Action / Observation 逐步演示，7 步完整 Agent 链路</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">动画</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="7-5.html">
+        <div class="page-num">30</div>
+        <div class="page-info">
+          <div class="page-title">Skill：让 Agent 少走弯路</div>
+          <div class="page-desc">Skill = 流程说明 + 工具调用指引，用"阳台收衣服"类比好循环 vs 差循环，含 SKILL.md 文件结构</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="7-4.html">
+        <div class="page-num">31</div>
+        <div class="page-info">
+          <div class="page-title">脚手架工程：Agent 从试验品到产品</div>
+          <div class="page-desc">模拟 Agent 查机票订酒店，无脚手架 vs 有脚手架完整对比，5 大能力详解</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <div class="section-header">成本优化</div>
+
+      <a class="page-row" href="8-1.html">
+        <div class="page-num">32</div>
+        <div class="page-info">
+          <div class="page-title">多轮对话为什么越来越贵？</div>
+          <div class="page-desc">Token 累积成本可视化，拖动轮次查看费用如何指数增长</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-2.html">
+        <div class="page-num">33</div>
+        <div class="page-info">
+          <div class="page-title">KV Cache：用空间换时间（和钱）</div>
+          <div class="page-desc">类比理解 + 节省效果计算器，拖动轮次查看节省比例</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#15803d;">交互</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-3.html">
+        <div class="page-num">34</div>
+        <div class="page-info">
+          <div class="page-title">动态时间戳：最贵的 System Prompt 设计</div>
+          <div class="page-desc">错误设计 vs 正确设计，三种时间处理方案对比切换</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef2f2;color:#dc2626;">反例</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-4.html">
+        <div class="page-num">35</div>
+        <div class="page-info">
+          <div class="page-title">综合成本优化：从系统角度省钱</div>
+          <div class="page-desc">5 层优化策略，成本构成可视化，节省 70-90% 的系统设计</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dbeafe;color:#1d4ed8;">系统设计</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-5.html">
+        <div class="page-num">36</div>
+        <div class="page-info">
+          <div class="page-title">图片 Token：像素也在烧钱</div>
+          <div class="page-desc">图片计费公式、缩放机制、分辨率陷阱、按任务分级策略</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#fef3c7;color:#92400e;">多模态</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-6.html">
+        <div class="page-num">37</div>
+        <div class="page-info">
+          <div class="page-title">语法层优化：写给机器的提示词</div>
+          <div class="page-desc">YAML vs JSON、CSV vs 数组、压缩 JSON 输出，格式性 Token 省 10-30%</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#e0f2fe;color:#0369a1;">提示词工程</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-7.html">
+        <div class="page-num">38</div>
+        <div class="page-info">
+          <div class="page-title">语义层优化：不要把上下文当垃圾桶</div>
+          <div class="page-desc">动态 Few-Shot、LLMLingua-2 压缩、关键信息放首尾，提升信息密度</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#f3e8ff;color:#7e22ce;">RAG</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-8.html">
+        <div class="page-num">39</div>
+        <div class="page-info">
+          <div class="page-title">输出层 + KV Cache 进阶</div>
+          <div class="page-desc">负向约束、Diff 润色、停止序列；KV Cache 的工具陷阱与滑动窗口问题</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:#dcfce7;color:#166534;">架构</span>
+        </div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="engineering-philosophy.html" style="border-color:rgba(194,151,46,.3);background:rgba(194,151,46,.03)">
+        <div class="page-num" style="background:rgba(194,151,46,.12);color:#c2972e">⚗</div>
+        <div class="page-info">
+          <div class="page-title" style="color:#c2972e">大道至简：坚守第一性原理</div>
+          <div class="page-desc">AI 工程化的本质 / 做 vs 不做的取舍标准 / 随时代被淘汰的工程化 / 终极问题</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:rgba(194,151,46,.12);color:#c2972e;">收官思考</span>
+        </div>
+        <span class="page-arrow" style="color:#c2972e">›</span>
+      </a>
+
+      <a class="page-row" href="summary-2.html" style="border-color:rgba(234,88,12,.25);background:rgba(234,88,12,.03)">
+        <div class="page-num" style="background:rgba(234,88,12,.12);color:#ea580c">★1</div>
+        <div class="page-info">
+          <div class="page-title" style="color:#ea580c">第二篇章汇总（上）· Prompt 工程 + Agent 设计</div>
+          <div class="page-desc">上下文溢出策略 / Prompt 六要素 / 工具调用真相 / Skill + 脚手架</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:rgba(234,88,12,.1);color:#ea580c;">篇章汇总</span>
+        </div>
+        <span class="page-arrow" style="color:#ea580c">›</span>
+      </a>
+
+      <a class="page-row" href="summary-2b.html" style="border-color:rgba(234,88,12,.25);background:rgba(234,88,12,.03)">
+        <div class="page-num" style="background:rgba(234,88,12,.12);color:#ea580c">★2</div>
+        <div class="page-info">
+          <div class="page-title" style="color:#ea580c">第二篇章汇总（下）· 成本优化 + AI PM 完整视角</div>
+          <div class="page-desc">五层成本体系 / KV Cache 原理 / 图片 Token / 课程完整能力清单</div>
+        </div>
+        <div class="page-badges">
+          <span class="badge" style="background:rgba(234,88,12,.1);color:#ea580c;">篇章汇总</span>
+        </div>
+        <span class="page-arrow" style="color:#ea580c">›</span>
+      </a>
+
+    </div><!-- /pages-area -->
+  </div><!-- /body -->
+</div>
+<script>
+// 如果 URL 带 #ch2，自动滚动 pages-area 到第二篇章分隔线
+window.addEventListener('load', function() {
+  if (location.hash === '#ch2') {
+    const el = document.getElementById('ch2');
+    const area = document.querySelector('.pages-area');
+    if (el && area) {
+      // 等一帧确保布局完成
+      requestAnimationFrame(function() {
+        area.scrollTop = el.offsetTop - 12;
+      });
+    }
+  }
+});
+</script>
+</body>
+</html>

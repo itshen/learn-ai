@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>工具调用的秘密</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:260px 1fr;min-height:0;overflow:hidden}
+
+/* ====== 左栏 ====== */
+.left{padding:16px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.l-desc{font-size:15px;color:var(--sub);line-height:1.65}
+.l-desc strong{color:var(--text)}
+
+/* 进度步骤条 */
+.prog-list{display:flex;flex-direction:column;gap:0;flex:1}
+.prog-item{display:flex;gap:12px;align-items:flex-start;opacity:.3;transition:opacity .35s}
+.prog-item.done{opacity:1}
+.prog-item.cur{opacity:1}
+.prog-dot-col{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.prog-dot{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--muted);flex-shrink:0;transition:all .35s}
+.prog-item.done .prog-dot{background:var(--green);border-color:var(--green);color:white}
+.prog-item.cur .prog-dot{background:var(--orange);border-color:var(--orange);color:white}
+.prog-line{width:2px;flex:1;min-height:10px;background:var(--border);margin:3px 0;transition:background .35s}
+.prog-item.done + .prog-item .prog-line,.prog-item.done .prog-line{background:var(--green)}
+.prog-content{padding-bottom:14px}
+.prog-role{font-size:13px;font-weight:800;color:var(--text);margin-bottom:2px}
+.prog-item.cur .prog-role{color:var(--orange)}
+.prog-desc{font-size:12px;color:var(--muted);line-height:1.45}
+
+/* 底部关键结论 */
+.insight{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--text);line-height:1.6;flex-shrink:0}
+.insight b{color:var(--orange)}
+
+/* ====== 右栏：消息流 ====== */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-top{padding:10px 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.r-hint{font-size:13px;color:var(--muted);font-weight:600}
+
+/* 消息区 */
+.msg-area{flex:1;overflow-y:auto;padding:12px 20px;display:flex;flex-direction:column;gap:0}
+
+/* 单条消息 */
+.msg{display:flex;gap:10px;opacity:0;transform:translateY(10px);transition:opacity .35s ease,transform .35s ease;margin-bottom:10px}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;flex-shrink:0;margin-top:2px}
+.msg-body{flex:1;min-width:0}
+.msg-role{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.msg-bubble{border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.65}
+.msg-note{font-size:12px;margin-top:5px;padding:5px 10px;border-radius:6px;font-weight:600;display:inline-block}
+
+/* 分隔线（框架执行） */
+.divider{display:flex;align-items:center;gap:10px;margin:4px 0 10px;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
+.divider.show{opacity:1;transform:translateY(0)}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-label{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+
+/* 代码 inline */
+.code{font-family:'Cascadia Code','Fira Code','SF Mono',monospace;font-size:12.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.hl-o{background:rgba(234,88,12,.15);border-radius:3px;padding:0 3px;color:#c2410c;font-weight:700}
+.hl-g{background:rgba(22,163,74,.12);border-radius:3px;padding:0 3px;color:#15803d;font-weight:700}
+.kw{color:#7c3aed}.str{color:#16a34a}.com{color:#9ca3af;font-style:italic}.fn{color:#0891b2}.num{color:#d97706}
+
+/* 控制栏 */
+.ctrl{padding:10px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:8px 22px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:13px;color:var(--muted);margin-left:4px}
+
+@keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · Agent 工程 · 第 2 页</div>
+      <div class="hd-title">工具调用的<em>秘密</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击「下一步」追踪完整调用链路 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="l-desc">模型<strong>不会真的执行代码</strong>——它只是输出一段结构化文字，框架代码负责解析并执行。</p>
+
+      <div class="prog-list" id="progList">
+        <div class="prog-item" id="pi0">
+          <div class="prog-dot-col">
+            <div class="prog-dot">1</div>
+            <div class="prog-line"></div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">System Prompt</div>
+            <div class="prog-desc">告知模型有哪些工具可调用</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi1">
+          <div class="prog-dot-col">
+            <div class="prog-dot">2</div>
+            <div class="prog-line"></div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">用户提问</div>
+            <div class="prog-desc">用户发出请求</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi2">
+          <div class="prog-dot-col">
+            <div class="prog-dot">3</div>
+            <div class="prog-line"></div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">模型输出 JSON</div>
+            <div class="prog-desc">只是文字预测，不是真调用</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi3">
+          <div class="prog-dot-col">
+            <div class="prog-dot">4</div>
+            <div class="prog-line"></div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">框架解析 + 执行</div>
+            <div class="prog-desc">你写的代码才是真正的执行者</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi4">
+          <div class="prog-dot-col">
+            <div class="prog-dot">5</div>
+            <div class="prog-line"></div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">结果注回上下文</div>
+            <div class="prog-desc">tool_result 追加，模型继续预测</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi5">
+          <div class="prog-dot-col">
+            <div class="prog-dot">6</div>
+          </div>
+          <div class="prog-content">
+            <div class="prog-role">最终回答</div>
+            <div class="prog-desc">模型生成用户可读的答案</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight">
+        <b>核心：</b>模型始终只在预测文字。<br>
+        工具调用 = 文字 → 代码解析 → API → 文字
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="r-top">
+        <div style="font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.3px">MESSAGE LIST 实时追踪</div>
+        <div class="r-hint" id="rHint">点击「下一步」开始</div>
+      </div>
+      <div class="msg-area" id="msgArea"></div>
+      <div class="ctrl">
+        <button class="btn btn-p" id="btnNext" onclick="nextStep()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="resetAll()">重置</button>
+        <span class="ctrl-hint" id="ctrlHint"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const STEPS = [
+  {
+    progIdx: 0,
+    hint: 'Step 1 / 6 · System Prompt 定义工具',
+    render() {
+      addMsg({
+        avatar:'SYS', avatarBg:'#5b4fcf',
+        role:'SYSTEM PROMPT',roleColor:'#7c3aed',
+        bubbleCls:'',bubbleBg:'rgba(124,58,237,.06)',bubbleBorder:'rgba(124,58,237,.2)',
+        html:`<div class="code"><span class="com"># 你是一个智能助手，可以调用以下工具：</span>
+
+tools:
+  - name: <span class="fn">get_weather</span>
+    desc: 查询某地天气预报
+    params:
+      city: string   <span class="com"># 城市名</span>
+      date: string   <span class="com"># 日期 YYYY-MM-DD</span>
+
+  - name: <span class="fn">search_web</span>
+    desc: 搜索互联网信息
+    params:
+      query: string  <span class="com"># 搜索关键词</span>
+
+<span class="com"># 需要工具时，输出 JSON 格式的调用请求。</span></div>`,
+        note:'📌 工具定义写在 System Prompt 里，模型"知道"有什么工具可以用',noteCls:'rgba(124,58,237,.08)',noteColor:'#7c3aed'
+      });
+    }
+  },
+  {
+    progIdx: 1,
+    hint: 'Step 2 / 6 · 用户发出问题',
+    render() {
+      addMsg({
+        avatar:'👤', avatarBg:'#0891b2',
+        role:'USER',roleColor:'#0891b2',
+        bubbleBg:'rgba(8,145,178,.06)',bubbleBorder:'rgba(8,145,178,.2)',
+        html:`北京明天天气怎么样？`,
+        note:null
+      });
+    }
+  },
+  {
+    progIdx: 2,
+    hint: 'Step 3 / 6 · 模型预测 JSON 文字（不是真调用！）',
+    render() {
+      addMsg({
+        avatar:'🤖', avatarBg:'#16a34a',
+        role:'MODEL OUTPUT',roleColor:'#16a34a',
+        bubbleBg:'rgba(22,163,74,.05)',bubbleBorder:'rgba(22,163,74,.2)',
+        html:`<div class="code"><span class="com"># 模型推断需要查天气，输出：</span>
+
+<span class="hl-o">tool_call:</span>
+  name: <span class="str">"get_weather"</span>
+  params:
+    city: <span class="str">"北京"</span>
+    date: <span class="str">"2026-04-11"</span></div>`,
+        note:'⚠️ 这只是一段文字预测！模型自己什么都没执行，它在等框架处理',noteCls:'rgba(234,88,12,.08)',noteColor:'#ea580c'
+      });
+    }
+  },
+  {
+    progIdx: 3,
+    hint: 'Step 4 / 6 · 框架代码解析并真正执行',
+    render() {
+      addDivider('↓ 框架代码接管 · 以下不是 LLM 的工作');
+      addMsg({
+        avatar:'⚙️', avatarBg:'#ea580c',
+        role:'FRAMEWORK（你写的代码）',roleColor:'#ea580c',
+        bubbleBg:'rgba(234,88,12,.05)',bubbleBorder:'rgba(234,88,12,.25)',
+        html:`<div class="code"><span class="com"># 1. 解析模型输出的 JSON</span>
+call = parse(model_output)  <span class="com"># → { name, params }</span>
+
+<span class="com"># 2. 安全校验（框架负责！模型不管）</span>
+<span class="kw">if</span> call.name <span class="kw">not in</span> ALLOWED_TOOLS:
+    <span class="kw">raise</span> SecurityError()
+
+<span class="com"># 3. 真正调用 API（这才是真执行）</span>
+result = <span class="fn">weather_api.get</span>(
+    city=<span class="str">"北京"</span>, date=<span class="str">"2026-04-11"</span>
+)</div>`,
+        note:'✅ 参数校验、权限控制、错误处理——安全逻辑全在框架，不依赖模型',noteCls:'rgba(22,163,74,.08)',noteColor:'#16a34a'
+      });
+    }
+  },
+  {
+    progIdx: 4,
+    hint: 'Step 5 / 6 · API 结果注回 Message List',
+    render() {
+      addDivider('↓ 框架把结果追加到对话，模型重新看到全部上下文');
+      addMsg({
+        avatar:'📡', avatarBg:'#0891b2',
+        role:'TOOL RESULT（框架注入）',roleColor:'#0891b2',
+        bubbleBg:'rgba(8,145,178,.05)',bubbleBorder:'rgba(8,145,178,.2)',
+        html:`<div class="code">tool_result:
+  name: <span class="str">"get_weather"</span>
+  data:
+    weather: <span class="str">"小雨转多云"</span>
+    temp:    <span class="num">12°C ~ 20°C</span>
+    wind:    <span class="str">"北风 3 级"</span></div>`,
+        note:'📌 这条消息追加到 Message List，模型下次调用时能看到它',noteCls:'rgba(8,145,178,.08)',noteColor:'#0891b2'
+      });
+    }
+  },
+  {
+    progIdx: 5,
+    hint: 'Step 6 / 6 · 模型看到结果，生成最终回答',
+    render() {
+      addDivider('↓ LLM 重新接管，基于完整上下文预测最终回答');
+      addMsg({
+        avatar:'🤖', avatarBg:'#16a34a',
+        role:'MODEL FINAL ANSWER',roleColor:'#16a34a',
+        bubbleBg:'rgba(22,163,74,.05)',bubbleBorder:'rgba(22,163,74,.25)',
+        html:`明天北京小雨转多云，气温 12–20°C，北风 3 级，建议带把伞出门。
+
+<div class="code" style="margin-top:8px"><span class="com"># 模型始终只是在"预测下一个 Token"</span>
+<span class="com"># 完整链路：文字 → 框架解析 → API → 注回 → 文字</span></div>`,
+        note:'🎯 用户看到的自然语言回答，本质是模型再次预测文字的结果',noteCls:'rgba(22,163,74,.08)',noteColor:'#16a34a'
+      });
+    }
+  }
+];
+
+let cur = 0;
+
+function addMsg({avatar,avatarBg,role,roleColor,bubbleBg,bubbleBorder,html,note,noteCls,noteColor}) {
+  const area = document.getElementById('msgArea');
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `
+    <div class="msg-avatar" style="background:${avatarBg}">${avatar}</div>
+    <div class="msg-body">
+      <div class="msg-role" style="color:${roleColor}">${role}</div>
+      <div class="msg-bubble" style="background:${bubbleBg};border:1.5px solid ${bubbleBorder}">${html}</div>
+      ${note ? `<div class="msg-note" style="background:${noteCls};color:${noteColor}">${note}</div>` : ''}
+    </div>`;
+  area.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.classList.add('show');
+    area.scrollTop = area.scrollHeight;
+  }));
+}
+
+function addDivider(label) {
+  const area = document.getElementById('msgArea');
+  const el = document.createElement('div');
+  el.className = 'divider';
+  el.innerHTML = `<div class="divider-line"></div><div class="divider-label">${label}</div><div class="divider-line"></div>`;
+  area.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+}
+
+function updateProg(idx) {
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('pi'+i);
+    el.classList.remove('done','cur');
+    if (i < idx) el.classList.add('done');
+    else if (i === idx) el.classList.add('cur');
+  }
+}
+
+function nextStep() {
+  if (cur >= STEPS.length) return;
+  const s = STEPS[cur];
+  updateProg(s.progIdx);
+  s.render();
+  document.getElementById('rHint').textContent = s.hint;
+  cur++;
+  if (cur >= STEPS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 链路完整';
+    document.getElementById('ctrlHint').textContent = '模型调用工具的完整流程就是这样';
+    // mark all done
+    for (let i = 0; i < 6; i++) {
+      const el = document.getElementById('pi'+i);
+      el.classList.remove('cur');
+      el.classList.add('done');
+    }
+  } else {
+    document.getElementById('ctrlHint').textContent = `还有 ${STEPS.length - cur} 步`;
+  }
+}
+
+function resetAll() {
+  cur = 0;
+  document.getElementById('msgArea').innerHTML = '';
+  document.getElementById('rHint').textContent = '点击「下一步」开始';
+  document.getElementById('ctrlHint').textContent = '';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('pi'+i);
+    el.classList.remove('done','cur');
+  }
+}
+</script>
+</body>
+</html>

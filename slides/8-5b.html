@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>图片 Token：按任务匹配分辨率</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:14px;font-weight:800;color:var(--red);letter-spacing:.5px}
+.title{font-size:24px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--green)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* 左栏：任务选择 */
+.left{padding:16px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.left-title{font-size:16px;font-weight:700;color:var(--text);flex-shrink:0}
+.left-sub{font-size:14px;color:var(--sub);line-height:1.5;flex-shrink:0}
+
+.task-list{display:flex;flex-direction:column;gap:7px;flex:1;overflow-y:auto}
+.task-card{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .2s;font-family:inherit;width:100%;text-align:left}
+.task-card:hover{border-color:rgba(0,102,255,.25);background:rgba(0,102,255,.02)}
+.task-card.active{border-color:var(--accent);background:rgba(0,102,255,.04);box-shadow:0 2px 12px rgba(0,102,255,.1)}
+.task-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.task-body{flex:1}
+.task-name{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.task-desc{font-size:14px;color:var(--sub);line-height:1.45}
+.task-badge{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700}
+
+/* 右栏：推荐结果 */
+.right{padding:16px 22px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+
+.rec-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.rec-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:15px;font-weight:700;color:var(--muted);flex-shrink:0}
+.rec-body{flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+
+/* 推荐分辨率卡片 */
+.res-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.res-card{border-radius:9px;padding:10px 12px;text-align:center;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
+.res-card.recommended{border-color:var(--green);background:rgba(22,163,74,.06)}
+.res-card.too-low{border-color:var(--border);background:var(--surface2);opacity:.6}
+.res-card.too-high{border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.04)}
+.res-card .rc-res{font-size:15px;font-weight:800;color:var(--text)}
+.res-card .rc-tok{font-size:22px;font-weight:900}
+.res-card .rc-lbl{font-size:11px;font-weight:700;margin-top:2px}
+.res-card .rc-verdict{font-size:12px;margin-top:4px;font-weight:700}
+
+/* 动画对比条 */
+.compare-section{display:flex;flex-direction:column;gap:6px}
+.compare-title{font-size:14px;font-weight:700;color:var(--muted)}
+.compare-row{display:flex;align-items:center;gap:8px}
+.compare-res{font-size:13px;font-weight:700;min-width:80px;color:var(--text)}
+.compare-bar-wrap{flex:1;height:22px;background:var(--surface2);border-radius:5px;overflow:hidden;position:relative}
+.compare-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:12px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;transition:width .6s ease}
+.compare-tok{font-size:13px;font-weight:800;min-width:60px;text-align:right}
+
+/* 精度说明 */
+.quality-section{display:flex;flex-direction:column;gap:6px}
+.quality-row{display:flex;align-items:center;gap:10px}
+.quality-label{font-size:13px;font-weight:700;min-width:70px;color:var(--sub)}
+.quality-dots{display:flex;gap:3px}
+.q-dot{width:14px;height:14px;border-radius:3px;transition:all .3s}
+.q-dot.filled{background:var(--accent)}
+.q-dot.empty{background:var(--surface2)}
+.quality-note{font-size:12px;color:var(--muted)}
+
+.insight-box{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:9px;padding:10px 14px;font-size:14px;color:var(--text);line-height:1.55;flex-shrink:0}
+.insight-box b{color:var(--green)}
+
+@keyframes slide-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:slide-in .3s ease}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 5b 页</div>
+      <div class="title">图片 Token：<em>按任务匹配分辨率</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">选任务类型 → 右侧推荐最省钱的分辨率</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：任务类型 -->
+    <div class="left">
+      <div class="left-title">选择你的视觉任务类型</div>
+      <div class="left-sub">不同任务对图片细节要求不同，用最低分辨率满足任务 = 最省钱。</div>
+
+      <div class="task-list" id="taskList">
+        <button class="task-card" onclick="pickTask(this,0)">
+          <div class="task-icon" style="background:rgba(22,163,74,.12)">🐱</div>
+          <div class="task-body">
+            <div class="task-name">粗分类</div>
+            <div class="task-desc">这是猫还是狗？图里有没有人？图像内容是什么大类？</div>
+            <span class="task-badge" style="background:rgba(22,163,74,.1);color:var(--green)">低精度需求</span>
+          </div>
+        </button>
+        <button class="task-card" onclick="pickTask(this,1)">
+          <div class="task-icon" style="background:rgba(8,145,178,.12)">🏙️</div>
+          <div class="task-body">
+            <div class="task-name">场景理解</div>
+            <div class="task-desc">图里在干什么？有哪些物体？场景是室内还是室外？</div>
+            <span class="task-badge" style="background:rgba(8,145,178,.1);color:var(--cyan)">中等精度</span>
+          </div>
+        </button>
+        <button class="task-card" onclick="pickTask(this,2)">
+          <div class="task-icon" style="background:rgba(234,88,12,.12)">📄</div>
+          <div class="task-body">
+            <div class="task-name">OCR / 图表识别</div>
+            <div class="task-desc">识别图中的文字、表格数据、图表数字。需要文字清晰。</div>
+            <span class="task-badge" style="background:rgba(234,88,12,.1);color:var(--orange)">高精度需求</span>
+          </div>
+        </button>
+        <button class="task-card" onclick="pickTask(this,3)">
+          <div class="task-icon" style="background:rgba(91,79,207,.12)">🔬</div>
+          <div class="task-body">
+            <div class="task-name">高精检测 / 医疗影像</div>
+            <div class="task-desc">病理切片、卫星图像、精密零件检测，需要最高分辨率。</div>
+            <span class="task-badge" style="background:rgba(91,79,207,.1);color:var(--purple)">极高精度</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="rec-panel" id="recPanel">
+        <div class="rec-head" id="recHead">← 选择左侧任务类型，查看推荐方案</div>
+        <div class="rec-body" id="recBody">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px">
+            点击左侧任意任务类型
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box" id="insightBox">
+        <b>核心原则：</b>分辨率不是越高越好。用最低满足任务需求的分辨率，Token 数可相差 <b>10–100 倍</b>。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const TASKS = [
+  {
+    name: '粗分类',
+    icon: '🐱',
+    color: 'var(--green)',
+    colorRgb: '22,163,74',
+    recommended: 1,  // index in resolutions
+    resolutions: [
+      { label: '256×256', w: 256, h: 256, tokens: 64,   quality: 2, verdict: '够用', cls: 'too-low' },
+      { label: '512×512', w: 512, h: 512, tokens: 258,  quality: 3, verdict: '推荐', cls: 'recommended' },
+      { label: '1024×768',w:1024, h: 768, tokens: 770,  quality: 4, verdict: '浪费', cls: 'too-high' },
+    ],
+    insight: '粗分类任务对细节不敏感，512×512 已包含充足语义信息。用 1024×768 效果几乎无提升，Token 却多 3 倍。',
+    qualityLabels: ['太模糊', '够用', '无提升', '无提升']
+  },
+  {
+    name: '场景理解',
+    icon: '🏙️',
+    color: 'var(--cyan)',
+    colorRgb: '8,145,178',
+    recommended: 1,
+    resolutions: [
+      { label: '512×512',  w: 512,  h: 512,  tokens: 258,  quality: 2, verdict: '太模糊', cls: 'too-low' },
+      { label: '1024×1024',w: 1024, h: 1024, tokens: 1026, quality: 4, verdict: '推荐',   cls: 'recommended' },
+      { label: '2560×1440',w: 2560, h: 1440, tokens: 3602, quality: 5, verdict: '过度',   cls: 'too-high' },
+    ],
+    insight: '场景理解需要识别物体和关系，~1000×1000 足够。超过此范围精度提升微乎其微，成本却涨 3.5 倍。',
+    qualityLabels: ['难辨细节', '够用', '明显提升', '无感知提升', '无感知提升']
+  },
+  {
+    name: 'OCR / 图表识别',
+    icon: '📄',
+    color: 'var(--orange)',
+    colorRgb: '234,88,12',
+    recommended: 1,
+    resolutions: [
+      { label: '1024×768', w: 1024, h: 768,  tokens: 770,  quality: 2, verdict: '模糊',  cls: 'too-low' },
+      { label: '2048×1536',w: 2048, h: 1536, tokens: 3074, quality: 5, verdict: '推荐',  cls: 'recommended' },
+      { label: '3840×2160',w: 3840, h: 2160, tokens: 8194, quality: 5, verdict: '过度',  cls: 'too-high' },
+    ],
+    insight: 'OCR 对文字清晰度要求高，~2000×1500 是最佳平衡点。4K 对文字识别效果几乎没有额外提升，却多花 2.7 倍。',
+    qualityLabels: ['字迹模糊', '勉强', '清晰', '非常清晰', '与上档相同', '与上档相同']
+  },
+  {
+    name: '高精检测',
+    icon: '🔬',
+    color: 'var(--purple)',
+    colorRgb: '91,79,207',
+    recommended: 1,
+    resolutions: [
+      { label: '2048×2048',w: 2048, h: 2048, tokens: 4098,  quality: 3, verdict: '不够',  cls: 'too-low' },
+      { label: '4096×4096',w: 4096, h: 4096, tokens: 16386, quality: 6, verdict: '推荐',  cls: 'recommended' },
+      { label: '5 张 4K×4K',w:4096, h: 4096, tokens: 81930, quality: 6, verdict: '危险',  cls: 'too-high' },
+    ],
+    insight: '医疗影像等场景确实需要高分辨率。但批量处理时，5 张 4K 图即跳入高价档。需要启用 vl_high_resolution_images 并控制批量大小。',
+    qualityLabels: ['','','细节丢失','合格','足够','推荐','极限']
+  }
+];
+
+function pickTask(btn, idx) {
+  document.querySelectorAll('.task-card').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRec(idx);
+}
+
+function renderRec(idx) {
+  const t = TASKS[idx];
+  document.getElementById('recHead').textContent = `${t.icon} ${t.name} — 分辨率推荐方案`;
+
+  const maxTok = Math.max(...t.resolutions.map(r => r.tokens));
+
+  const body = document.getElementById('recBody');
+  body.innerHTML = `
+    <div class="res-cards animate-in" id="resCards"></div>
+    <div class="compare-section animate-in" id="compareSection">
+      <div class="compare-title">Token 数量对比（越短越省钱）</div>
+    </div>
+    <div class="quality-section animate-in" id="qualitySection">
+      <div class="compare-title">精度感知对比（越多格越清晰）</div>
+    </div>
+    <div style="font-size:14px;color:var(--sub);line-height:1.6;flex-shrink:0;padding-top:4px" id="insightText"></div>
+  `;
+
+  // 分辨率卡片
+  const cards = document.getElementById('resCards');
+  t.resolutions.forEach((r, i) => {
+    const tokColor = r.cls === 'recommended' ? `rgb(${t.colorRgb})` :
+                     r.cls === 'too-high' ? 'var(--red)' : 'var(--muted)';
+    const card = document.createElement('div');
+    card.className = 'res-card ' + r.cls;
+    card.innerHTML = `
+      <div class="rc-res">${r.label}</div>
+      <div class="rc-tok" style="color:${tokColor}">${r.tokens.toLocaleString()}</div>
+      <div class="rc-lbl" style="color:${tokColor}">Token</div>
+      <div class="rc-verdict" style="color:${tokColor}">${r.verdict}</div>
+    `;
+    cards.appendChild(card);
+  });
+
+  // 对比条
+  const compareSection = document.getElementById('compareSection');
+  t.resolutions.forEach((r, i) => {
+    const barColor = r.cls === 'recommended' ? `rgb(${t.colorRgb})` :
+                     r.cls === 'too-high' ? 'var(--red)' : 'var(--muted)';
+    const pct = Math.round(r.tokens / maxTok * 100);
+    const row = document.createElement('div');
+    row.className = 'compare-row';
+    row.innerHTML = `
+      <div class="compare-res">${r.label}</div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar" style="width:0%;background:${barColor}">${r.verdict}</div>
+      </div>
+      <div class="compare-tok" style="color:${barColor}">${r.tokens.toLocaleString()} T</div>
+    `;
+    compareSection.appendChild(row);
+    // 动画延迟
+    setTimeout(() => {
+      row.querySelector('.compare-bar').style.width = pct + '%';
+    }, 50 + i * 100);
+  });
+
+  // 精度点点
+  const qualitySection = document.getElementById('qualitySection');
+  t.resolutions.forEach((r, i) => {
+    const dotColor = r.cls === 'recommended' ? `rgb(${t.colorRgb})` :
+                     r.cls === 'too-high' ? 'var(--red)' : 'var(--muted)';
+    const row = document.createElement('div');
+    row.className = 'quality-row';
+    const dots = Array.from({length:6}, (_,j) =>
+      `<div class="q-dot ${j < r.quality ? 'filled' : 'empty'}" style="${j < r.quality ? `background:${dotColor}` : ''}"></div>`
+    ).join('');
+    row.innerHTML = `
+      <div class="quality-label">${r.label}</div>
+      <div class="quality-dots">${dots}</div>
+      <div class="quality-note" style="color:${dotColor}">${r.verdict}</div>
+    `;
+    qualitySection.appendChild(row);
+  });
+
+  document.getElementById('insightText').innerHTML =
+    `<b style="color:rgb(${t.colorRgb})">结论：</b>${t.insight}`;
+}
+</script>
+</body>
+</html>

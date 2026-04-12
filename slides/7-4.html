@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>脚手架工程：让 Agent 从试验品变成产品</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--muted:#8e8e93;--cyan:#0891b2;--purple:#5b4fcf}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--orange);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+.left{padding:16px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:8px;overflow:auto}
+.right{padding:16px 22px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+
+/* 模式切换 */
+.mode-row{display:flex;gap:6px;flex-shrink:0}
+.mode-btn{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;font-family:inherit;transition:all .15s}
+.mode-btn h4{font-size:15px;font-weight:700;margin-bottom:2px}
+.mode-btn p{font-size:12px;color:var(--sub)}
+.mode-btn.bad{}.mode-btn.bad.active{border-color:var(--red);background:rgba(220,38,38,.04)}.mode-btn.bad.active h4{color:var(--red)}
+.mode-btn.good{}.mode-btn.good.active{border-color:var(--green);background:rgba(22,163,74,.04)}.mode-btn.good.active h4{color:var(--green)}
+
+/* 控制 */
+.ctrl{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.ctrl-label{font-size:14px;color:var(--muted);font-weight:600}
+.ctrl-btns{display:flex;gap:5px}
+.btn-play{padding:5px 14px;border-radius:7px;background:var(--orange);color:white;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.btn-play:disabled{opacity:.35;cursor:not-allowed}
+.btn-reset{padding:5px 10px;border-radius:7px;background:var(--surface2);color:var(--sub);font-size:13px;font-weight:600;border:1px solid var(--border);cursor:pointer;font-family:inherit}
+
+/* 运行日志 */
+.log-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.log-head{padding:7px 12px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:14px;font-weight:700;color:var(--muted)}
+.log-body{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.log-entry{padding:6px 10px;border-radius:7px;font-size:13px;line-height:1.5;display:flex;align-items:flex-start;gap:6px;opacity:0;transform:translateY(4px);transition:all .3s}
+.log-entry.show{opacity:1;transform:translateY(0)}
+.log-icon{flex-shrink:0;font-size:14px;width:20px;text-align:center}
+.log-text{flex:1;color:var(--text)}
+.log-entry.think{background:rgba(91,79,207,.04)}.log-entry.think .log-icon{color:var(--purple)}
+.log-entry.tool{background:rgba(8,145,178,.04)}.log-entry.tool .log-icon{color:var(--cyan)}
+.log-entry.ok{background:rgba(22,163,74,.04)}.log-entry.ok .log-icon{color:var(--green)}
+.log-entry.err{background:rgba(220,38,38,.04)}.log-entry.err .log-icon{color:var(--red)}
+.log-entry.warn{background:rgba(234,88,12,.04)}.log-entry.warn .log-icon{color:var(--orange)}
+.log-entry.fix{background:rgba(22,163,74,.04);border:1px solid rgba(22,163,74,.12)}.log-entry.fix .log-icon{color:var(--green)}
+
+/* 统计 */
+.stat-row{display:flex;gap:5px;flex-shrink:0}
+.stat{flex:1;border-radius:8px;padding:6px 8px;text-align:center}
+.stat-n{font-size:20px;font-weight:800}
+.stat-l{font-size:11px;font-weight:700;margin-top:1px}
+.stat.bad{background:rgba(220,38,38,.06);color:var(--red)}.stat.bad .stat-l{color:var(--red)}
+.stat.good{background:rgba(22,163,74,.06);color:var(--green)}.stat.good .stat-l{color:var(--green)}
+.stat.neutral{background:var(--surface2);color:var(--text)}.stat.neutral .stat-l{color:var(--muted)}
+
+/* 右栏：5大能力 */
+.cap-list{display:flex;flex-direction:column;gap:4px}
+.cap-item{display:flex;gap:8px;align-items:flex-start;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:all .15s;font-family:inherit;text-align:left;width:100%}
+.cap-item:hover{background:rgba(234,88,12,.02)}
+.cap-item.active{border-color:var(--orange);background:rgba(234,88,12,.04)}
+.cap-num{width:22px;height:22px;border-radius:6px;background:rgba(234,88,12,.1);color:var(--orange);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cap-item h5{font-size:14px;font-weight:700;color:var(--text)}
+.cap-item p{font-size:12px;color:var(--sub);line-height:1.35}
+
+.detail-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;flex:1;overflow:auto;min-height:0}
+.detail-card h5{font-size:15px;font-weight:700;color:var(--orange);margin-bottom:6px}
+.detail-card p{font-size:14px;color:var(--sub);line-height:1.65;margin-bottom:6px}
+.detail-card p:last-child{margin-bottom:0}
+.detail-card b{color:var(--text)}
+.detail-card code{font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--text)}
+
+.ratio-box{background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.18);border-radius:10px;padding:8px 14px;font-size:15px;color:var(--text);line-height:1.6;text-align:center;flex-shrink:0}
+.ratio-box b{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块七 · Agent 工程 · 第 5 页</div>
+      <div class="title">脚手架工程：<em>让 Agent 从试验品变成产品</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">左侧体验差距 → 右侧看 5 大能力详解</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：交互模拟 -->
+    <div class="left">
+      <div class="mode-row">
+        <button class="mode-btn bad active" id="modeBad" onclick="setMode('bad')"><h4>❌ 没有脚手架</h4><p>裸跑 Agent，看看会发生什么</p></button>
+        <button class="mode-btn good" id="modeGood" onclick="setMode('good')"><h4>✅ 有脚手架</h4><p>加上 5 层防护后的效果</p></button>
+      </div>
+
+      <div class="ctrl">
+        <span class="ctrl-label" id="ctrlLabel">任务：帮用户查机票 + 订酒店</span>
+        <div class="ctrl-btns">
+          <button class="btn-play" id="btnPlay" onclick="playNext()">▶ 下一步</button>
+          <button class="btn-reset" onclick="resetSim()">重置</button>
+        </div>
+      </div>
+
+      <div class="log-panel">
+        <div class="log-head" id="logHead">Agent 运行日志</div>
+        <div class="log-body" id="logBody"></div>
+      </div>
+
+      <div class="stat-row" id="statRow"></div>
+    </div>
+
+    <!-- 右栏：5大能力 -->
+    <div class="right">
+      <div style="font-size:14px;font-weight:700;color:var(--muted);flex-shrink:0">生产级脚手架 5 大能力（点击查看详解）</div>
+      <div class="cap-list">
+        <button class="cap-item active" onclick="showCap(this,0)"><div class="cap-num">1</div><div><h5>超时与重试</h5><p>工具调用设 timeout + 指数退避重试</p></div></button>
+        <button class="cap-item" onclick="showCap(this,1)"><div class="cap-num">2</div><div><h5>最大步数限制</h5><p>max_iterations 防止死循环</p></div></button>
+        <button class="cap-item" onclick="showCap(this,2)"><div class="cap-num">3</div><div><h5>输入输出校验</h5><p>JSON Schema 拦截非法参数</p></div></button>
+        <button class="cap-item" onclick="showCap(this,3)"><div class="cap-num">4</div><div><h5>状态机 + 回滚</h5><p>检查点恢复，失败不从头来</p></div></button>
+        <button class="cap-item" onclick="showCap(this,4)"><div class="cap-num">5</div><div><h5>观测与日志</h5><p>全链路记录，生产问题靠日志</p></div></button>
+      </div>
+      <div class="detail-card" id="detailCard"></div>
+      <div class="ratio-box">
+        Agent 工程 = <b>80% 脚手架 + 20% 模型</b><br>
+        大多数 Agent 项目失败，不是模型不够聪明，而是错误处理不够健壮。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const BAD_STEPS=[
+  {cls:'think',icon:'🧠',text:'思考：用户要查机票和订酒店，先查机票……'},
+  {cls:'tool',icon:'🔧',text:'调用 search_flights("北京→上海", "2026-04-15")'},
+  {cls:'err',icon:'❌',text:'API 超时……没有设超时机制，一直等待中……'},
+  {cls:'err',icon:'⏳',text:'等了 45 秒……还在等……用户以为 AI 卡死了'},
+  {cls:'think',icon:'🧠',text:'终于超时了。再试一次……'},
+  {cls:'tool',icon:'🔧',text:'调用 search_flights("北京→上海", "2026-04-15")'},
+  {cls:'ok',icon:'✅',text:'拿到机票数据了：3 个航班可选。'},
+  {cls:'think',icon:'🧠',text:'现在订酒店。用 book_hotel 工具……'},
+  {cls:'tool',icon:'🔧',text:'调用 book_hotel("上海", checkin="明天") — 参数格式错误！'},
+  {cls:'err',icon:'💥',text:'API 报错 400：date 格式必须是 YYYY-MM-DD，但传了"明天"'},
+  {cls:'think',icon:'🧠',text:'再试一次……'},
+  {cls:'tool',icon:'🔧',text:'调用 book_hotel("上海", checkin="明天")  — 又传了一样的参数！'},
+  {cls:'err',icon:'💥',text:'又报错 400……模型没学会纠正，进入循环……'},
+  {cls:'err',icon:'🔄',text:'第 3 次调用……第 4 次……第 5 次……全是同一个错误'},
+  {cls:'err',icon:'💸',text:'循环了 15 次，消耗了 50K Token，用户还是没拿到酒店信息'},
+  {cls:'err',icon:'☠️',text:'最终崩溃：无结果返回。用户体验极差。'},
+];
+
+const GOOD_STEPS=[
+  {cls:'think',icon:'🧠',text:'思考：用户要查机票和订酒店，先查机票……'},
+  {cls:'tool',icon:'🔧',text:'调用 search_flights("北京→上海", "2026-04-15")  [timeout=10s]'},
+  {cls:'warn',icon:'⏱️',text:'脚手架：API 响应超时 (10s)，自动重试 1/3 …'},
+  {cls:'ok',icon:'✅',text:'重试成功！拿到 3 个航班。[耗时 3.2s]'},
+  {cls:'think',icon:'🧠',text:'现在订酒店。'},
+  {cls:'tool',icon:'🔧',text:'调用 book_hotel("上海", checkin="明天")'},
+  {cls:'fix',icon:'🛡️',text:'脚手架：参数校验失败 → date 格式必须是 YYYY-MM-DD → 返回格式错误给模型'},
+  {cls:'think',icon:'🧠',text:'收到校验反馈，纠正参数格式……'},
+  {cls:'tool',icon:'🔧',text:'调用 book_hotel("上海", checkin="2026-04-15")  ✓ 参数合法'},
+  {cls:'ok',icon:'✅',text:'酒店预订成功！上海浦东希尔顿，¥580/晚。'},
+  {cls:'ok',icon:'📊',text:'脚手架日志：总计 5 次工具调用，8K Token，耗时 12s，全程可追溯。'},
+  {cls:'ok',icon:'🎉',text:'任务完成：机票 + 酒店信息已整合返回给用户。'},
+];
+
+let curMode='bad',curStep=0;
+
+function setMode(m){curMode=m;curStep=0;
+  document.getElementById('modeBad').className='mode-btn bad'+(m==='bad'?' active':'');
+  document.getElementById('modeGood').className='mode-btn good'+(m==='good'?' active':'');
+  resetSim();
+}
+
+function resetSim(){
+  curStep=0;
+  const steps=curMode==='bad'?BAD_STEPS:GOOD_STEPS;
+  document.getElementById('logBody').innerHTML=steps.map((s,i)=>
+    `<div class="log-entry ${s.cls}" id="le${i}"><span class="log-icon">${s.icon}</span><span class="log-text">${s.text}</span></div>`
+  ).join('');
+  document.getElementById('logHead').textContent=curMode==='bad'?'Agent 运行日志（无脚手架）':'Agent 运行日志（有脚手架）';
+  document.getElementById('ctrlLabel').textContent='任务：帮用户查机票 + 订酒店';
+  document.getElementById('btnPlay').disabled=false;
+  document.getElementById('btnPlay').textContent='▶ 下一步';
+  document.getElementById('statRow').innerHTML='';
+}
+
+function playNext(){
+  const steps=curMode==='bad'?BAD_STEPS:GOOD_STEPS;
+  if(curStep>=steps.length)return;
+  const el=document.getElementById('le'+curStep);
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  curStep++;
+  document.getElementById('ctrlLabel').textContent=`第 ${curStep} / ${steps.length} 步`;
+  if(curStep>=steps.length){
+    document.getElementById('btnPlay').disabled=true;
+    document.getElementById('btnPlay').textContent='✓ 完成';
+    showStats();
+  }
+}
+
+function showStats(){
+  const isBad=curMode==='bad';
+  if(isBad){
+    document.getElementById('statRow').innerHTML=`
+      <div class="stat bad"><div class="stat-n">15 次</div><div class="stat-l">无效循环</div></div>
+      <div class="stat bad"><div class="stat-n">50K</div><div class="stat-l">Token 浪费</div></div>
+      <div class="stat bad"><div class="stat-n">崩溃</div><div class="stat-l">最终结果</div></div>
+    `;
+    document.getElementById('ctrlLabel').textContent='看完差的 → 切换到"有脚手架"对比';
+  } else {
+    document.getElementById('statRow').innerHTML=`
+      <div class="stat good"><div class="stat-n">5 次</div><div class="stat-l">工具调用</div></div>
+      <div class="stat good"><div class="stat-n">8K</div><div class="stat-l">Token 消耗</div></div>
+      <div class="stat good"><div class="stat-n">成功</div><div class="stat-l">任务完成</div></div>
+    `;
+    document.getElementById('ctrlLabel').textContent='脚手架让 Agent 从崩溃变成稳定交付';
+  }
+}
+
+const CAP_DETAILS=[
+  {title:'超时与重试',body:'<p>工具调用设置超时（如 10s），失败后用<b>指数退避</b>最多重试 3 次。超出则用降级策略：返回缓存结果或告知用户"暂时不可用"。</p><p><b>不要无限等待</b>，用户会以为 AI 卡死了。左侧"无脚手架"演示中 45 秒的等待就是反面案例。</p>'},
+  {title:'最大步数限制',body:'<p>设置 <code>max_iterations=20</code>，防止 Agent 陷入死循环。</p><p>LLM 有时会反复调用同一个工具而不知道退出——左侧演示中"循环 15 次同一错误"就是真实场景。到达上限时，<b>优雅地返回当前进度</b>，而非直接报错。</p>'},
+  {title:'输入输出校验',body:'<p>用 JSON Schema 严格定义每个工具的参数类型和取值范围。</p><p>左侧演示中模型传了 <code>"明天"</code> 而不是 <code>"2026-04-15"</code>，有脚手架时在执行前就拦截并<b>返回格式化错误让模型自我纠正</b>，一次纠正就成功。没有校验则陷入死循环。</p>'},
+  {title:'状态机 + 回滚',body:'<p>Agent 每步状态（当前步骤、已调用工具、中间结果）都持久化。某步失败时，从<b>最近检查点恢复</b>，不用从头来。</p><p>对 10+ 步的长链路 Agent 尤为重要——机票已查好，酒店失败时只重试酒店，不用重新查机票。</p>'},
+  {title:'观测与日志',body:'<p>每次工具调用（输入/输出）、每次模型返回都记录完整日志，包含时间戳、Token 消耗、延迟。</p><p><b>生产环境 90% 的问题靠日志排查。</b>没有日志的 Agent 是黑盒，问题无从定位。推荐集成 LangSmith 或 Arize AI。</p>'}
+];
+
+function showCap(btn,i){
+  document.querySelectorAll('.cap-item').forEach((b,j)=>b.classList.toggle('active',j===i));
+  const d=CAP_DETAILS[i];
+  document.getElementById('detailCard').innerHTML=`<h5>${d.title}</h5>${d.body}`;
+}
+
+resetSim();
+showCap(document.querySelector('.cap-item.active'),0);
+</script>
+</body>
+</html>

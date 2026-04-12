@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 的"食物"：训练数据</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0; --text: #1c1c1e; --sub: #6b7280;
+  --accent: #0066ff; --amber: #d97706; --success: #16a34a;
+  --danger: #e53e3e; --purple: #7c3aed; --border: rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px; aspect-ratio: 16/9;
+  background: var(--bg); border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 14px 36px; flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.header h2 { font-size: 20px; font-weight: 800; color: var(--text); }
+.header p  { font-size: 12px; color: var(--sub); margin-top: 2px; }
+.btn-next {
+  background: var(--accent); color: white; border: none;
+  padding: 9px 22px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left {
+  width: 40%; padding: 20px 28px 20px 36px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 14px;
+  justify-content: center; overflow: hidden;
+}
+
+.big-num {
+  font-size: 72px; font-weight: 900; color: var(--accent);
+  line-height: 1; letter-spacing: -3px;
+  transition: transform 0.2s;
+}
+.big-num.pop { transform: scale(1.06); }
+.big-label { font-size: 15px; font-weight: 700; color: var(--sub); margin-top: 4px; }
+
+/* corpus bars */
+.corpus-list { display: flex; flex-direction: column; gap: 7px; }
+.corpus-row  { display: flex; align-items: center; gap: 10px; }
+.corpus-name { width: 70px; font-size: 13px; font-weight: 700; color: var(--sub); text-align: right; flex-shrink: 0; }
+.corpus-track { flex: 1; height: 24px; background: rgba(0,0,0,0.05); border-radius: 7px; overflow: hidden; }
+.corpus-fill {
+  height: 100%; border-radius: 7px; width: 0;
+  display: flex; align-items: center; padding-left: 10px;
+  transition: width 0.9s cubic-bezier(0.25,1,0.5,1);
+}
+.corpus-fill span { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.95); }
+.corpus-pct { width: 38px; font-size: 13px; font-weight: 800; text-align: right; flex-shrink: 0; }
+
+.insight {
+  background: rgba(217,119,6,0.06); border: 1.5px solid rgba(217,119,6,0.2);
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.6;
+  opacity: 0; transform: translateY(6px); transition: opacity 0.4s, transform 0.4s;
+}
+.insight.show { opacity: 1; transform: translateY(0); }
+.insight span { font-size: 13px; font-weight: 400; color: var(--sub); }
+
+/* ── Right ── */
+.right {
+  flex: 1; padding: 16px 24px;
+  display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+}
+.right-top-label {
+  font-size: 12px; font-weight: 800; color: var(--sub);
+  letter-spacing: 0.4px; text-transform: uppercase; flex-shrink: 0;
+}
+
+/* slider */
+.slider-wrap { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.slider-val { font-size: 18px; font-weight: 900; color: var(--accent); min-width: 100px; }
+.slider-mode-badge {
+  font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 8px;
+  white-space: nowrap; transition: all 0.3s;
+}
+input[type=range] {
+  flex: 1; accent-color: var(--accent); cursor: pointer; height: 6px;
+}
+
+/* 右侧双区布局：上方规模感受 + 下方实测卡片 */
+.right-panels {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0;
+}
+
+/* 规模感受卡 */
+.vis-box {
+  background: white; border-radius: 14px;
+  border: 1.5px solid var(--border);
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;
+  flex-shrink: 0;
+}
+.vis-analogy {
+  font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.5;
+}
+.vis-analogy b { color: var(--accent); }
+.vis-analogy .sub { font-size: 12px; font-weight: 400; color: var(--sub); margin-top: 2px; }
+
+/* icon grid */
+.icon-grid {
+  display: flex; flex-wrap: wrap;
+  align-content: flex-start; gap: 3px;
+  max-height: 52px; overflow: hidden;
+}
+.icon-unit {
+  font-size: 17px; line-height: 1;
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.icon-unit.in { opacity: 1; transform: scale(1); }
+
+/* scale bar */
+.scale-bar-wrap { }
+.scale-bar-track {
+  height: 8px; background: rgba(0,0,0,0.06); border-radius: 8px; overflow: hidden;
+}
+.scale-bar-fill {
+  height: 100%; border-radius: 8px; background: var(--accent);
+  transition: width 0.5s cubic-bezier(0.25,1,0.5,1);
+}
+.scale-bar-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--sub); margin-top: 3px; font-weight: 600;
+}
+
+/* ── 实测卡片 ── */
+.model-card {
+  flex: 1; min-width: 0; border-radius: 14px; border: 2px solid var(--border);
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;
+  transition: border-color 0.3s, background 0.3s;
+  min-height: 0; overflow: hidden;
+}
+.model-card.is-hallucination { border-color: rgba(229,62,62,0.45); background: rgba(229,62,62,0.03); }
+.model-card.is-unknown       { border-color: rgba(217,119,6,0.45);  background: rgba(217,119,6,0.03); }
+.model-card.is-correct       { border-color: rgba(22,163,74,0.5);   background: rgba(22,163,74,0.04); }
+
+.model-card-header {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.model-size-big {
+  font-size: 28px; font-weight: 900; line-height: 1;
+  transition: color 0.3s;
+}
+.is-hallucination .model-size-big { color: var(--danger); }
+.is-unknown       .model-size-big { color: var(--amber); }
+.is-correct       .model-size-big { color: var(--success); }
+
+.model-card-meta { flex: 1; }
+.model-card-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.model-card-tag  { font-size: 11px; color: var(--sub); margin-top: 1px; }
+
+.verdict-badge {
+  font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 8px;
+  flex-shrink: 0;
+}
+.is-hallucination .verdict-badge { background: var(--danger); color: white; }
+.is-unknown       .verdict-badge { background: var(--amber);  color: white; }
+.is-correct       .verdict-badge { background: var(--success); color: white; }
+
+.model-card-q {
+  font-size: 11px; font-weight: 700; color: var(--sub); flex-shrink: 0;
+}
+.model-card-answer {
+  flex: 1; min-width: 0; min-height: 0;
+  font-size: 13px; color: var(--text); line-height: 1.7;
+  border-radius: 10px; padding: 10px 14px;
+  overflow-y: auto;
+  transition: background 0.3s;
+}
+.is-hallucination .model-card-answer { background: rgba(229,62,62,0.05); }
+.is-unknown       .model-card-answer { background: rgba(217,119,6,0.05); }
+.is-correct       .model-card-answer { background: rgba(22,163,74,0.05); }
+
+.model-card-answer .wrong { color: var(--danger); font-weight: 700; }
+.model-card-answer .right { color: var(--success); font-weight: 700; }
+.model-card-answer b { color: var(--success); font-weight: 700; }
+
+.model-card-tip {
+  font-size: 11px; color: var(--sub); flex-shrink: 0; line-height: 1.5;
+}
+.model-card-tip b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div>
+      <h2>AI 的"食物"：训练数据</h2>
+      <p>想让 AI 学会说话，先要喂给它数以万亿计的文字——它读了人类写过的绝大多数内容</p>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="body">
+
+    <!-- 左 -->
+    <div class="left">
+
+      <div>
+        <div class="big-num" id="bigNum">~1B</div>
+        <div class="big-label" id="bigSubLabel">Tokens（词元）· 小模型训练数据量级</div>
+      </div>
+
+      <div class="corpus-list" id="corpusList"></div>
+
+      <div class="insight" id="insight">
+        读了多少，就能说多少。<br>
+        <span>训练数据的质量和多样性，决定了模型"世界观"的上限。</span>
+      </div>
+
+    </div>
+
+    <!-- 右 -->
+    <div class="right">
+      <div class="right-top-label">拖动滑条 · 感受不同参数量模型的能力差异</div>
+
+      <div class="slider-wrap">
+        <span class="slider-val" id="sliderVal">270M</span>
+        <input type="range" min="0" max="8" step="1" value="0" id="scaleSlider" oninput="updateScale(this.value)" style="flex:1">
+        <span class="slider-mode-badge" id="modeBadge">幻觉</span>
+      </div>
+
+      <div class="right-panels">
+
+        <!-- 上：规模感受小卡 -->
+        <div class="vis-box">
+          <div class="vis-analogy" id="visAnalogy"></div>
+          <div class="icon-grid" id="iconGrid"></div>
+          <div class="scale-bar-wrap">
+            <div class="scale-bar-track">
+              <div class="scale-bar-fill" id="scaleBarFill" style="width:2%"></div>
+            </div>
+          <div class="scale-bar-labels">
+            <span>270M</span><span>0.6B</span><span>1.8B</span><span>30B</span><span>70B</span><span>120B</span><span>235B</span><span>1T</span><span>5T+</span>
+          </div>
+          </div>
+        </div>
+
+        <!-- 下：实测大卡（随 slider 切换） -->
+        <div class="model-card" id="modelCard">
+          <div class="model-card-header">
+            <div class="model-size-big" id="cardSize">270M</div>
+            <div class="model-card-meta">
+              <div class="model-card-name" id="cardName">Gemma-4-e2b</div>
+              <div class="model-card-tag" id="cardTag">Google · 本地推理</div>
+            </div>
+            <div class="verdict-badge" id="cardVerdict">幻觉</div>
+          </div>
+          <div class="model-card-q">问：李知恩是谁？请介绍一下她的生平和代表作品。</div>
+          <div class="model-card-answer" id="cardAnswer"></div>
+          <div class="model-card-tip" id="cardTip"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── 语料条 ──
+const CORPUS = [
+  { name:'网页文本', pct:70, color:'#0066ff' },
+  { name:'书籍',     pct:12, color:'#7c3aed' },
+  { name:'代码',     pct:8,  color:'#16a34a' },
+  { name:'学术论文', pct:5,  color:'#d97706' },
+  { name:'对话数据', pct:5,  color:'#e53e3e' },
+];
+const list = document.getElementById('corpusList');
+CORPUS.forEach(c => {
+  list.innerHTML += `
+    <div class="corpus-row">
+      <div class="corpus-name">${c.name}</div>
+      <div class="corpus-track">
+        <div class="corpus-fill" style="background:${c.color}" data-w="${c.pct}">
+          <span>${c.pct}%</span>
+        </div>
+      </div>
+      <div class="corpus-pct" style="color:${c.color}">${c.pct}%</div>
+    </div>`;
+});
+setTimeout(() => {
+  list.querySelectorAll('.corpus-fill').forEach(el => el.style.width = el.dataset.w + '%');
+}, 200);
+
+// ── 模型档位数据（参数量 + 实测结果）──
+const SCALES = [
+  {
+    // slider 左侧
+    num: '270M',
+    sublabel: 'Tokens（词元）· 超小模型，约 ~1B Tokens 训练',
+    // 右上规模感受
+    analogy: '训练数据约 <b>75 万本</b> 普通小说',
+    sub: '一座小型城市图书馆的馆藏',
+    icon: '📚', count: 8, pct: 2,
+    // 实测卡
+    verdict: 'hallucination',
+    verdictLabel: '幻觉',
+    modelName: 'Gemma-4-e2b (270M)',
+    modelTag: 'Google · LMStudio 本地实测',
+    answer: '李知恩是一位中国著名<b class="wrong">教育ólogo</b>和<b class="wrong">教育家</b>。尽管目前没有公开信息，但根据一些记录，可以推断她是<b class="wrong">中国教育教育家</b>。代表作品：<b class="wrong">《教育家》《教育与教育家》</b>，描述了中国教育教育家的生活和工作。',
+    tip: '270M 完全不知道李知恩是谁——直接捏造了一个"中国教育家"身份，还把"educólogo"这个词拼错了。这就是参数太少、训练数据太稀疏的结果：随机拼凑，毫无根据。',
+  },
+  {
+    num: '0.6B',
+    sublabel: 'Tokens（词元）· 超小模型，约 ~1B Tokens 训练',
+    analogy: '训练数据约 <b>75 万本</b> 普通小说',
+    sub: '知识覆盖极度稀疏，只记得"常识级"内容',
+    icon: '📚', count: 8, pct: 5,
+    verdict: 'hallucination',
+    verdictLabel: '幻觉',
+    modelName: 'Qwen3-0.6B',
+    modelTag: 'Alibaba · LMStudio 本地实测',
+    answer: '李知恩（<b class="wrong">Lee Ji-hoon</b>）是韩国著名的女演员，出生于1993年，目前担任<b class="wrong">韩国国家大百科全书的编委</b>。她的职业生涯始于韩国演艺圈，并在多个影视作品中展现了独特的魅力。早期经历：李知恩在青少年时期便展现出对表演的热情，后来进入娱乐圈发展。',
+    tip: '0.6B 知道"韩国女艺人"这个大方向，但艺名拼成了 Lee Ji-hoon（错），还捏造了"国家百科全书编委"这个根本不存在的职位。方向对了，细节全错。',
+  },
+  {
+    num: '1.8B',
+    sublabel: 'Tokens（词元）· 小模型，约 ~2B Tokens 训练',
+    analogy: '训练数据约 <b>150 万本</b> 书',
+    sub: '略懂大众知识，但稍微小众的事实容易空白',
+    icon: '📖', count: 12, pct: 12,
+    verdict: 'unknown',
+    verdictLabel: '拒绝回答',
+    modelName: 'HunYuan-1.8B',
+    modelTag: 'Tencent · LMStudio 本地实测',
+    answer: '关于"李知恩"这一名字，目前<b class="wrong">没有广泛知名或公开的权威资料</b>记录其生平及代表作品，可能是特定领域的从业者或非公众人物。若您所指的是某个地区或特定圈子里的个体，建议提供更多背景信息（如所在领域、成就或相关事件），以便进一步核实。',
+    tip: '1.8B 比幻觉稍好——至少没有捏造身份，但也不知道李知恩是谁，只能推给用户说"请提供更多信息"。相当于"这本书我没读到过"。',
+  },
+  {
+    num: '30B',
+    sublabel: 'Tokens（词元）· 大型模型，约 ~15T Tokens 训练',
+    analogy: '相当于把整个互联网 <b>读了两三遍</b>',
+    sub: '知识覆盖已相当全面，主流事实基本准确',
+    icon: '🚀', count: 26, pct: 56,
+    verdict: 'correct',
+    verdictLabel: '正确详细',
+    modelName: 'Qwen3-Coder-30B',
+    modelTag: 'Alibaba · LMStudio 本地实测',
+    answer: '李知恩（艺名 <b>IU</b>），1993年5月16日出生于韩国首尔，是韩国著名女歌手、词曲创作人和演员。2008年出道，2010年凭借《Good Day》获得广泛关注，被誉为"国民妹妹"。代表音乐作品：《Good Day》《Through the Night》《Palette》《LILAC》；代表演艺作品：《我的大叔》《鬼怪》《德鲁纳酒店》。',
+    tip: '30B 已经能给出完整、有条理的介绍——艺名、生日、出道时间、代表作都准确。到这个量级，主流公众人物的事实基本不再幻觉。',
+  },
+  {
+    num: '70B',
+    sublabel: 'Tokens（词元）· 大型模型，约 ~15T Tokens 训练',
+    analogy: '相当于把整个互联网 <b>读了两三遍</b>',
+    sub: '大参数量不等于没有幻觉——稍微小众的事实照样出错',
+    icon: '🚀', count: 32, pct: 65,
+    verdict: 'hallucination',
+    verdictLabel: '严重幻觉',
+    modelName: 'Llama-3.3-70B-Instruct',
+    modelTag: 'Meta · OpenRouter 云端实测',
+    answer: '李知恩是一位韩国女演员，生于<b class="wrong">1987年2月9日</b>。她在2010年因出演电视剧<b class="wrong">《秘密花园》</b>而获得关注，在那里她扮演了一个名叫<b class="wrong">尹瑟的富家子弟</b>。代表作品包括《信号》《Architecture 101》《当恶魔呼唤你的名字时》等。',
+    tip: '70B 完全答错！把李知恩（歌手/IU）认成了另一个同名女演员，出生年份差了6年，代表作全部是另一个人的。参数量大不代表不幻觉——这正是"训练数据覆盖"决定知识边界的体现。',
+  },
+  {
+    num: '120B',
+    sublabel: 'Tokens（词元）· 超大模型，约 ~15T+ Tokens 训练',
+    analogy: '相当于把整个互联网 <b>反复啃了好几遍</b>',
+    sub: '知识极为密集，能处理细节、跨语言、深度推理',
+    icon: '🤯', count: 38, pct: 78,
+    verdict: 'correct',
+    verdictLabel: '专家级',
+    modelName: 'GPT-OSS-120B',
+    modelTag: 'OpenAI · LMStudio 本地实测',
+    answer: '李知恩（Lee Ji‑eun），艺名 <b>IU</b>，1993年5月16日生于韩国首尔江南区，父亲是音乐教师，母亲是美术老师。2008年以单曲《Lost Child》正式出道，签约 LOEN（现 Kakao M）。2010年发行专辑《IU…i\'m IU》，主打《Marshmallow》首获音乐节目冠军；同年《Good Day》以三段式高音一举奠定"国民妹妹"地位。代表专辑：《Last Fantasy》《Modern Times》《Palette》《Lilac》；代表曲：《Through the Night》《Eight》《Coin》；主演电视剧：《我的大叔》《德鲁纳酒店》《我的解忧方案》。',
+    tip: '120B 的回答近乎维基百科——连父母职业、公司名称、出道单曲都准确。和 70B 的严重幻觉相比，这个跨越感极强。',
+  },
+  {
+    num: '235B',
+    sublabel: 'Tokens（词元）· MoE 巨型模型，约 ~20T Tokens 训练',
+    analogy: '训练数据已超过人类 <b>所有文字的总量</b>',
+    sub: '2000 亿参数池，22B 动态激活，推理与知识兼顾',
+    icon: '🌌', count: 48, pct: 86,
+    verdict: 'correct',
+    verdictLabel: '百科级',
+    modelName: 'Qwen3-235B-A22B（MoE）',
+    modelTag: 'Alibaba · OpenRouter 云端实测',
+    answer: '李知恩（1993年5月16日－），韩国创作女歌手、音乐制作人及演员，以艺名 <b>IU</b>（아이유）闻名。13岁参加选秀未果，后成为LOEN Entertainment（现Kakao Music）练习生。2008年9月正式出道，2010年《Good Day》以三段高音横扫榜单，奠定"国民级"地位。代表专辑：《Last Fantasy》《Modern Times》《Palette》《Lilac》；代表曲：《Good Day》《Through the Night》《BBIBBI》《Love Scenario》；影视代表：《我的大叔》《鬼怪》《德鲁纳酒店》。',
+    tip: '235B MoE 切换到完全正确——艺名、出道背景、代表作品全部准确，说明参数池足够大之后，"稍微小众"的知识点就能被正确覆盖。',
+  },
+  {
+    num: '1T',
+    sublabel: 'Tokens（词元）· 万亿参数 MoE，约 ~20T Tokens 训练',
+    analogy: '人类语言文字的 <b>数倍总量</b>',
+    sub: '万亿参数 MoE，专家并行激活，极限知识密度',
+    icon: '🛸', count: 58, pct: 95,
+    verdict: 'correct',
+    verdictLabel: '超越百科',
+    modelName: 'Kimi K2（~1T MoE）',
+    modelTag: 'Moonshot AI · OpenRouter 云端实测',
+    answer: '李知恩（이지은，Lee Ji-eun），艺名 <b>IU</b>（아이유，"我与你"的缩写），1993年5月16日生，韩国创作型女歌手、演员、词曲作者、制作人。K-Pop史上首位同时达成"Melon日榜、周榜、年榜All-Kill"与"音源累计破百次PAK（Perfect All-Kill）"的艺人。2007年15岁签约LOEN Entertainment，2008年出道，2010年《좋은 날（好日子）》三段高音爆红。代表专辑：《Real》《Last Fantasy》《Modern Times》《Palette》《Lilac》《The Winning》；代表曲：《Through the Night》《Eight》《Coin》《Celebrity》《Love wins all》；影视：《我的大叔》《德鲁纳酒店》《我的解忧方案》。',
+    tip: 'Kimi K2 连 Melon 音源纪录、PAK 次数、韩文歌名都记准了——这是万亿参数体量带来的知识密度，几乎等同于一个实时可查的专业数据库。',
+  },
+  {
+    num: '5T+',
+    sublabel: 'Tokens（词元）· 顶级闭源旗舰，约 ~20T+ Tokens 训练',
+    analogy: '人类所有文字的 <b>数十倍等效覆盖</b>',
+    sub: '参数量未公开，业内推测超 5T，行业天花板',
+    icon: '🌠', count: 72, pct: 100,
+    verdict: 'correct',
+    verdictLabel: '行业天花板',
+    modelName: 'Claude Opus 4.6',
+    modelTag: 'Anthropic · OpenRouter 代理实测',
+    answer: '李知恩（이지은）艺名 <b>IU</b>（아이유），1993年5月16日出生于韩国首尔。艺名"IU"取自"I"与"You"的组合，寓意通过音乐将人与人连接。年仅15岁以歌曲《迷儿》出道，签约LOEN Entertainment（后更名Kakao Entertainment）。2010年《좋은 날（好日子）》连续三个高音引发轰动，奠定"国民妹妹"地位。代表专辑：《Modern Times》《Palette》（与G-Dragon合作）《Lilac》；代表曲：《Through the Night》《BBIBBI》《Celebrity》《Love wins all》（与V合拍MV）；影视：《Dream High》《我的大叔》（演技获高度认可）《德鲁纳酒店》《月之恋人-步步惊心：丽》。',
+    tip: 'Claude Opus 4.6 回答结构清晰如维基百科——连艺名语源、童年家境、练习生经历、合作歌手细节都完整记录，这是顶级闭源模型的知识广度与表达能力的综合体现。',
+  },
+];
+
+let currentScale = 0;
+
+// 类型 → 样式映射
+const VERDICT_CLASS = {
+  hallucination: 'is-hallucination',
+  unknown:       'is-unknown',
+  correct:       'is-correct',
+};
+const BADGE_COLORS = {
+  hallucination: { bg: 'var(--danger)', text: 'white' },
+  unknown:       { bg: 'var(--amber)',  text: 'white' },
+  correct:       { bg: 'var(--success)', text: 'white' },
+};
+
+function updateScale(v) {
+  const s = SCALES[+v];
+  currentScale = +v;
+
+  // 左侧大数字 pop 动画
+  const bigNum = document.getElementById('bigNum');
+  bigNum.textContent = s.num;
+  bigNum.classList.remove('pop');
+  void bigNum.offsetWidth;
+  bigNum.classList.add('pop');
+  setTimeout(() => bigNum.classList.remove('pop'), 300);
+
+  // 左侧副标签
+  document.getElementById('bigSubLabel').textContent = s.sublabel;
+
+  // slider val + mode badge
+  document.getElementById('sliderVal').textContent = s.num;
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = s.verdictLabel;
+  const bc = BADGE_COLORS[s.verdict];
+  badge.style.background = bc.bg;
+  badge.style.color = bc.text;
+
+  // 规模感受（右上小卡）
+  document.getElementById('visAnalogy').innerHTML =
+    s.analogy + `<div class="sub">${s.sub}</div>`;
+  document.getElementById('scaleBarFill').style.width = s.pct + '%';
+
+  // 图标格
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < s.count; i++) {
+    const span = document.createElement('span');
+    span.className = 'icon-unit';
+    span.textContent = s.icon;
+    grid.appendChild(span);
+    setTimeout(() => span.classList.add('in'), i * 15);
+  }
+
+  // 实测大卡（右下）
+  const card = document.getElementById('modelCard');
+  card.className = 'model-card ' + VERDICT_CLASS[s.verdict];
+
+  document.getElementById('cardSize').textContent    = s.num;
+  document.getElementById('cardName').textContent    = s.modelName;
+  document.getElementById('cardTag').textContent     = s.modelTag;
+  document.getElementById('cardVerdict').textContent = s.verdictLabel;
+  document.getElementById('cardAnswer').innerHTML    = s.answer;
+  document.getElementById('cardTip').innerHTML       = s.tip;
+}
+
+// 初始化
+updateScale(0);
+document.getElementById('scaleSlider').value = 0;
+
+// ── 下一步 ──
+let step = 0;
+function nextStep() {
+  step++;
+  if (step === 1) {
+    document.getElementById('insight').classList.add('show');
+    document.getElementById('nextBtn').textContent = '完成 ✓';
+    document.getElementById('nextBtn').style.background = '#16a34a';
+    document.getElementById('nextBtn').onclick = null;
+  }
+}
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

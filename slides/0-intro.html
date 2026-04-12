@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>开篇：我们在哪里？</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --text: #1c1c1e;
+  --sub: #6b7280;
+  --accent: #0066ff;
+  --danger: #dc2626;
+  --amber: #d97706;
+  --success: #16a34a;
+  --border: rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  padding: 14px 36px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.header-left h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+.header-left p  { font-size: 12px; color: var(--sub); margin-top: 2px; }
+.btn-next {
+  background: var(--accent); color: white; border: none;
+  padding: 9px 22px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* Body: left + right */
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left {
+  width: 42%; padding: 20px 28px 20px 36px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-right: 1px solid var(--border);
+  overflow: hidden; justify-content: center;
+}
+
+.big-label {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--sub);
+}
+.big-title {
+  font-size: 40px; font-weight: 900; color: var(--text); line-height: 1.15;
+  margin-top: 4px;
+}
+
+.step-list { display: flex; flex-direction: column; gap: 9px; }
+
+.step-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-radius: 14px;
+  background: white; border: 1.5px solid var(--border);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.step-item.show { opacity: 1; transform: translateY(0); }
+.step-item.is-danger  { border-color: rgba(220,38,38,0.25); }
+.step-item.is-amber   { border-color: rgba(217,119,6,0.25); }
+.step-item.is-success { border-color: rgba(22,163,74,0.28); background: rgba(22,163,74,0.03); }
+
+.step-dot {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; flex-shrink: 0;
+}
+.is-danger  .step-dot { background: rgba(220,38,38,0.1);  color: var(--danger); }
+.is-amber   .step-dot { background: rgba(217,119,6,0.1);  color: var(--amber); }
+.is-success .step-dot { background: rgba(22,163,74,0.12); color: var(--success); }
+
+.step-body { flex: 1; }
+.step-header { display: flex; align-items: center; gap: 8px; }
+.step-title { font-size: 17px; font-weight: 800; color: var(--text); flex: 1; min-width: 0; }
+.step-tag {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.is-danger  .step-tag { background: var(--danger);  color: white; }
+.is-amber   .step-tag { background: var(--amber);   color: white; }
+.is-success .step-tag { background: var(--success); color: white; }
+.step-desc { font-size: 13px; color: var(--sub); margin-top: 4px; line-height: 1.6; }
+
+/* quote */
+.quote-box {
+  background: rgba(220,38,38,0.04); border: 1.5px solid rgba(220,38,38,0.18);
+  border-radius: 14px; padding: 14px 18px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.quote-box.show { opacity: 1; transform: translateY(0); }
+.quote-main {
+  font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.65;
+}
+.quote-main em { font-style: normal; color: var(--danger); }
+.quote-sub {
+  font-size: 13px; color: var(--sub); margin-top: 6px; line-height: 1.6;
+}
+
+/* ── Right ── */
+.right {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 14px 20px 14px 14px; align-items: center; justify-content: center;
+  gap: 10px;
+}
+
+/* 图片容器：相对定位，气泡绝对定位在图上 */
+.chart-wrap {
+  position: relative; width: 100%; flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.dk-img {
+  max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
+  opacity: 0; transform: scale(0.97);
+  transition: opacity 0.5s, transform 0.5s;
+  display: block;
+}
+.dk-img.show { opacity: 1; transform: scale(1); }
+
+/* 气泡 — 用百分比定位，贴图内容区域 */
+.bubble {
+  position: absolute;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 800;
+  white-space: nowrap; pointer-events: none;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+  opacity: 0; transition: opacity 0.4s;
+}
+.bubble.show { opacity: 1; }
+.bubble::after {
+  content: '';
+  position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+}
+
+/* 📍 "一些人可能在这里" — 愚昧之巅上方 */
+.bubble-peak {
+  background: var(--danger); color: white;
+  left: 25%; top: 18%;
+}
+.bubble-peak::after { border-top: 7px solid var(--danger); }
+
+/* 😰 "动手后必经" — 绝望之谷底部 */
+.bubble-valley {
+  background: var(--amber); color: white;
+  left: 38%; bottom: 46%;
+}
+.bubble-valley::after { border-top: 7px solid var(--amber); }
+
+/* 🎯 "课程目标" — 平稳高原：图内约 right 10%, top 38% */
+.bubble-goal {
+  background: var(--success); color: white;
+  right: 6%; top: 28%;
+}
+.bubble-goal::after { border-top: 7px solid var(--success); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div class="header-left">
+      <h2>开篇：我们在哪里？</h2>
+      <p>AI 产品经理训练营 · 正式开始之前</p>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="body">
+
+    <!-- 左：文字 -->
+    <div class="left">
+      <div>
+        <div class="big-label">达克鲁宁效应 · Dunning-Kruger Effect</div>
+        <div class="big-title">你现在<br>在哪里？</div>
+      </div>
+
+      <div class="step-list">
+
+        <div class="step-item is-danger" id="s0">
+          <div class="step-dot">1</div>
+          <div class="step-body">
+            <div class="step-header">
+              <div class="step-title">愚昧之巅</div>
+              <div class="step-tag">📍 一些人可能在这里</div>
+            </div>
+            <div class="step-desc">刚接触 AI，觉得"我懂了"——ChatGPT 是对话，RAG 就是搜索，Prompt 就是说话。</div>
+          </div>
+        </div>
+
+        <div class="step-item is-amber" id="s1">
+          <div class="step-dot">2</div>
+          <div class="step-body">
+            <div class="step-header">
+              <div class="step-title">绝望之谷</div>
+              <div class="step-tag">动手后必经</div>
+            </div>
+            <div class="step-desc">开始动手，发现模型乱答、Prompt 无效、RAG 效果差——"AI 怎么这么难用？"</div>
+          </div>
+        </div>
+
+        <div class="step-item is-success" id="s2">
+          <div class="step-dot">→</div>
+          <div class="step-body">
+            <div class="step-header">
+              <div class="step-title">平稳高原</div>
+              <div class="step-tag">🎯 课程目标</div>
+            </div>
+            <div class="step-desc">真正理解 AI 在做什么，能判断问题出在哪、该用什么方案解决。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 金句 -->
+      <div class="quote-box" id="quoteBox">
+        <div class="quote-main">
+          弱小和无知从来不是生存的障碍，<em>傲慢才是。</em>
+        </div>
+        <div class="quote-sub">
+          傲慢是成长最大的敌人——到达平稳高原<strong>不需要会写代码</strong>，但需要放下"我已经懂了"，认真理解底层逻辑。
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：图 + 气泡 -->
+    <div class="right">
+      <div class="chart-wrap">
+        <img class="dk-img" id="dkImg" src="dunning-kruger.png" alt="达克鲁宁效应曲线">
+        <div class="bubble bubble-peak"   id="bubblePeak">📍 一些人可能在这里</div>
+        <div class="bubble bubble-valley" id="bubbleValley">😰 动手后必经</div>
+        <div class="bubble bubble-goal"   id="bubbleGoal">🎯 课程目标</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  () => { document.getElementById('dkImg').classList.add('show'); },
+  () => {
+    document.getElementById('s0').classList.add('show');
+    document.getElementById('bubblePeak').classList.add('show');
+  },
+  () => {
+    document.getElementById('s1').classList.add('show');
+    document.getElementById('bubbleValley').classList.add('show');
+  },
+  () => {
+    document.getElementById('s2').classList.add('show');
+    document.getElementById('bubbleGoal').classList.add('show');
+  },
+  () => {
+    document.getElementById('quoteBox').classList.add('show');
+    const btn = document.getElementById('nextBtn');
+    btn.textContent = '继续 →';
+    btn.onclick = () => location.href = '0-why.html';
+  },
+];
+
+let step = 0;
+function nextStep() {
+  if (step >= STEPS.length) return;
+  STEPS[step]();
+  step++;
+}
+
+nextStep();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

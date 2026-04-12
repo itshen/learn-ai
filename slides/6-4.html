@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>流式返回与格式配合</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--orange:#ea580c;--cyan:#0891b2;--amber:#d97706;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--purple);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:300px 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:18px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow:auto}
+.desc{font-size:16px;color:var(--sub);line-height:1.65}
+.mode-label{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.mode-tabs{display:flex;flex-direction:column;gap:5px}
+.mode-btn{padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;text-align:left;transition:all .2s;display:flex;align-items:center;gap:8px}
+.mode-btn .badge{font-size:11px;font-weight:800;font-family:monospace;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.mode-btn .txt h4{font-size:14px;font-weight:700;color:var(--text)}
+.mode-btn .txt p{font-size:12px;color:var(--muted);margin-top:1px}
+.mode-btn.active{border-color:var(--purple)}
+.mode-btn.active .txt h4{color:var(--purple)}
+
+.ctrl-btn{width:100%;padding:10px;background:var(--purple);color:white;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s}
+.ctrl-btn:hover{opacity:.85}
+.ctrl-btn:disabled{opacity:.45;cursor:default}
+
+.insight-row{font-size:14px;color:var(--text);line-height:1.6;background:rgba(147,51,234,.06);border:1px solid rgba(147,51,234,.18);border-radius:9px;padding:10px 12px}
+.insight-row b{color:var(--purple)}
+
+/* ── 右栏：三列对比 ── */
+.right{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.compare-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;min-height:0}
+.col-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;transition:border-color .3s}
+.col-panel.streaming{border-color:var(--purple)}
+.col-panel.done-good{border-color:var(--green)}
+.col-panel.done-bad{border-color:var(--red)}
+.col-header{padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.col-header .fmt-badge{font-size:12px;font-weight:800;font-family:monospace;padding:2px 8px;border-radius:4px}
+.col-header .status{font-size:12px;font-weight:600}
+.col-body{flex:1;overflow:auto;padding:12px}
+
+/* 渲染区域 */
+.render-area{font-size:14px;line-height:1.7;min-height:60px}
+.render-area .chunk{display:inline}
+.render-area .visible{color:var(--text)}
+.render-area .pending{color:var(--muted);opacity:.4}
+
+/* 原始流 */
+.raw-stream{font-size:12px;font-family:'Cascadia Code','Fira Code',monospace;color:#6c7086;background:#1e1b2e;border-radius:6px;padding:8px;margin-top:8px;line-height:1.6;max-height:70px;overflow:auto;word-break:break-all}
+
+/* 解析结果卡片 */
+.parsed-card{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:7px;padding:8px 10px;margin-top:6px;font-size:13px;color:var(--text);line-height:1.6;display:none}
+.parsed-card.show{display:block}
+.parsed-card .pc-label{font-size:11px;font-weight:800;color:var(--green);margin-bottom:4px}
+.parsed-field{display:flex;gap:6px;margin-bottom:2px}
+.parsed-field .k{color:var(--cyan);font-weight:700;flex-shrink:0;font-size:12px}
+.parsed-field .v{color:var(--text);font-size:12px}
+
+.wait-card{background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.15);border-radius:7px;padding:8px 10px;margin-top:6px;font-size:12px;color:var(--red);display:none}
+.wait-card.show{display:block}
+
+/* 底部说明 */
+.bottom-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex-shrink:0}
+.insight-cell{background:rgba(147,51,234,.06);border:1px solid rgba(147,51,234,.15);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.5}
+.insight-cell b{color:var(--purple)}
+
+@keyframes blink-cur{0%,100%{opacity:1}50%{opacity:0}}
+.cursor::after{content:'▋';animation:blink-cur .8s infinite;font-size:14px;color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块六 · Prompt Engineering · 第 6 页</div>
+      <div class="title">流式返回：<em>格式选择影响实时体验</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">点击格式后播放，观察三种渲染差异 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">LLM 是<b>逐 Token 输出</b>的。同一个响应内容，格式不同，流式体验完全不同。</p>
+
+      <div class="mode-label">选择演示场景</div>
+      <div class="mode-tabs">
+        <button class="mode-btn active" onclick="selectMode(this,0)">
+          <span class="badge" style="background:#ede9fe;color:#6d28d9">工具推荐</span>
+          <div class="txt"><h4>结构化列表输出</h4><p>3 个工具，包含名称/类型/亮点</p></div>
+        </button>
+        <button class="mode-btn" onclick="selectMode(this,1)">
+          <span class="badge" style="background:#dbeafe;color:#1e40af">分析报告</span>
+          <div class="txt"><h4>多字段结论输出</h4><p>结论/原因/建议/置信度</p></div>
+        </button>
+      </div>
+
+      <button class="ctrl-btn" id="playBtn" onclick="startStream()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        开始播放流式输出
+      </button>
+      <button class="ctrl-btn" id="resetBtn" onclick="resetAll()" style="background:var(--surface2);color:var(--text);border:1.5px solid var(--border)">重置</button>
+
+      <div class="insight-row">
+        <b>核心结论：</b><br>
+        XML 捕获标签 → 立刻渲染字段<br>
+        JSON 等全文 → 解析一次<br>
+        MD 逐字显示 → 无法提取字段
+      </div>
+    </div>
+
+    <!-- 右栏：三列对比 -->
+    <div class="right">
+      <div class="compare-cols">
+        <!-- JSON 列 -->
+        <div class="col-panel" id="panelJson">
+          <div class="col-header">
+            <span class="fmt-badge" style="background:#fef3c7;color:#92400e">JSON</span>
+            <span class="status" id="statusJson" style="color:var(--muted)">等待中</span>
+          </div>
+          <div class="col-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">原始流 Token（逐字累积）</div>
+            <div class="raw-stream" id="rawJson"></div>
+            <div class="wait-card" id="waitJson">
+              ⏳ 等待完整 JSON 到达后才能解析…<br>
+              流式过程中 JSON 是"残缺"的，<br>
+              无法中途解析渲染
+            </div>
+            <div class="parsed-card" id="parsedJson">
+              <div class="pc-label">✓ JSON 解析完成（全文到达后）</div>
+              <div id="parsedJsonContent"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Markdown 列 -->
+        <div class="col-panel" id="panelMd">
+          <div class="col-header">
+            <span class="fmt-badge" style="background:#ede9fe;color:#6d28d9">Markdown</span>
+            <span class="status" id="statusMd" style="color:var(--muted)">等待中</span>
+          </div>
+          <div class="col-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">渲染区域（逐字显示）</div>
+            <div class="render-area cursor" id="renderMd"></div>
+            <div class="wait-card" id="waitMd" style="background:rgba(234,88,12,.05);border-color:rgba(234,88,12,.2);color:var(--orange)">
+              ⚠️ 虽然逐字显示流畅，<br>
+              但无法从 Markdown 中<br>
+              可靠提取结构化字段
+            </div>
+          </div>
+        </div>
+
+        <!-- XML 列 -->
+        <div class="col-panel" id="panelXml">
+          <div class="col-header">
+            <span class="fmt-badge" style="background:#dbeafe;color:#1e40af">XML 自定义标签</span>
+            <span class="status" id="statusXml" style="color:var(--muted)">等待中</span>
+          </div>
+          <div class="col-body">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">增量解析渲染（捕获到 &lt;/tag&gt; 即渲染）</div>
+            <div id="xmlCards"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部说明 -->
+      <div class="bottom-bar">
+        <div class="insight-cell">
+          <b>JSON 流式</b><br>
+          后端友好但流式不佳：<br>
+          必须<b>等全文</b>才能解析，<br>
+          用户看到的是"loading"状态
+        </div>
+        <div class="insight-cell">
+          <b>Markdown 流式</b><br>
+          用户体验最流畅：<br>
+          逐字显示有"打字"感，<br>
+          但<b>无法提取字段</b>做程序处理
+        </div>
+        <div class="insight-cell">
+          <b>XML 流式</b><br>
+          <b>两全其美</b>：流式 + 结构化<br>
+          捕获到 <code style="background:var(--surface2);padding:0 4px;border-radius:3px">&lt;/name&gt;</code> 立刻渲染，<br>
+          Claude 原生推荐此方式
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// ── 两个场景的数据 ──
+const MODES = [
+  {
+    // 场景0：工具推荐
+    jsonTokens: `{\n  "tools": [\n    {\n      "name": "Notion AI",\n      "type": "写作辅助",\n      "highlight": "一键总结改写"\n    },\n    {\n      "name": "Midjourney",\n      "type": "图像生成",\n      "highlight": "艺术风格丰富"\n    },\n    {\n      "name": "Copilot",\n      "type": "代码补全",\n      "highlight": "支持 50+ 语言"\n    }\n  ]\n}`,
+    jsonFields: [
+      {k:'name', v:'Notion AI'},{k:'type', v:'写作辅助'},{k:'highlight', v:'一键总结改写'},
+      {k:'name', v:'Midjourney'},{k:'type', v:'图像生成'},{k:'highlight', v:'艺术风格丰富'},
+      {k:'name', v:'Copilot'},{k:'type', v:'代码补全'},{k:'highlight', v:'支持 50+ 语言'},
+    ],
+    mdTokens: `## AI 工具推荐\n\n### 1. Notion AI\n- **类型**：写作辅助\n- **亮点**：一键总结改写\n\n### 2. Midjourney\n- **类型**：图像生成\n- **亮点**：艺术风格丰富\n\n### 3. Copilot\n- **类型**：代码补全\n- **亮点**：支持 50+ 语言`,
+    xmlTokens: `<tool_list>\n  <tool>\n    <name>Notion AI</name>\n    <type>写作辅助</type>\n    <highlight>一键总结改写</highlight>\n  </tool>\n  <tool>\n    <name>Midjourney</name>\n    <type>图像生成</type>\n    <highlight>艺术风格丰富</highlight>\n  </tool>\n  <tool>\n    <name>Copilot</name>\n    <type>代码补全</type>\n    <highlight>支持 50+ 语言</highlight>\n  </tool>\n</tool_list>`,
+    // XML 捕获事件：[tokenIndex, fieldLabel, fieldValue, isNewCard]
+    xmlEvents: [
+      [18, 'name', 'Notion AI', true],
+      [24, 'type', '写作辅助', false],
+      [32, 'highlight', '一键总结改写', false],
+      [52, 'name', 'Midjourney', true],
+      [58, 'type', '图像生成', false],
+      [66, 'highlight', '艺术风格丰富', false],
+      [86, 'name', 'Copilot', true],
+      [92, 'type', '代码补全', false],
+      [100, 'highlight', '支持 50+ 语言', false],
+    ]
+  },
+  {
+    // 场景1：分析报告
+    jsonTokens: `{\n  "conclusion": "建议采用 RAG 方案",\n  "reason": "幻觉率高，知识库已准备",\n  "action": "第一步部署向量数据库",\n  "confidence": "0.87"\n}`,
+    jsonFields: [
+      {k:'conclusion', v:'建议采用 RAG 方案'},
+      {k:'reason', v:'幻觉率高，知识库已准备'},
+      {k:'action', v:'第一步部署向量数据库'},
+      {k:'confidence', v:'0.87'},
+    ],
+    mdTokens: `## 分析结论\n\n**结论**：建议采用 RAG 方案\n\n**原因**：幻觉率高，知识库已准备\n\n**建议行动**：第一步部署向量数据库\n\n**置信度**：0.87`,
+    xmlTokens: `<report>\n  <conclusion>建议采用 RAG 方案</conclusion>\n  <reason>幻觉率高，知识库已准备</reason>\n  <action>第一步部署向量数据库</action>\n  <confidence>0.87</confidence>\n</report>`,
+    xmlEvents: [
+      [14, 'conclusion', '建议采用 RAG 方案', true],
+      [22, 'reason', '幻觉率高，知识库已准备', false],
+      [30, 'action', '第一步部署向量数据库', false],
+      [38, 'confidence', '0.87', false],
+    ]
+  }
+];
+
+let curMode = 0;
+let timers = [];
+let playing = false;
+
+function selectMode(btn, i) {
+  if (playing) return;
+  curMode = i;
+  document.querySelectorAll('.mode-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  resetAll();
+}
+
+function resetAll() {
+  timers.forEach(clearTimeout); timers = [];
+  playing = false;
+  document.getElementById('playBtn').disabled = false;
+  // reset JSON
+  document.getElementById('rawJson').textContent = '';
+  document.getElementById('waitJson').classList.remove('show');
+  document.getElementById('parsedJson').classList.remove('show');
+  document.getElementById('statusJson').textContent = '等待中';
+  document.getElementById('statusJson').style.color = 'var(--muted)';
+  document.getElementById('panelJson').className = 'col-panel';
+  // reset MD
+  document.getElementById('renderMd').className = 'render-area cursor';
+  document.getElementById('renderMd').textContent = '';
+  document.getElementById('waitMd').classList.remove('show');
+  document.getElementById('statusMd').textContent = '等待中';
+  document.getElementById('statusMd').style.color = 'var(--muted)';
+  document.getElementById('panelMd').className = 'col-panel';
+  // reset XML
+  document.getElementById('xmlCards').innerHTML = '';
+  document.getElementById('statusXml').textContent = '等待中';
+  document.getElementById('statusXml').style.color = 'var(--muted)';
+  document.getElementById('panelXml').className = 'col-panel';
+}
+
+function startStream() {
+  if (playing) return;
+  playing = true;
+  document.getElementById('playBtn').disabled = true;
+  const m = MODES[curMode];
+  streamJson(m);
+  streamMd(m);
+  streamXml(m);
+}
+
+function streamJson(m) {
+  const chars = m.jsonTokens.split('');
+  const rawEl = document.getElementById('rawJson');
+  const statusEl = document.getElementById('statusJson');
+  const panelEl = document.getElementById('panelJson');
+  panelEl.classList.add('streaming');
+  statusEl.textContent = '流式接收中…';
+  statusEl.style.color = 'var(--purple)';
+  // show wait card early
+  const t0 = setTimeout(() => document.getElementById('waitJson').classList.add('show'), 400);
+  timers.push(t0);
+  chars.forEach((ch, i) => {
+    const t = setTimeout(() => {
+      rawEl.textContent += ch;
+      rawEl.scrollTop = rawEl.scrollHeight;
+    }, i * 22);
+    timers.push(t);
+  });
+  const totalMs = chars.length * 22 + 200;
+  const tf = setTimeout(() => {
+    document.getElementById('waitJson').classList.remove('show');
+    panelEl.classList.remove('streaming');
+    panelEl.classList.add('done-good');
+    statusEl.textContent = '✓ 解析完成';
+    statusEl.style.color = 'var(--green)';
+    const pc = document.getElementById('parsedJson');
+    pc.classList.add('show');
+    document.getElementById('parsedJsonContent').innerHTML = m.jsonFields.map(f =>
+      `<div class="parsed-field"><span class="k">${f.k}:</span><span class="v">${f.v}</span></div>`
+    ).join('');
+  }, totalMs);
+  timers.push(tf);
+}
+
+function streamMd(m) {
+  const chars = m.mdTokens.split('');
+  const renderEl = document.getElementById('renderMd');
+  const statusEl = document.getElementById('statusMd');
+  const panelEl = document.getElementById('panelMd');
+  panelEl.classList.add('streaming');
+  statusEl.textContent = '流式渲染中…';
+  statusEl.style.color = 'var(--purple)';
+  chars.forEach((ch, i) => {
+    const t = setTimeout(() => {
+      if (ch === '\n') {
+        renderEl.appendChild(document.createElement('br'));
+      } else {
+        const span = document.createElement('span');
+        // Style markdown syntax chars differently
+        if (['#','*','-'].includes(ch)) span.style.color = 'var(--purple)';
+        span.textContent = ch;
+        renderEl.appendChild(span);
+      }
+    }, i * 22);
+    timers.push(t);
+  });
+  const totalMs = chars.length * 22 + 200;
+  const tm = setTimeout(() => {
+    renderEl.classList.remove('cursor');
+    document.getElementById('waitMd').classList.add('show');
+    panelEl.classList.remove('streaming');
+    panelEl.classList.add('done-bad');
+    statusEl.textContent = '⚠ 无法提取字段';
+    statusEl.style.color = 'var(--orange)';
+  }, totalMs);
+  timers.push(tm);
+}
+
+function streamXml(m) {
+  const chars = m.xmlTokens.split('');
+  const cardsEl = document.getElementById('xmlCards');
+  const statusEl = document.getElementById('statusXml');
+  const panelEl = document.getElementById('panelXml');
+  panelEl.classList.add('streaming');
+  statusEl.textContent = '流式解析中…';
+  statusEl.style.color = 'var(--purple)';
+
+  // Build event map: token index → xml event
+  const eventMap = {};
+  m.xmlEvents.forEach(ev => { eventMap[ev[0]] = ev; });
+
+  // track current card element
+  let currentCard = null;
+
+  chars.forEach((ch, i) => {
+    const t = setTimeout(() => {
+      if (eventMap[i]) {
+        const [, field, value, isNew] = eventMap[i];
+        if (isNew) {
+          currentCard = document.createElement('div');
+          currentCard.style.cssText = 'background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:8px 10px;margin-bottom:7px;animation:_si .25s ease';
+          currentCard.innerHTML = `<div style="font-size:11px;font-weight:800;color:var(--green);margin-bottom:4px">✓ 增量捕获</div>`;
+          cardsEl.appendChild(currentCard);
+        }
+        if (currentCard) {
+          const row = document.createElement('div');
+          row.className = 'parsed-field';
+          row.innerHTML = `<span class="k" style="color:var(--cyan);font-weight:700;font-size:12px;min-width:60px">${field}:</span><span style="font-size:13px;color:var(--text)">${value}</span>`;
+          currentCard.appendChild(row);
+          cardsEl.scrollTop = cardsEl.scrollHeight;
+        }
+      }
+    }, i * 22);
+    timers.push(t);
+  });
+
+  const totalMs = chars.length * 22 + 200;
+  const tf = setTimeout(() => {
+    panelEl.classList.remove('streaming');
+    panelEl.classList.add('done-good');
+    statusEl.textContent = '✓ 全部字段已渲染';
+    statusEl.style.color = 'var(--green)';
+    playing = false;
+    document.getElementById('playBtn').disabled = false;
+  }, totalMs);
+  timers.push(tf);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 产品从入门到精通</title>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --text: #1c1c1e;
+  --sub: #6b6b70;
+  --accent: #0066ff;
+  --purple: #7c3aed;
+  --green: #16a34a;
+  --border: rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── header ── */
+.header {
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.brand { font-size: 13px; font-weight: 700; color: var(--sub); letter-spacing: 0.3px; }
+.btn-enter {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 28px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  text-decoration: none; display: inline-block;
+  transition: all 0.2s;
+}
+.btn-enter:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* ── body ── */
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ── 左：主标题 ── */
+.left {
+  width: 40%; flex-shrink: 0;
+  padding: 28px 48px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-right: 1px solid var(--border);
+  gap: 14px;
+}
+.eyebrow {
+  font-size: 12px; font-weight: 800; color: var(--accent);
+  letter-spacing: 1.2px; text-transform: uppercase;
+}
+.main-title {
+  font-size: 52px; font-weight: 900; color: var(--text);
+  line-height: 1.15;
+}
+.main-title .hl { color: var(--accent); }
+.subtitle {
+  font-size: 17px; color: var(--sub); line-height: 1.85;
+}
+.subtitle b { color: var(--text); font-weight: 700; }
+
+.stats-row {
+  display: flex; gap: 32px; padding-top: 4px;
+}
+.stat { display: flex; flex-direction: column; gap: 3px; }
+.stat-num { font-size: 28px; font-weight: 900; color: var(--accent); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--sub); }
+
+/* ── 右：两篇章卡片 + 二维码 ── */
+.middle {
+  flex: 1; padding: 32px 36px;
+  display: flex; flex-direction: column; justify-content: center; gap: 16px;
+}
+.right-label {
+  font-size: 11px; font-weight: 800; color: var(--sub);
+  letter-spacing: 0.8px; text-transform: uppercase;
+}
+.chapter-cards { display: flex; flex-direction: column; gap: 16px; }
+
+.ch-card {
+  background: white; border-radius: 16px;
+  border: 1.5px solid var(--border);
+  padding: 22px 26px;
+  display: flex; align-items: flex-start; gap: 20px;
+  text-decoration: none; color: inherit;
+  transition: all 0.15s; cursor: pointer;
+}
+.ch-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0,102,255,0.1);
+  transform: translateX(4px);
+}
+.ch-num {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900; color: white; flex-shrink: 0;
+}
+.ch-body { flex: 1; }
+.ch-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.ch-desc  { font-size: 14px; color: var(--sub); line-height: 1.65; }
+.ch-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pill {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: rgba(0,0,0,0.03); color: var(--sub);
+}
+.ch-arrow { font-size: 20px; color: #ccc; align-self: center; flex-shrink: 0; transition: color 0.15s; }
+.ch-card:hover .ch-arrow { color: var(--accent); }
+
+/* ── 二维码区域 ── */
+.qr-tip {
+  font-size: 12px; color: var(--sub); line-height: 1.7;
+}
+.qr-tip strong { color: var(--text); font-weight: 800; }
+
+.qr-row {
+  display: flex; gap: 20px; align-items: flex-start;
+}
+.qr-item {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.qr-img {
+  width: 108px; height: 108px; border-radius: 12px;
+  border: 1.5px solid var(--border);
+  object-fit: cover; display: block;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.qr-label {
+  font-size: 11px; color: var(--sub); font-weight: 600;
+  text-align: center; line-height: 1.5;
+}
+.qr-sep {
+  width: 1px; background: var(--border); align-self: stretch; margin: 4px 0;
+}
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div class="brand">AI 产品经理培训课程 · 洛小山</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <a href="https://luoxiaoshan.cn/" target="_blank" style="font-size:13px;font-weight:600;color:var(--sub);text-decoration:none;transition:color 0.15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--sub)'">请教作者</a>
+      <div id="pv-badge" style="display:flex;align-items:center;gap:10px;background:rgba(0,102,255,0.06);border:1.5px solid rgba(0,102,255,0.15);border-radius:12px;padding:6px 14px;font-size:12px;font-weight:700;">
+        <span style="color:var(--sub);font-weight:600">今日</span>
+        <span id="pv-today" style="color:var(--accent);font-size:16px;font-weight:900;min-width:28px;text-align:right">—</span>
+        <span style="width:1px;height:14px;background:rgba(0,0,0,0.1);display:inline-block"></span>
+        <span style="color:var(--sub);font-weight:600">总学习</span>
+        <span id="pv-total" style="color:var(--purple);font-size:16px;font-weight:900;min-width:32px;text-align:right">—</span>
+      </div>
+      <a class="btn-enter" href="llm-story.html">查看完整目录 →</a>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- 左：大标题 + 数据 -->
+    <div class="left">
+      <div class="eyebrow">AI Product Manager Training</div>
+      <div class="main-title">
+        AI 产品<br><span class="hl">从入门到精通</span>
+      </div>
+      <div class="subtitle">
+        从<b>大模型底层原理</b>到<b>AI 工程化落地</b>，<br>
+        帮助 AI 产品经理建立完整的认知框架与实战能力。
+      </div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">2</div>
+          <div class="stat-label">大篇章</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">41</div>
+          <div class="stat-label">页幻灯</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">30+</div>
+          <div class="stat-label">交互演示</div>
+        </div>
+      </div>
+
+      <!-- 二维码 -->
+      <div style="height:24px"></div>
+      <div class="qr-tip">想学习更多 AI 技巧，或者和我交流，<br>扫码关注公众号 👇</div>
+      <div class="qr-row">
+        <div class="qr-item">
+          <img class="qr-img" src="../qrcode_luoxiaoshan.jpg" alt="公众号二维码">
+          <div class="qr-label">关注公众号<br>洛小山</div>
+        </div>
+        <div class="qr-sep"></div>
+        <div class="qr-item">
+          <img class="qr-img" src="../qrcode_sponsor.jpg" alt="赞赏码">
+          <div class="qr-label">请我喝咖啡<br>赞赏支持</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中：两个篇章入口 -->
+    <div class="middle">
+      <div class="right-label">课程篇章</div>
+      <div class="chapter-cards">
+
+        <a class="ch-card" href="llm-story.html">
+          <div class="ch-num" style="background:linear-gradient(135deg,#0066ff,#6366f1)">1</div>
+          <div class="ch-body">
+            <div class="ch-title">第一篇章 · 大模型是怎么来的</div>
+            <div class="ch-desc">Token 生成机制、GPT 跃进历程、从补全到对话的演变、大模型幻觉的成因与四种缓解方案</div>
+            <div class="ch-pills">
+              <span class="pill">Token 与训练</span>
+              <span class="pill">GPT 跃进</span>
+              <span class="pill">上下文窗口</span>
+              <span class="pill">幻觉与 RAG</span>
+              <span class="pill">Temperature</span>
+            </div>
+          </div>
+          <div class="ch-arrow">›</div>
+        </a>
+
+        <a class="ch-card" href="story-2.html">
+          <div class="ch-num" style="background:linear-gradient(135deg,#7c3aed,#db2777)">2</div>
+          <div class="ch-body">
+            <div class="ch-title">第二篇章 · AI 工程化</div>
+            <div class="ch-desc">上下文工程、Prompt 进阶、安全防御、Agent 设计与工具调用、五层成本优化体系</div>
+            <div class="ch-pills">
+              <span class="pill">Prompt Engineering</span>
+              <span class="pill">Agent + ReAct</span>
+              <span class="pill">Prompt 注入防御</span>
+              <span class="pill">KV Cache</span>
+              <span class="pill">成本优化</span>
+            </div>
+          </div>
+          <div class="ch-arrow">›</div>
+        </a>
+
+      </div>
+
+    </div>
+
+  </div><!-- /body -->
+</div>
+<script>
+(function() {
+  function fmt(n) {
+    if (n >= 10000) return (n / 10000).toFixed(1) + 'w';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return n;
+  }
+  fetch('/pv')
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('pv-today').textContent = fmt(d.today);
+      document.getElementById('pv-total').textContent = fmt(d.total);
+    })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>

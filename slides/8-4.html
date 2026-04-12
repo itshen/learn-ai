@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>综合成本优化：从系统角度省钱</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--amber:#d97706;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:14px;font-weight:800;color:var(--red);letter-spacing:.5px}
+.title{font-size:24px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--green)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:14px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.desc{font-size:16px;color:var(--sub);line-height:1.6;flex-shrink:0}
+
+/* 成本模拟器 */
+.sim-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1;overflow:hidden}
+.sim-title{font-size:15px;font-weight:700;color:var(--muted);flex-shrink:0}
+
+/* 当前状态区 */
+.cost-state{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.cost-row{display:flex;align-items:center;gap:8px}
+.cost-row-label{font-size:13px;font-weight:700;color:var(--muted);width:52px;flex-shrink:0;text-align:right}
+.cost-bar-wrap{flex:1;height:26px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+.cost-bar-inner{height:100%;display:flex;gap:1px;transition:all .6s ease}
+.cost-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:rgba(255,255,255,.95);overflow:hidden;white-space:nowrap;padding:0 4px;transition:flex .6s ease,opacity .5s ease,min-width .6s ease;border-radius:3px}
+.cost-seg.gone{flex:0 !important;min-width:0 !important;opacity:0;padding:0}
+.cost-pct{font-size:13px;font-weight:800;min-width:36px;text-align:right;transition:color .4s}
+
+/* 节省标注 */
+.save-labels{display:flex;flex-wrap:wrap;gap:5px;flex-shrink:0}
+.save-tag{padding:3px 9px;border-radius:5px;font-size:13px;font-weight:700;border:1.5px solid transparent;transition:all .3s;opacity:.35}
+.save-tag.active{opacity:1}
+.save-tag.s1{background:rgba(22,163,74,.1);border-color:rgba(22,163,74,.3);color:var(--green)}
+.save-tag.s2{background:rgba(8,145,178,.1);border-color:rgba(8,145,178,.3);color:var(--cyan)}
+.save-tag.s3{background:rgba(234,88,12,.1);border-color:rgba(234,88,12,.3);color:var(--orange)}
+.save-tag.s4{background:rgba(91,79,207,.1);border-color:rgba(91,79,207,.3);color:var(--purple)}
+.save-tag.s5{background:rgba(215,170,6,.1);border-color:rgba(215,170,6,.3);color:var(--amber)}
+
+/* 总节省大数字 */
+.total-save{text-align:center;padding:8px 0;flex-shrink:0}
+.total-save .big{font-size:40px;font-weight:900;transition:all .5s}
+.total-save .lbl{font-size:14px;color:var(--muted);font-weight:600;margin-top:2px}
+
+/* 实施路径步骤 */
+.path-steps{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
+.path-step{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--sub);line-height:1.5;padding:3px 0;opacity:0;transform:translateX(-8px);transition:all .35s ease}
+.path-step.show{opacity:1;transform:translateX(0)}
+.path-step .step-num{width:18px;height:18px;border-radius:50%;background:var(--green);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* ── 右栏 ── */
+.right{padding:14px 20px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.strat-header{font-size:16px;font-weight:700;color:var(--text);flex-shrink:0}
+.strat-list{display:flex;flex-direction:column;gap:4px;overflow-y:auto;flex:1}
+
+.strat-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:inherit;width:100%;text-align:left}
+.strat-item:hover{border-color:rgba(22,163,74,.3);background:rgba(22,163,74,.02)}
+.strat-item.active{border-color:var(--green);background:rgba(22,163,74,.04);box-shadow:0 2px 12px rgba(22,163,74,.1)}
+.strat-badge{padding:3px 8px;border-radius:5px;font-size:12px;font-weight:800;white-space:nowrap}
+.p1{background:rgba(22,163,74,.12);color:var(--green)}
+.p2{background:rgba(8,145,178,.12);color:var(--cyan)}
+.p3{background:rgba(234,88,12,.12);color:var(--orange)}
+.p4{background:rgba(91,79,207,.12);color:var(--purple)}
+.p5{background:rgba(215,170,6,.12);color:var(--amber)}
+.strat-name{font-size:16px;font-weight:700;color:var(--text)}
+.strat-sub{font-size:13px;color:var(--sub);margin-top:1px}
+.strat-saving{font-size:14px;font-weight:800;white-space:nowrap}
+
+/* 详情展开区 */
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;flex-shrink:0;min-height:90px;overflow:hidden;position:relative}
+.detail-inner{font-size:14px;color:var(--sub);line-height:1.65;animation:fade-in .25s ease}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.detail-inner b{color:var(--text)}
+.detail-inner .flow{display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap}
+.detail-inner .flow-step{padding:3px 10px;border-radius:5px;font-size:13px;font-weight:700;background:var(--surface2)}
+.detail-inner .flow-arrow{color:var(--muted);font-size:14px;font-weight:700}
+.detail-inner .flow-step.hit{background:rgba(22,163,74,.1);color:var(--green)}
+.detail-inner .flow-step.skip{background:rgba(8,145,178,.1);color:var(--cyan)}
+.detail-inner .flow-step.flag{background:rgba(220,38,38,.1);color:var(--red)}
+
+.takeaway{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:9px;padding:8px 14px;font-size:14px;color:var(--text);flex-shrink:0;line-height:1.5}
+.takeaway b{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 5 页</div>
+      <div class="title">综合成本优化：<em>从系统角度省钱</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击策略 → 左侧实时看成本下降</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：成本模拟器 -->
+    <div class="left">
+      <p class="desc">单一优化效果有限。分层组合策略可将 AI 成本降低 <strong>70–90%</strong>。</p>
+
+      <div class="sim-box">
+        <div class="sim-title">每天 10 万次对话 · 点击右侧策略叠加优化效果</div>
+
+        <div class="cost-state">
+          <div class="cost-row">
+            <div class="cost-row-label">优化前</div>
+            <div class="cost-bar-wrap">
+              <div class="cost-bar-inner">
+                <div class="cost-seg" style="flex:35;background:#dc2626" id="seg-before-hist">重复历史 35%</div>
+                <div class="cost-seg" style="flex:25;background:#ea580c" id="seg-before-rag">不必要RAG 25%</div>
+                <div class="cost-seg" style="flex:20;background:#d97706" id="seg-before-model">旗舰模型 20%</div>
+                <div class="cost-seg" style="flex:20;background:#0891b2" id="seg-before-real">必要计算 20%</div>
+              </div>
+            </div>
+            <div class="cost-pct" style="color:var(--red)">100%</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-row-label">当前</div>
+            <div class="cost-bar-wrap">
+              <div class="cost-bar-inner" id="afterBar">
+                <div class="cost-seg" style="flex:35;background:#dc2626" id="seg-hist">重复历史</div>
+                <div class="cost-seg" style="flex:25;background:#ea580c" id="seg-rag">不必要RAG</div>
+                <div class="cost-seg" style="flex:20;background:#d97706" id="seg-model">旗舰模型</div>
+                <div class="cost-seg" style="flex:20;background:#0891b2" id="seg-real">必要 20%</div>
+                <div class="cost-seg" style="flex:0;background:rgba(22,163,74,.35);color:#16a34a;min-width:0" id="seg-saved">已节省</div>
+              </div>
+            </div>
+            <div class="cost-pct" id="afterPct" style="color:var(--text)">100%</div>
+          </div>
+        </div>
+
+        <div class="save-labels">
+          <span class="save-tag s1" id="tag1">KV Cache −35%</span>
+          <span class="save-tag s2" id="tag2">模型路由 −12%</span>
+          <span class="save-tag s3" id="tag3">RAG过滤 −18%</span>
+          <span class="save-tag s4" id="tag4">历史压缩 −8%</span>
+          <span class="save-tag s5" id="tag5">语义缓存 −7%</span>
+        </div>
+
+        <div class="total-save">
+          <div class="big" id="totalBig" style="color:var(--muted)">0%</div>
+          <div class="lbl">已叠加节省</div>
+        </div>
+
+        <div class="path-steps" id="pathSteps"></div>
+      </div>
+    </div>
+
+    <!-- 右栏：策略卡片 -->
+    <div class="right">
+      <div class="strat-header">五层优化策略（依次点击，叠加效果）</div>
+      <div class="strat-list" id="stratList">
+
+        <button class="strat-item" onclick="pickStrat(this,0)">
+          <span class="strat-badge p1">优先级 1</span>
+          <div>
+            <div class="strat-name">KV Cache + 固定 System Prompt</div>
+            <div class="strat-sub">最简单、效果最大。历史命中缓存，重算归零</div>
+          </div>
+          <div class="strat-saving" style="color:var(--green)">节省 30–50%</div>
+        </button>
+
+        <button class="strat-item" onclick="pickStrat(this,1)">
+          <span class="strat-badge p2">优先级 2</span>
+          <div>
+            <div class="strat-name">意图识别 → 模型路由</div>
+            <div class="strat-sub">80% 简单问题用小模型，复杂的才上旗舰</div>
+          </div>
+          <div class="strat-saving" style="color:var(--cyan)">节省 40–60%</div>
+        </button>
+
+        <button class="strat-item" onclick="pickStrat(this,2)">
+          <span class="strat-badge p3">优先级 3</span>
+          <div>
+            <div class="strat-name">RAG 触发过滤</div>
+            <div class="strat-sub">加"是否需要 RAG"判断，跳过不必要的向量检索</div>
+          </div>
+          <div class="strat-saving" style="color:var(--orange)">节省 20–40%</div>
+        </button>
+
+        <button class="strat-item" onclick="pickStrat(this,3)">
+          <span class="strat-badge p4">优先级 4</span>
+          <div>
+            <div class="strat-name">对话历史压缩（摘要策略）</div>
+            <div class="strat-sub">超过 N 轮后，用 ~200 Token 替换 ~2000 Token 历史</div>
+          </div>
+          <div class="strat-saving" style="color:var(--purple)">长对话节省 60–80%</div>
+        </button>
+
+        <button class="strat-item" onclick="pickStrat(this,4)">
+          <span class="strat-badge p5">优先级 5</span>
+          <div>
+            <div class="strat-name">语义缓存（Semantic Cache）</div>
+            <div class="strat-sub">语义相似问题复用同一回答，FAQ 不调用 LLM</div>
+          </div>
+          <div class="strat-saving" style="color:var(--amber)">FAQ 节省 70–90%</div>
+        </button>
+
+      </div>
+
+      <div class="detail-panel" id="detailPanel">
+        <div class="detail-inner" style="color:var(--muted);font-size:15px;text-align:center;padding-top:18px">
+          ← 点击左侧任意策略，查看实施流程
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <b>成本优化 = 架构设计，不是事后补救。</b> 在系统设计之初就考虑这 5 层，比上线后再优化容易 10 倍。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// 每个策略"消除"的成本段 及 叠加后剩余百分比
+const STRATS = [
+  {
+    segId: 'seg-hist',
+    tagId: 'tag1',
+    savePct: 35,   // 消除重复历史35%
+    tagCls: 's1',
+    steps: [
+      '在 System Prompt 里去掉所有动态内容（时间戳、用户 ID、随机内容）',
+      '保持 System Prompt 完全固定 → 平台自动命中前缀缓存',
+      '所有动态信息移入 User 消息 → 每轮只算新增 Token',
+      'OpenAI / Claude / Gemini 均原生支持，零额外配置'
+    ],
+    flow: ['请求进入','SYS固定?','✓ 命中缓存','只算新Token'],
+    detail: `<b>KV Cache 原理：</b>System Prompt 不变 → 平台缓存其 K/V 矩阵 → 后续对话无需重算。<br><br>
+      <div class="flow">
+        <span class="flow-step">新请求</span><span class="flow-arrow">→</span>
+        <span class="flow-step hit">SYS 命中缓存</span><span class="flow-arrow">→</span>
+        <span class="flow-step skip">只算本轮新增</span><span class="flow-arrow">→</span>
+        <span class="flow-step hit">返回结果</span>
+      </div>
+      <b>关键：</b>System Prompt 每次改变一个字符，缓存就完全失效。`
+  },
+  {
+    segId: 'seg-model',
+    tagId: 'tag2',
+    savePct: 12,
+    tagCls: 's2',
+    steps: [
+      '在请求入口加意图分类器（用便宜小模型，如 gpt-4o-mini）',
+      '"简单问答/闲聊" → 直接用小模型回答（成本约 1/10）',
+      '"专业分析/创作" → 路由到旗舰模型',
+      '小模型分类成本可忽略，节省旗舰模型费用 40–60%'
+    ],
+    detail: `<b>模型路由流程：</b>先用廉价模型判断复杂度，再决定用哪个模型回答。<br><br>
+      <div class="flow">
+        <span class="flow-step">用户请求</span><span class="flow-arrow">→</span>
+        <span class="flow-step">小模型分类</span><span class="flow-arrow">→</span>
+        <span class="flow-step skip">简单: 小模型答</span>
+      </div>
+      <div class="flow" style="margin-top:2px">
+        <span style="width:80px;display:inline-block"></span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step flag">复杂: 旗舰模型</span>
+      </div>
+      <b>实测：</b>80% 的对话可由小模型处理，旗舰模型使用率降至 20%。`
+  },
+  {
+    segId: 'seg-rag',
+    tagId: 'tag3',
+    savePct: 18,
+    tagCls: 's3',
+    steps: [
+      '在 RAG 流程最前加一步判断：这个问题需要检索文档吗？',
+      '"通用知识"（如"什么是Python"）→ 跳过 RAG，直接回答',
+      '"产品特定问题"（如"你们的退款政策"）→ 触发向量检索',
+      '可用规则判断（关键词匹配）或小模型分类'
+    ],
+    detail: `<b>RAG 触发过滤：</b>不是每个问题都需要检索，过滤掉通用知识问题。<br><br>
+      <div class="flow">
+        <span class="flow-step">用户问题</span><span class="flow-arrow">→</span>
+        <span class="flow-step">需要RAG?</span><span class="flow-arrow">→</span>
+        <span class="flow-step hit">否: 直接回答</span>
+      </div>
+      <div class="flow" style="margin-top:2px">
+        <span style="width:80px;display:inline-block"></span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step flag">是: 向量检索 → 注入上下文</span>
+      </div>
+      <b>效果：</b>生产环境约 40–70% 的问题可跳过 RAG。`
+  },
+  {
+    segId: null,  // 消减 hist 剩余部分
+    tagId: 'tag4',
+    savePct: 8,
+    tagCls: 's4',
+    steps: [
+      '设定阈值：对话超过 20 轮，或历史 Token 超过 3000 时触发',
+      '用一次 LLM 调用，将早期 N 轮压缩为 ~200 Token 摘要',
+      '用摘要替换原始历史，Context 使用量大幅下降',
+      '要压缩得早（快溢出之前），而不是溢出后再处理'
+    ],
+    detail: `<b>历史压缩时机：</b>在 Context 快满之前主动压缩，而不是被动截断。<br><br>
+      <div class="flow">
+        <span class="flow-step">第 N 轮对话</span><span class="flow-arrow">→</span>
+        <span class="flow-step flag">历史 > 3000T?</span><span class="flow-arrow">→</span>
+        <span class="flow-step hit">触发摘要压缩</span>
+      </div>
+      <div class="flow" style="margin-top:4px">
+        <span class="flow-step">~2000T 历史</span><span class="flow-arrow">压缩为</span>
+        <span class="flow-step hit">~200T 摘要</span><span class="flow-arrow">节省</span>
+        <span class="flow-step hit">90%</span>
+      </div>`
+  },
+  {
+    segId: null,
+    tagId: 'tag5',
+    savePct: 7,
+    tagCls: 's5',
+    steps: [
+      '维护向量数据库，存储历史高质量 Q-A 对的 Embedding',
+      '新请求先做 Embedding，搜索相似度 > 阈值（如 0.92）的历史回答',
+      '命中 → 直接返回缓存答案，不调用 LLM（延迟 ~10ms）',
+      '未命中 → 正常调用 LLM，并将新问答存入缓存库'
+    ],
+    detail: `<b>语义缓存 vs 精确缓存：</b>"怎么退款" 和 "退款流程是什么" → 语义相似 → 复用同一回答。<br><br>
+      <div class="flow">
+        <span class="flow-step">新问题 Embedding</span><span class="flow-arrow">→</span>
+        <span class="flow-step">向量搜索</span><span class="flow-arrow">→</span>
+        <span class="flow-step hit">相似度 > 0.92: HIT</span>
+      </div>
+      <div class="flow" style="margin-top:2px">
+        <span style="width:140px;display:inline-block"></span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step flag">未命中: 调用 LLM + 存缓存</span>
+      </div>
+      <b>适合场景：</b>客服 FAQ、高频同类问题系统（命中率可达 60–80%）。`
+  }
+];
+
+// 当前已开启的策略集合
+let activeSet = new Set();
+// 当前各段 flex 值（动态）
+let segFlex = { hist: 35, rag: 25, model: 20, real: 20, saved: 0 };
+
+function pickStrat(btn, idx) {
+  const s = STRATS[idx];
+  const isOn = activeSet.has(idx);
+
+  if (isOn) {
+    // 取消
+    activeSet.delete(idx);
+    btn.classList.remove('active');
+    document.getElementById(s.tagId).classList.remove('active');
+  } else {
+    // 激活
+    activeSet.add(idx);
+    btn.classList.add('active');
+    document.getElementById(s.tagId).classList.add('active');
+  }
+
+  // 重算 bar
+  recalcBar();
+  // 更新右下详情
+  renderDetail(idx, !isOn);
+  // 更新步骤列表（展示最后激活的策略）
+  renderSteps(idx, !isOn);
+}
+
+function recalcBar() {
+  // 重置
+  let hist = 35, rag = 25, model = 20, real = 20;
+  let saved = 0;
+
+  if (activeSet.has(0)) { saved += 35; hist = 0; }       // KV Cache 消灭重复历史
+  if (activeSet.has(1)) { saved += 12; model = 8; }      // 路由：旗舰模型 20→8
+  if (activeSet.has(2)) { saved += 18; rag = 7; }        // RAG过滤：25→7
+  if (activeSet.has(3)) { saved += 8; hist = Math.max(0, hist - 8); }  // 历史压缩
+  if (activeSet.has(4)) { saved += 7; }                  // 语义缓存
+
+  const total = hist + rag + model + real + saved;
+  const remaining = 100 - saved;
+
+  // 应用 flex
+  const apply = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.flex = val;
+    if (val === 0) { el.classList.add('gone'); el.textContent = ''; }
+    else { el.classList.remove('gone'); }
+  };
+  apply('seg-hist',  hist);
+  apply('seg-rag',   rag);
+  apply('seg-model', model);
+  apply('seg-real',  real);
+
+  const savedEl = document.getElementById('seg-saved');
+  savedEl.style.flex = saved;
+  savedEl.style.minWidth = saved > 0 ? '40px' : '0';
+  savedEl.textContent = saved > 0 ? `节省 ${saved}%` : '';
+
+  // 更新百分比数字
+  const pctEl = document.getElementById('afterPct');
+  pctEl.textContent = remaining + '%';
+  pctEl.style.color = saved > 50 ? 'var(--green)' : saved > 20 ? 'var(--orange)' : 'var(--text)';
+
+  // 大数字
+  const bigEl = document.getElementById('totalBig');
+  bigEl.textContent = saved + '%';
+  bigEl.style.color = saved > 60 ? 'var(--green)' : saved > 30 ? 'var(--orange)' : 'var(--muted)';
+}
+
+function renderDetail(idx, isActivating) {
+  const s = STRATS[idx];
+  const panel = document.getElementById('detailPanel');
+  if (!isActivating) {
+    panel.innerHTML = '<div class="detail-inner" style="color:var(--muted);font-size:15px;text-align:center;padding-top:18px">← 点击左侧任意策略，查看实施流程</div>';
+    return;
+  }
+  panel.innerHTML = `<div class="detail-inner">${s.detail}</div>`;
+}
+
+function renderSteps(idx, isActivating) {
+  const s = STRATS[idx];
+  const el = document.getElementById('pathSteps');
+  el.innerHTML = '';
+  if (!isActivating) return;
+  s.steps.forEach((text, i) => {
+    const div = document.createElement('div');
+    div.className = 'path-step';
+    div.innerHTML = `<div class="step-num">${i+1}</div><div>${text}</div>`;
+    el.appendChild(div);
+    setTimeout(() => div.classList.add('show'), i * 80);
+  });
+}
+
+// 初始化
+recalcBar();
+</script>
+</body>
+</html>

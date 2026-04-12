@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>GPT 的跃进 · 为什么 PreTraining 改变了一切</title>
+<script src="../global-attn.js"></script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --amber: #d97706;
+  --success: #16a34a;
+  --danger: #e53e3e;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+.header {
+  padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  background-color: var(--bg-color);
+}
+.title-area h2 { font-size: 22px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; filter: none; }
+.btn-replay {
+  background: white; color: var(--text-main); border: 1px solid rgba(0,0,0,0.12);
+  padding: 10px 20px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-replay:hover { background: rgba(0,0,0,0.05); }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left-panel {
+  width: 40%; padding: 28px 32px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto;
+}
+.step-label {
+  font-size: 11px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.big-claim {
+  font-size: 26px; font-weight: 800; color: var(--text-main);
+  line-height: 1.45;
+}
+.em-blue { color: var(--accent); }
+.em-amber { color: var(--amber); }
+.desc-text { font-size: 15px; color: var(--text-sub); line-height: 1.8; }
+
+.model-compare-row {
+  display: flex; gap: 8px;
+}
+.model-tag {
+  flex: 1; padding: 10px 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; text-align: center;
+  border: 1px solid;
+}
+.mt-old { background: rgba(0,0,0,0.04); color: #6b7280; border-color: rgba(0,0,0,0.1); }
+.mt-gpt { background: rgba(0,102,255,0.08); color: var(--accent); border-color: rgba(0,102,255,0.2); }
+.mt-label { font-size: 10px; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
+
+.highlight-card {
+  border-radius: 12px; padding: 16px 18px;
+  display: none;
+}
+.highlight-card.show { display: block; }
+.highlight-card.blue { background: rgba(0,102,255,0.05); border: 1px solid rgba(0,102,255,0.15); }
+.highlight-card.green { background: rgba(22,163,74,0.05); border: 1px solid rgba(22,163,74,0.15); }
+.highlight-card .label { font-size: 12px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
+.highlight-card .val { font-size: 14px; color: var(--text-main); line-height: 1.7; }
+
+/* ── Right ── */
+.right-panel {
+  flex: 1; padding: 20px 28px;
+  display: flex; flex-direction: column; gap: 12px;
+  overflow: hidden;
+}
+
+/* ── Algo Tabs ── */
+.algo-tabs {
+  display: flex; gap: 6px; flex-shrink: 0;
+}
+.algo-tab {
+  flex: 1; padding: 8px 0; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  background: white; color: var(--text-sub);
+  transition: all 0.18s; text-align: center;
+}
+.algo-tab:hover { border-color: rgba(0,0,0,0.2); color: var(--text-main); }
+.algo-tab.active.cnn  { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+.algo-tab.active.rnn  { background: #f0fdf4; color: #15803d; border-color: #86efac; }
+.algo-tab.active.bert { background: #faf5ff; color: #7c3aed; border-color: #d8b4fe; }
+.algo-tab.active.gpt  { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+
+.algo-pane { display: none; flex: 1; flex-direction: column; gap: 10px; min-height: 0; }
+.algo-pane.active { display: flex; }
+
+/* ── Shared token row ── */
+.token-row {
+  display: flex; gap: 5px; flex-wrap: wrap; align-items: center;
+  padding: 14px 16px; background: white; border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
+}
+.tk {
+  padding: 7px 11px; border-radius: 8px;
+  font-size: 14px; font-weight: 700;
+  cursor: default; transition: all 0.2s;
+  user-select: none;
+}
+.tk-default { background: rgba(0,0,0,0.05); color: var(--text-main); }
+.tk-window  { background: #ffedd5; color: #c2410c; border: 1.5px solid #fdba74; }
+.tk-active  { background: #dbeafe; color: #1d4ed8; border: 1.5px solid #93c5fd; transform: scale(1.08); }
+.tk-rnn-cur { background: #dcfce7; color: #15803d; border: 1.5px solid #86efac; transform: scale(1.08); }
+.tk-rnn-mem { background: rgba(22,163,74,0.08); color: #15803d; border: 1px solid #86efac; }
+.tk-rnn-dim { background: rgba(0,0,0,0.04); color: #9ca3af; }
+.tk-bert-focus { background: #f3e8ff; color: #7c3aed; border: 1.5px solid #d8b4fe; transform: scale(1.08); cursor: pointer; }
+.tk-bert-hi { background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid #d8b4fe; }
+.tk-bert-mid { background: rgba(124,58,237,0.04); color: var(--text-main); }
+.tk-gpt-ctx { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.tk-gpt-new { background: #dcfce7; color: #15803d; border: 2px solid #4ade80; transform: scale(1.1); }
+.tk-gpt-gen { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+.tk-gpt-future { background: rgba(0,0,0,0.04); color: #d1d5db; }
+.tk-clickable { cursor: pointer; }
+.tk-clickable:hover { filter: brightness(0.93); }
+
+/* ── Desc box ── */
+.desc-box {
+  background: rgba(0,0,0,0.03); border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; color: var(--text-main); line-height: 1.7; flex-shrink: 0;
+  min-height: 52px;
+}
+.desc-box b { color: var(--accent); }
+
+/* ── CNN window controls ── */
+.window-controls {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.wc-label { font-size: 12px; font-weight: 600; color: var(--text-sub); }
+.wc-btn {
+  padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12);
+  background: white; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.wc-btn:hover { background: #f0f0f0; }
+.wc-btn:disabled { color: #ccc; cursor: not-allowed; }
+
+/* ── RNN memory bar ── */
+.memory-row {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 10px 16px; background: white; border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.07);
+}
+.mem-label { font-size: 11px; font-weight: 700; color: var(--text-sub); width: 60px; flex-shrink: 0; }
+.mem-track { flex: 1; height: 8px; background: rgba(0,0,0,0.07); border-radius: 4px; overflow: hidden; }
+.mem-fill { height: 100%; border-radius: 4px; background: #22c55e; transition: width 0.5s ease; }
+.mem-pct { font-size: 11px; font-weight: 700; color: #15803d; width: 36px; text-align: right; flex-shrink: 0; }
+
+/* ── BERT attention matrix ── */
+.attn-grid {
+  background: white; border-radius: 12px; padding: 12px 16px;
+  border: 1px solid rgba(0,0,0,0.07); flex: 1; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.attn-hint { font-size: 12px; font-weight: 600; color: var(--text-sub); }
+
+/* 矩阵热图 */
+.attn-matrix-wrap {
+  flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden;
+}
+.attn-matrix-header {
+  display: flex; margin-left: 52px; gap: 3px;
+}
+.attn-col-label {
+  flex: 1; text-align: center; font-size: 10px; font-weight: 700; color: var(--text-sub);
+  padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.attn-col-label.focus-col { color: var(--purple); }
+.attn-matrix-rows { display: flex; flex-direction: column; gap: 3px; }
+.attn-matrix-row { display: flex; align-items: center; gap: 3px; }
+.attn-row-label {
+  width: 48px; font-size: 11px; font-weight: 700; color: var(--text-sub);
+  text-align: right; padding-right: 4px; flex-shrink: 0; white-space: nowrap;
+}
+.attn-row-label.focus-row { color: var(--purple); font-size: 12px; }
+.attn-cell {
+  flex: 1; border-radius: 4px; height: 26px;
+  transition: background 0.4s ease, transform 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: rgba(255,255,255,0);
+  cursor: default; position: relative;
+}
+.attn-cell.has-focus {
+  color: rgba(255,255,255,0.85);
+}
+.attn-cell.self-cell { outline: 2px solid rgba(124,58,237,0.5); border-radius: 4px; }
+/* 方向标注条 */
+.attn-direction-row {
+  display: flex; margin-left: 52px; gap: 3px; flex-shrink: 0;
+}
+.dir-seg {
+  flex: 1; height: 4px; border-radius: 2px;
+  opacity: 0; transition: opacity 0.4s, background 0.4s;
+}
+.dir-seg.left-dir  { background: #f59e0b; }
+.dir-seg.right-dir { background: #22c55e; }
+.dir-seg.self-dir  { background: #a855f7; }
+.dir-seg.active    { opacity: 1; }
+/* 图例 */
+.attn-legend {
+  display: flex; gap: 14px; align-items: center; flex-shrink: 0;
+  font-size: 11px; font-weight: 600; color: var(--text-sub);
+}
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.legend-self  { background: #a855f7; }
+.legend-left  { background: #f59e0b; }
+.legend-right { background: #22c55e; }
+
+/* ── GPT generation ── */
+.gpt-gen-area {
+  background: white; border-radius: 12px; padding: 14px 16px;
+  border: 1px solid rgba(0,0,0,0.07); flex: 1;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.gpt-gen-label { font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.3px; }
+.gpt-result { font-size: 15px; font-weight: 600; color: var(--text-main); line-height: 1.8; min-height: 32px; }
+.gpt-cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); vertical-align: text-bottom; animation: blink 0.85s step-start infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.gpt-gen-btn {
+  padding: 8px 20px; border-radius: 9px; border: none;
+  background: var(--accent); color: white; font-size: 13px; font-weight: 700;
+  cursor: pointer; align-self: flex-start; transition: all 0.18s;
+}
+.gpt-gen-btn:hover { filter: brightness(1.1); }
+.gpt-gen-btn:disabled { background: #ccc; cursor: not-allowed; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+
+  <div class="header">
+    <div class="title-area">
+      <h2>GPT 的跃进：PreTraining 为什么改变了一切</h2>
+      <p>从 CNN/RNN/BERT 到 GPT，大模型史上最重要的一步</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-replay" id="replayBtn" onclick="replayAll()" style="display:none;">↺ 重播</button>
+      <button class="btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+
+    <!-- Left -->
+    <div class="left-panel">
+      <div>
+        <div class="step-label">大模型发展史</div>
+        <div class="big-claim">
+          在 GPT 之前，<br>
+          大家都在做<span class="em-amber">任务专用模型</span>——<br>
+          <span class="em-blue">GPT 的出现，是一次跃进</span>
+        </div>
+      </div>
+
+      <div class="desc-text">
+        CNN、RNN、BERT，都是先确定任务再训练模型。<br>
+        GPT 反过来了：<strong>先用海量语料做预训练，再适配任务。</strong>
+      </div>
+
+      <div class="model-compare-row" id="compareRow" style="opacity:0;transition:opacity 0.5s;">
+        <div class="model-tag mt-old">
+          <div class="mt-label">之前</div>
+          CNN / RNN / BERT
+        </div>
+        <div style="display:flex;align-items:center;font-size:20px;color:#ccc;">→</div>
+        <div class="model-tag mt-gpt">
+          <div class="mt-label">跃进</div>
+          GPT（PreTraining）
+        </div>
+      </div>
+
+      <div class="highlight-card blue" id="card1">
+        <div class="label">PreTraining 的本质</div>
+        <div class="val">
+          用互联网上<strong>几乎所有的文字</strong>做 Token 预测训练——<br>
+          模型被迫学会了语法、常识、事实、逻辑、风格……<br>
+          这一切都只是预测下一个词的<strong>副产品</strong>。
+        </div>
+      </div>
+
+      <div class="highlight-card green" id="card2">
+        <div class="label">为什么这是跃进？</div>
+        <div class="val">
+          之前：每个任务从零训练，换任务就换模型<br>
+          GPT：<strong>预训练一次，能力迁移到任意任务</strong><br>
+          这就是 Foundation Model（基础模型）的核心思路
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: 算法交互体验 -->
+    <div class="right-panel">
+
+      <!-- Tab 切换 -->
+      <div class="algo-tabs">
+        <button class="algo-tab cnn active" onclick="setAlgo('cnn')">CNN 滑动窗口</button>
+        <button class="algo-tab rnn" onclick="setAlgo('rnn')">RNN 记忆衰减</button>
+        <button class="algo-tab bert" onclick="setAlgo('bert')">BERT 双向注意力</button>
+        <button class="algo-tab gpt" onclick="setAlgo('gpt')">GPT 因果生成</button>
+      </div>
+
+      <!-- ══ CNN ══ -->
+      <div class="algo-pane active" id="pane-cnn">
+        <div class="token-row" id="cnn-tokens"></div>
+        <div class="window-controls">
+          <span class="wc-label">窗口大小 3</span>
+          <button class="wc-btn" id="cnn-prev" onclick="cnnMove(-1)">← 向左</button>
+          <button class="wc-btn" id="cnn-next" onclick="cnnMove(1)">向右 →</button>
+          <span class="wc-label" id="cnn-pos-label" style="margin-left:4px;color:var(--text-main);font-weight:700;"></span>
+        </div>
+        <div class="desc-box" id="cnn-desc"></div>
+        <div style="background:rgba(194,65,12,0.05);border:1px solid #fdba74;border-radius:10px;padding:12px 16px;font-size:13px;color:#7c2d12;line-height:1.7;flex-shrink:0;">
+          <b style="color:#c2410c;">CNN 的局限：</b>只能看窗口内的词，窗口外的关系完全看不到。<br>
+          「哥哥」和句首「紫霞」的关系？CNN 无法在一步内捕捉。
+        </div>
+      </div>
+
+      <!-- ══ RNN ══ -->
+      <div class="algo-pane" id="pane-rnn">
+        <!-- Token 行（上方） -->
+        <div class="token-row" id="rnn-tokens"></div>
+
+        <!-- 每词独立记忆强度（核心可视化） -->
+        <div style="background:white;border-radius:12px;padding:12px 16px;border:1px solid rgba(0,0,0,0.07);flex-shrink:0;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:8px;letter-spacing:0.3px;">
+            各词残留记忆强度（当 RNN 处理到当前词时）
+          </div>
+          <div id="rnn-mem-bars" style="display:flex;gap:6px;align-items:flex-end;height:64px;"></div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:6px;">← 越早的词，记忆越弱；当前处理词 = 100%</div>
+        </div>
+
+        <div class="desc-box" id="rnn-desc"></div>
+        <div style="background:rgba(239,68,68,0.05);border:1px solid #fca5a5;border-radius:10px;padding:10px 16px;font-size:12px;color:#7f1d1d;line-height:1.6;flex-shrink:0;">
+          <b style="color:#dc2626;">RNN 的局限：</b>隐状态每步被新词覆盖，越早的词记忆越模糊。处理长文本时「梯度消失」——开头的信息到结尾几乎消失殆尽。
+        </div>
+      </div>
+
+      <!-- ══ BERT ══ -->
+      <div class="algo-pane" id="pane-bert">
+        <div class="token-row" id="bert-tokens"></div>
+        <div class="attn-grid">
+          <div class="attn-hint" id="bert-hint">点击任意词 → 热图亮度 = 注意力权重，<span style="color:#f59e0b;">黄=左边</span> <span style="color:#22c55e;">绿=右边</span> <span style="color:#a855f7;">紫=自身</span></div>
+          <div class="attn-matrix-wrap" id="bert-matrix-wrap">
+            <!-- 初始提示 -->
+            <div id="bert-empty-hint" style="display:flex;align-items:center;justify-content:center;flex:1;color:#9ca3af;font-size:13px;">← 点击上方任意词，查看双向注意力热图</div>
+          </div>
+          <div class="attn-legend">
+            <span><span class="legend-dot legend-left"></span>左边的词（BERT 能看）</span>
+            <span><span class="legend-dot legend-right"></span>右边的词（BERT 能看）</span>
+            <span><span class="legend-dot legend-self"></span>自身</span>
+          </div>
+        </div>
+        <div style="background:rgba(124,58,237,0.05);border:1px solid #d8b4fe;border-radius:10px;padding:10px 16px;font-size:12px;color:#4c1d95;line-height:1.6;flex-shrink:0;">
+          <b style="color:#7c3aed;">BERT 的局限：</b>双向注意力理解能力强，但预训练目标是「填空」——不擅长生成，不能直接用来续写文本。
+        </div>
+      </div>
+
+      <!-- ══ GPT ══ -->
+      <div class="algo-pane" id="pane-gpt">
+        <div class="token-row" id="gpt-tokens"></div>
+
+        <!-- GPT 生成区 + 概率面板横排 -->
+        <div style="display:flex;gap:10px;flex:1;min-height:0;">
+
+          <!-- 左：生成结果 + 按钮 -->
+          <div class="gpt-gen-area" style="flex:1;">
+            <div class="gpt-gen-label">GPT 单向因果生成 · 只看左边，逐步续写</div>
+            <div class="gpt-result" id="gpt-result"></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="gpt-gen-btn" id="gpt-btn" onclick="gptGenerate()">开始生成 →</button>
+              <button class="gpt-gen-btn" style="background:white;color:var(--text-main);border:1px solid rgba(0,0,0,0.12);" onclick="gptReset()">重置</button>
+            </div>
+          </div>
+
+          <!-- 右：概率分布面板 -->
+          <div id="gpt-prob-panel" style="
+            width:200px;flex-shrink:0;
+            background:white;border-radius:12px;padding:10px 14px;
+            border:1px solid rgba(0,0,0,0.07);
+            display:flex;flex-direction:column;gap:6px;
+          ">
+            <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.3px;" id="gpt-prob-title">下一词概率</div>
+            <div id="gpt-prob-rows" style="display:flex;flex-direction:column;gap:4px;flex:1;justify-content:center;">
+              <div style="color:#9ca3af;font-size:12px;text-align:center;">点击「开始生成」</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="background:rgba(0,102,255,0.05);border:1px solid #93c5fd;border-radius:10px;padding:10px 16px;font-size:12px;color:#1e3a8a;line-height:1.6;flex-shrink:0;">
+          <b style="color:#1d4ed8;">GPT 的跃进：</b>因果预训练目标就是「预测下一词」，和生成天然一致——不需要特殊任务数据，规模越大涌现的能力越惊人。
+        </div>
+      </div>
+
+    </div><!-- /right-panel -->
+  </div><!-- /main-area -->
+</div><!-- /slide-container -->
+
+<script>
+// ══ 共用语料 ══
+const WORDS = ['紫霞', '捧着', '月光', '宝盒', '，', '轻声', '问', '：', '哥哥'];
+const W = WORDS.length;
+
+// ══ 算法切换 ══
+function setAlgo(name) {
+  // 停止 RNN / GPT 的自动播放
+  if (rnnTimer) { clearInterval(rnnTimer); rnnTimer = null; }
+  if (gptTimer) { clearInterval(gptTimer); gptTimer = null; }
+
+  ['cnn','rnn','bert','gpt'].forEach(a => {
+    document.getElementById('pane-' + a).classList.toggle('active', a === name);
+    document.querySelectorAll('.algo-tab').forEach(t => {
+      if (t.classList.contains(a)) t.classList.toggle('active', a === name);
+    });
+  });
+  if (name === 'cnn')  initCNN();
+  if (name === 'rnn')  initRNN();
+  if (name === 'bert') initBERT();
+  if (name === 'gpt')  initGPT();
+}
+
+// ════════════════ CNN ════════════════
+let cnnPos = 0;
+const CNN_W = 3;
+
+function initCNN() {
+  cnnPos = 0;
+  renderCNN();
+}
+
+function renderCNN() {
+  const row = document.getElementById('cnn-tokens');
+  row.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const inWindow = i >= cnnPos && i < cnnPos + CNN_W;
+    const sp = document.createElement('span');
+    sp.className = 'tk ' + (inWindow ? 'tk-window' : 'tk-default');
+    sp.textContent = w;
+    row.appendChild(sp);
+    if (i < W - 1) {
+      const ar = document.createElement('span');
+      ar.style.cssText = 'color:#ccc;font-size:14px;';
+      ar.textContent = '→';
+      row.appendChild(ar);
+    }
+  });
+  document.getElementById('cnn-pos-label').textContent = `当前感知野：位置 ${cnnPos + 1}–${Math.min(cnnPos + CNN_W, W)}`;
+  document.getElementById('cnn-prev').disabled = cnnPos === 0;
+  document.getElementById('cnn-next').disabled = cnnPos + CNN_W >= W;
+  const windowWords = WORDS.slice(cnnPos, cnnPos + CNN_W).join('、');
+  document.getElementById('cnn-desc').innerHTML =
+    `CNN 当前感知野（窗口大小=3）：<b>「${windowWords}」</b><br>
+     只能提取这三个词之间的局部特征，窗口外的词对模型<b>完全不可见</b>。`;
+}
+
+function cnnMove(dir) {
+  cnnPos = Math.max(0, Math.min(cnnPos + dir, W - CNN_W));
+  renderCNN();
+}
+
+// ════════════════ RNN ════════════════
+let rnnPos = 0;
+let rnnTimer = null;
+
+function initRNN() {
+  rnnPos = 0;
+  if (rnnTimer) clearInterval(rnnTimer);
+  renderRNN();
+  rnnTimer = setInterval(() => {
+    rnnPos = (rnnPos + 1) % W;
+    renderRNN();
+  }, 900);
+}
+
+// 计算当前处理到 rnnPos 时，每个词的残留记忆强度
+// 当前词 = 100%，往前每隔一步按指数衰减
+function calcMemory(curPos) {
+  return WORDS.map((_, i) => {
+    if (i > curPos) return 0;           // 未处理
+    if (i === curPos) return 100;        // 当前词
+    const steps = curPos - i;           // 距当前词的步数
+    return Math.max(3, Math.round(100 * Math.pow(0.62, steps)));
+  });
+}
+
+function memColor(pct) {
+  if (pct >= 80) return { bar:'#22c55e', text:'#15803d' };
+  if (pct >= 55) return { bar:'#84cc16', text:'#4d7c0f' };
+  if (pct >= 35) return { bar:'#eab308', text:'#a16207' };
+  if (pct >= 15) return { bar:'#f97316', text:'#c2410c' };
+  return { bar:'#ef4444', text:'#dc2626' };
+}
+
+function renderRNN() {
+  const mems = calcMemory(rnnPos);
+
+  // ── Token 行 ──
+  const row = document.getElementById('rnn-tokens');
+  row.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    let cls;
+    if (i === rnnPos) cls = 'tk-rnn-cur';
+    else if (i < rnnPos) cls = 'tk-rnn-mem';
+    else cls = 'tk-rnn-dim';
+    const sp = document.createElement('span');
+    sp.className = 'tk ' + cls;
+    sp.textContent = w;
+    row.appendChild(sp);
+    if (i < W - 1) {
+      const ar = document.createElement('span');
+      ar.style.cssText = 'color:#ccc;font-size:14px;';
+      ar.textContent = '→';
+      row.appendChild(ar);
+    }
+  });
+
+  // ── 每词独立记忆柱 ──
+  const barsEl = document.getElementById('rnn-mem-bars');
+  barsEl.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const pct = mems[i];
+    const col = memColor(pct);
+    const col$ = document.createElement('div');
+    col$.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;';
+
+    // 百分比标签
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `font-size:10px;font-weight:800;color:${pct === 0 ? '#d1d5db' : col.text};`;
+    lbl.textContent = pct === 0 ? '—' : pct + '%';
+
+    // 柱子（高度按比例）
+    const barWrap = document.createElement('div');
+    barWrap.style.cssText = 'width:100%;flex:1;display:flex;align-items:flex-end;';
+    const bar = document.createElement('div');
+    const heightPct = pct === 0 ? 4 : pct;
+    bar.style.cssText = `width:100%;border-radius:4px 4px 0 0;transition:height 0.4s ease,background 0.4s ease;
+      height:${heightPct}%;background:${pct === 0 ? '#f3f4f6' : col.bar};`;
+    barWrap.appendChild(bar);
+
+    // 词名
+    const wordLbl = document.createElement('div');
+    wordLbl.style.cssText = `font-size:11px;font-weight:700;color:${i === rnnPos ? '#1d4ed8' : i > rnnPos ? '#d1d5db' : '#374151'};
+      white-space:nowrap;`;
+    wordLbl.textContent = w;
+
+    col$.appendChild(lbl);
+    col$.appendChild(barWrap);
+    col$.appendChild(wordLbl);
+    barsEl.appendChild(col$);
+  });
+
+  // ── 描述文字 ──
+  const curMem = mems[0]; // 最早那个词的记忆（紫霞）
+  const processed = rnnPos === 0 ? '正在处理第一个词' : `已处理 ${rnnPos + 1} 个词`;
+  const firstWordMem = mems.find((m, i) => i < rnnPos && m > 0);
+  document.getElementById('rnn-desc').innerHTML =
+    `当前处理：<b>「${WORDS[rnnPos]}」</b>　${processed}` +
+    (rnnPos > 0
+      ? `<br>「紫霞」的残留记忆：<b style="color:${memColor(mems[0]).text};">${mems[0]}%</b>` +
+        (mems[0] < 20 ? '　<b style="color:#dc2626;">⚠ 几乎遗忘！</b>' : '')
+      : '');
+}
+
+// ════════════════ BERT ════════════════
+// 注意力权重矩阵，每行 = 该词对所有词的权重（0-100）
+const BERT_ATTN = [
+  [92, 8, 12, 6, 10, 4, 8, 3, 18],   // 紫霞
+  [10, 90, 35, 22, 8, 10, 5, 4, 12],  // 捧着
+  [14, 32, 94, 78, 6, 12, 4, 4, 9],   // 月光
+  [8, 26, 72, 92, 10, 8, 4, 3, 11],   // 宝盒
+  [16, 9, 7, 10, 88, 38, 22, 32, 14], // ，
+  [5, 10, 13, 8, 34, 90, 62, 28, 13], // 轻声
+  [12, 7, 4, 4, 20, 60, 95, 48, 22],  // 问
+  [5, 4, 4, 3, 30, 26, 44, 91, 18],   // ：
+  [88, 12, 9, 9, 14, 10, 20, 22, 97], // 哥哥
+];
+let bertFocus = -1;
+
+function initBERT() {
+  bertFocus = -1;
+  renderBERTTokens();
+  renderBERTMatrix(-1);
+}
+
+function renderBERTTokens() {
+  const row = document.getElementById('bert-tokens');
+  row.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const sp = document.createElement('span');
+    sp.className = 'tk tk-clickable ' + (i === bertFocus ? 'tk-bert-focus' : 'tk-default');
+    sp.textContent = w;
+    sp.onclick = () => { bertFocus = i; renderBERTTokens(); renderBERTMatrix(i); };
+    row.appendChild(sp);
+    if (i < W - 1) {
+      const ar = document.createElement('span');
+      ar.style.cssText = 'color:#d8b4fe;font-size:13px;margin:0 1px;';
+      ar.textContent = '↔';
+      row.appendChild(ar);
+    }
+  });
+}
+
+function renderBERTMatrix(focus) {
+  const wrap = document.getElementById('bert-matrix-wrap');
+  const emptyHint = document.getElementById('bert-empty-hint');
+
+  if (focus < 0) {
+    emptyHint.style.display = 'flex';
+    // 清除旧矩阵
+    wrap.querySelectorAll('.attn-matrix-header,.attn-direction-row,.attn-matrix-rows').forEach(el => el.remove());
+    return;
+  }
+  emptyHint.style.display = 'none';
+  // 清旧内容
+  wrap.querySelectorAll('.attn-matrix-header,.attn-direction-row,.attn-matrix-rows').forEach(el => el.remove());
+
+  const weights = BERT_ATTN[focus]; // focus 词对所有词的注意力
+
+  // ── 列标题（词名） ──
+  const header = document.createElement('div');
+  header.className = 'attn-matrix-header';
+  WORDS.forEach((w, ci) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'attn-col-label' + (ci === focus ? ' focus-col' : '');
+    lbl.textContent = w;
+    header.appendChild(lbl);
+  });
+  wrap.appendChild(header);
+
+  // ── 方向色条（左=黄、自身=紫、右=绿） ──
+  const dirRow = document.createElement('div');
+  dirRow.className = 'attn-direction-row';
+  WORDS.forEach((_, ci) => {
+    const seg = document.createElement('div');
+    const cls = ci < focus ? 'left-dir' : ci === focus ? 'self-dir' : 'right-dir';
+    seg.className = 'dir-seg ' + cls;
+    dirRow.appendChild(seg);
+  });
+  wrap.appendChild(dirRow);
+  requestAnimationFrame(() => {
+    dirRow.querySelectorAll('.dir-seg').forEach(s => s.classList.add('active'));
+  });
+
+  // ── 只显示 focus 行（该词对所有其他词的注意力）──
+  // 为了直观，我们显示完整矩阵的一行，配合颜色区分方向
+  const rowsWrap = document.createElement('div');
+  rowsWrap.className = 'attn-matrix-rows';
+
+  // 单行矩阵（focus 词 → 所有词）
+  const matRow = document.createElement('div');
+  matRow.className = 'attn-matrix-row';
+  const rowLbl = document.createElement('div');
+  rowLbl.className = 'attn-row-label focus-row';
+  rowLbl.textContent = WORDS[focus];
+  matRow.appendChild(rowLbl);
+
+  weights.forEach((v, ci) => {
+    const cell = document.createElement('div');
+    cell.className = 'attn-cell has-focus' + (ci === focus ? ' self-cell' : '');
+    // 方向决定颜色：左=琥珀，自身=紫，右=绿
+    let r, g, b;
+    if (ci < focus)       { r=245; g=158; b=11;  } // 琥珀/黄
+    else if (ci === focus){ r=168; g=85;  b=247; } // 紫
+    else                  { r=34;  g=197; b=94;  } // 绿
+    cell.style.background = `rgba(${r},${g},${b},0)`;
+    cell.dataset.r = r; cell.dataset.g = g; cell.dataset.b = b;
+    cell.dataset.v = v;
+    // 数值标注（权重 > 30% 才显示）
+    if (v >= 30) cell.textContent = v + '%';
+    matRow.appendChild(cell);
+  });
+  rowsWrap.appendChild(matRow);
+
+  // 空行占位，展示其他词"对 focus 词"的注意力（反向）作对比
+  const subLbl = document.createElement('div');
+  subLbl.style.cssText = 'font-size:11px;color:#9ca3af;margin-top:4px;margin-left:52px;';
+  subLbl.textContent = '↑ 上行：「' + WORDS[focus] + '」关注其他词的权重（颜色深 = 权重高）';
+  rowsWrap.appendChild(subLbl);
+
+  // 再加一个"其他词对 focus 的反向注意力"行
+  const matRow2 = document.createElement('div');
+  matRow2.className = 'attn-matrix-row';
+  const rowLbl2 = document.createElement('div');
+  rowLbl2.className = 'attn-row-label';
+  rowLbl2.style.cssText = 'width:48px;font-size:10px;color:#9ca3af;text-align:right;padding-right:4px;';
+  rowLbl2.textContent = '←被关注';
+  matRow2.appendChild(rowLbl2);
+  WORDS.forEach((_, ci) => {
+    // 其他词对 focus 的注意力
+    const revV = BERT_ATTN[ci][focus];
+    const cell = document.createElement('div');
+    cell.className = 'attn-cell has-focus';
+    let r, g, b;
+    if (ci < focus)       { r=245; g=158; b=11;  }
+    else if (ci === focus){ r=168; g=85;  b=247; }
+    else                  { r=34;  g=197; b=94;  }
+    cell.style.background = `rgba(${r},${g},${b},0)`;
+    cell.dataset.r = r; cell.dataset.g = g; cell.dataset.b = b;
+    cell.dataset.v = revV;
+    if (revV >= 30) cell.textContent = revV + '%';
+    matRow2.appendChild(cell);
+  });
+  rowsWrap.appendChild(matRow2);
+
+  const subLbl2 = document.createElement('div');
+  subLbl2.style.cssText = 'font-size:11px;color:#9ca3af;margin-top:2px;margin-left:52px;';
+  subLbl2.textContent = '↑ 下行：其他词反过来关注「' + WORDS[focus] + '」的权重';
+  rowsWrap.appendChild(subLbl2);
+
+  wrap.appendChild(rowsWrap);
+
+  // 动画：异步设置透明度
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    wrap.querySelectorAll('.attn-cell[data-v]').forEach(cell => {
+      const v = +cell.dataset.v;
+      const alpha = Math.max(0.06, v / 100 * 0.88);
+      cell.style.background = `rgba(${cell.dataset.r},${cell.dataset.g},${cell.dataset.b},${alpha})`;
+    });
+  }));
+
+  // 更新提示
+  document.getElementById('bert-hint').innerHTML =
+    `点击任意词 → 热图亮度 = 注意力权重，<span style="color:#f59e0b;">黄=左边</span> <span style="color:#22c55e;">绿=右边</span> <span style="color:#a855f7;">紫=自身</span>`;
+}
+
+// ════════════════ GPT ════════════════
+const GPT_CONTEXT = ['紫霞', '捧着', '月光', '宝盒', '，', '轻声', '问', '：', '哥哥'];
+const GPT_GENERATE = ['，', '你', '说', '你', '喜', '欢', '我', '。'];
+
+// 每步生成时的候选词概率（chosen 是选中的，candidates 是候选列表）
+const GPT_PROB_FRAMES = [
+  { chosen:'，', candidates:[{w:'，',p:72},{w:'！',p:12},{w:'：',p:8},{w:'啊',p:5},{w:'？',p:3}] },
+  { chosen:'你', candidates:[{w:'你',p:65},{w:'我',p:18},{w:'她',p:9},{w:'说',p:5},{w:'哦',p:3}] },
+  { chosen:'说', candidates:[{w:'说',p:58},{w:'问',p:20},{w:'笑',p:12},{w:'叹',p:6},{w:'看',p:4}] },
+  { chosen:'你', candidates:[{w:'你',p:70},{w:'我',p:15},{w:'喜',p:8},{w:'不',p:4},{w:'也',p:3}] },
+  { chosen:'喜', candidates:[{w:'喜',p:82},{w:'爱',p:10},{w:'很',p:4},{w:'真',p:3},{w:'好',p:1}] },
+  { chosen:'欢', candidates:[{w:'欢',p:96},{w:'爱',p:2},{w:'悦',p:1},{w:'好',p:1},{w:'乐',p:0}] },
+  { chosen:'我', candidates:[{w:'我',p:88},{w:'你',p:6},{w:'她',p:3},{w:'他',p:2},{w:'人',p:1}] },
+  { chosen:'。', candidates:[{w:'。',p:91},{w:'！',p:5},{w:'…',p:2},{w:'，',p:1},{w:'？',p:1}] },
+];
+
+let gptGenIdx = 0;
+let gptTimer = null;
+
+function initGPT() {
+  gptGenIdx = 0;
+  if (gptTimer) clearInterval(gptTimer);
+  renderGPTTokens(0);
+  document.getElementById('gpt-result').innerHTML = '<span style="color:#9ca3af;">点击「开始生成」，看 GPT 如何逐步续写</span>';
+  document.getElementById('gpt-btn').disabled = false;
+  document.getElementById('gpt-btn').textContent = '开始生成 →';
+  document.getElementById('gpt-prob-title').textContent = '下一词概率';
+  document.getElementById('gpt-prob-rows').innerHTML = '<div style="color:#9ca3af;font-size:12px;text-align:center;">点击「开始生成」</div>';
+}
+
+function renderGPTTokens(genCount) {
+  const row = document.getElementById('gpt-tokens');
+  row.innerHTML = '';
+  GPT_CONTEXT.forEach((w, i) => {
+    const sp = document.createElement('span');
+    sp.className = 'tk tk-gpt-ctx';
+    sp.textContent = w;
+    row.appendChild(sp);
+    if (i < GPT_CONTEXT.length - 1 || genCount > 0) {
+      const ar = document.createElement('span');
+      ar.style.cssText = 'color:#93c5fd;font-size:13px;';
+      ar.textContent = '→';
+      row.appendChild(ar);
+    }
+  });
+  GPT_GENERATE.forEach((w, i) => {
+    if (i >= genCount) return;
+    const isNew = i === genCount - 1;
+    const sp = document.createElement('span');
+    sp.className = 'tk ' + (isNew ? 'tk-gpt-new' : 'tk-gpt-gen');
+    sp.textContent = w;
+    row.appendChild(sp);
+    if (i < genCount - 1) {
+      const ar = document.createElement('span');
+      ar.style.cssText = 'color:#86efac;font-size:13px;';
+      ar.textContent = '→';
+      row.appendChild(ar);
+    }
+  });
+}
+
+function renderGPTProb(frameIdx) {
+  const frame = GPT_PROB_FRAMES[frameIdx];
+  const titleEl = document.getElementById('gpt-prob-title');
+  const rowsEl  = document.getElementById('gpt-prob-rows');
+  titleEl.textContent = `预测「${frame.chosen}」时的候选词`;
+  rowsEl.innerHTML = '';
+  frame.candidates.forEach(c => {
+    const isChosen = c.w === frame.chosen;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = `width:22px;font-size:12px;font-weight:700;text-align:center;flex-shrink:0;
+      color:${isChosen ? '#15803d' : '#6b7280'};`;
+    lbl.textContent = c.w;
+    const track = document.createElement('div');
+    track.style.cssText = 'flex:1;height:14px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;';
+    const fill = document.createElement('div');
+    fill.style.cssText = `height:100%;border-radius:4px;width:0%;transition:width 0.4s ease;
+      background:${isChosen ? '#15803d' : '#d1d5db'};`;
+    track.appendChild(fill);
+    const pct = document.createElement('span');
+    pct.style.cssText = `font-size:11px;font-weight:700;width:28px;text-align:right;flex-shrink:0;
+      color:${isChosen ? '#15803d' : '#9ca3af'};`;
+    pct.textContent = c.p + '%';
+    row.appendChild(lbl); row.appendChild(track); row.appendChild(pct);
+    rowsEl.appendChild(row);
+    // 动画
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = c.p + '%'; }));
+  });
+}
+
+function gptGenerate() {
+  if (gptTimer) clearInterval(gptTimer);
+  gptGenIdx = 0;
+  const btn = document.getElementById('gpt-btn');
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  const resultEl = document.getElementById('gpt-result');
+
+  const contextText = GPT_CONTEXT.join('');
+  resultEl.innerHTML = `<span style="color:#1d4ed8;font-weight:700;">${contextText}</span><span class="gpt-cursor"></span>`;
+
+  // 先显示第一帧概率
+  renderGPTProb(0);
+
+  gptTimer = setInterval(() => {
+    renderGPTTokens(gptGenIdx + 1);
+    const generated = GPT_GENERATE.slice(0, gptGenIdx + 1).join('');
+    if (gptGenIdx < GPT_GENERATE.length - 1) {
+      resultEl.innerHTML = `<span style="color:#1d4ed8;font-weight:700;">${contextText}</span><span style="color:#15803d;font-weight:700;">${generated}</span><span class="gpt-cursor"></span>`;
+      // 更新下一步概率
+      if (gptGenIdx + 1 < GPT_PROB_FRAMES.length) renderGPTProb(gptGenIdx + 1);
+    } else {
+      resultEl.innerHTML = `<span style="color:#1d4ed8;font-weight:700;">${contextText}</span><span style="color:#15803d;font-weight:700;">${generated}</span>`;
+      document.getElementById('gpt-prob-title').textContent = '✓ 生成完成';
+      clearInterval(gptTimer);
+      btn.disabled = false;
+      btn.textContent = '再次生成 →';
+      btn.onclick = () => { gptReset(); setTimeout(gptGenerate, 100); };
+    }
+    gptGenIdx++;
+  }, 700);
+}
+
+function gptReset() {
+  if (gptTimer) clearInterval(gptTimer);
+  initGPT();
+  document.getElementById('gpt-btn').onclick = gptGenerate;
+}
+
+// ══ 左侧讲解步骤 ══
+let step = 0;
+function nextStep() {
+  step++;
+  const btn = document.getElementById('nextBtn');
+  if (step === 1) {
+    document.getElementById('compareRow').style.opacity = '1';
+    document.getElementById('card1').classList.add('show');
+  }
+  else if (step === 2) {
+    document.getElementById('card2').classList.add('show');
+    btn.textContent = '完成';
+    btn.onclick = null;
+    document.getElementById('replayBtn').style.display = 'inline-block';
+  }
+}
+
+function replayAll() {
+  step = 0;
+  const btn = document.getElementById('nextBtn');
+  btn.textContent = '下一步 →';
+  btn.onclick = nextStep;
+  btn.disabled = false;
+  document.getElementById('replayBtn').style.display = 'none';
+  document.getElementById('compareRow').style.opacity = '0';
+  document.getElementById('card1').classList.remove('show');
+  document.getElementById('card2').classList.remove('show');
+}
+
+// 初始化默认 Tab
+initCNN();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>RAG 检索增强生成</title>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+  --success: #16a34a;
+  --amber: #d97706;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.header {
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0; background-color: var(--bg-color);
+}
+.badge {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 14px; border-radius: 8px; white-space: nowrap;
+  background: rgba(22,163,106,0.1); color: var(--success);
+}
+.title-area h2 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* Left */
+.left-panel {
+  width: 34%; padding: 20px 24px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
+}
+.left-panel::-webkit-scrollbar { width: 3px; }
+.left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.section-label {
+  font-size: 12px; font-weight: 800; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+.scene-card {
+  background: white; border-radius: 12px; padding: 14px 18px;
+  border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+}
+.scene-card:hover { border-color: rgba(22,163,106,0.25); }
+.scene-card.active { border-color: var(--success); background: rgba(22,163,106,0.03); }
+.scene-tag { font-size: 12px; font-weight: 800; color: var(--success); margin-bottom: 5px; }
+.scene-name { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.scene-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+
+.decision-box {
+  background: rgba(217,119,6,0.04);
+  border: 1px solid rgba(217,119,6,0.15);
+  border-radius: 12px; padding: 14px 18px;
+}
+.decision-title { font-size: 12px; font-weight: 800; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.3px; }
+.decision-row {
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+}
+.decision-row:last-child { margin-bottom: 0; }
+.decision-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.decision-text { font-size: 13px; color: var(--text-sub); line-height: 1.7; }
+.decision-text b { color: var(--text-main); }
+
+/* Right */
+.right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 30px; min-width: 0; gap: 14px;
+}
+.right-top { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.right-top h3 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+.tab-group { display: flex; gap: 6px; }
+.tab-btn {
+  padding: 7px 18px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: white; color: var(--text-sub); transition: all 0.15s;
+}
+.tab-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+/* Flow view */
+.flow-view {
+  flex: 1; display: flex; flex-direction: column; gap: 10px;
+}
+.flow-step-row {
+  display: flex; align-items: stretch; gap: 0;
+}
+.flow-node {
+  flex: 1; background: white; border-radius: 12px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 6px; position: relative;
+}
+.flow-node.active-node { border: 2px solid var(--accent); }
+.flow-node-num {
+  font-size: 12px; font-weight: 800; color: var(--text-sub); letter-spacing: 0.3px;
+}
+.flow-node-title { font-size: 15px; font-weight: 700; color: var(--text-main); }
+.flow-node-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+.flow-node-tag {
+  display: inline-block; margin-top: 4px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px;
+  background: rgba(0,102,255,0.08); color: var(--accent);
+  align-self: flex-start;
+}
+.flow-node-tag.pm { background: rgba(217,119,6,0.1); color: var(--amber); }
+.flow-arrow-v {
+  width: 100%; text-align: center; color: var(--text-sub);
+  font-size: 18px; line-height: 1; padding: 2px 0; flex-shrink: 0;
+}
+.flow-arrow-h {
+  width: 28px; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; color: var(--text-sub); font-size: 18px;
+}
+
+/* Compare view */
+.compare-area { flex: 1; display: flex; gap: 16px; min-height: 0; }
+.compare-col { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.col-label {
+  font-size: 13px; font-weight: 700; padding: 0 2px;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.col-label .dot { width: 10px; height: 10px; border-radius: 50%; }
+.col-label .dot.red { background: var(--danger); }
+.col-label .dot.green { background: var(--success); }
+.col-label span { color: var(--text-sub); }
+.convo-box {
+  flex: 1; background: white; border-radius: 14px; padding: 16px 18px;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+.convo-box::-webkit-scrollbar { width: 3px; }
+.convo-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.bubble-user {
+  background: var(--accent); color: white;
+  padding: 11px 15px; border-radius: 12px 12px 4px 12px;
+  font-size: 15px; line-height: 1.6; align-self: flex-end; max-width: 90%;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.bubble-user.show { opacity: 1; transform: translateY(0); }
+.bubble-retrieval {
+  background: rgba(217,119,6,0.06); border: 1px dashed rgba(217,119,6,0.3);
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; color: #92400e; line-height: 1.6;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.bubble-retrieval.show { opacity: 1; transform: translateY(0); }
+.bubble-ai {
+  background: rgba(0,0,0,0.04); color: var(--text-main);
+  padding: 11px 15px; border-radius: 12px 12px 12px 4px;
+  font-size: 15px; line-height: 1.8; align-self: flex-start; max-width: 95%;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.bubble-ai.show { opacity: 1; transform: translateY(0); }
+.bubble-ai .hl-red { color: var(--danger); font-weight: 600; text-decoration: underline wavy var(--danger); text-underline-offset: 3px; }
+.bubble-ai .hl-green { color: var(--success); font-weight: 600; }
+.bubble-ai .source-tag {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(0,102,255,0.1); color: var(--accent); margin-left: 4px;
+}
+.bubble-typing {
+  display: inline-block; width: 6px; height: 14px;
+  background: var(--text-sub); border-radius: 2px; margin-left: 2px;
+  animation: blink 0.7s step-end infinite; vertical-align: text-bottom;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.verdict {
+  flex-shrink: 0; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  opacity: 0; transition: opacity 0.4s ease;
+}
+.verdict.show { opacity: 1; }
+.verdict.bad { background: rgba(229,62,62,0.06); color: var(--danger); border: 1px solid rgba(229,62,62,0.15); }
+.verdict.good { background: rgba(22,163,106,0.06); color: var(--success); border: 1px solid rgba(22,163,106,0.15); }
+
+.replay-btn {
+  padding: 6px 16px; border-radius: 9px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: white; color: var(--text-sub); transition: all 0.15s;
+}
+.replay-btn:hover { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+/* Why it works */
+.why-box {
+  background: #1c1c1e; border-radius: 12px; padding: 14px 16px;
+  flex-shrink: 0;
+}
+.why-title {
+  font-size: 11px; font-weight: 800; color: #6b7280;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px;
+}
+.token-chain {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;
+}
+.token-chip {
+  padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700;
+}
+.token-chip.context { background: rgba(255,255,255,0.08); color: #9ca3af; }
+.token-chip.retrieved { background: rgba(22,163,106,0.2); color: #6ee7b7; border: 1px solid rgba(22,163,106,0.35); }
+.token-chip.question { background: rgba(0,102,255,0.2); color: #93c5fd; border: 1px solid rgba(0,102,255,0.35); }
+.token-chip.output { background: rgba(22,163,106,0.15); color: #6ee7b7; }
+.token-chip.output-bad { background: rgba(229,62,62,0.2); color: #fca5a5; border: 1px solid rgba(229,62,62,0.35); }
+.token-arrow { color: #4b5563; font-size: 14px; font-weight: 700; padding: 0 2px; align-self: center; }
+.why-insight {
+  font-size: 13px; color: #9ca3af; line-height: 1.7;
+  border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 4px;
+}
+.why-insight b { color: #e5e7eb; }
+.why-insight .key { color: #86efac; font-weight: 700; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+  <div class="header">
+    <div class="title-area">
+      <h2>RAG 检索增强生成：让模型「开卷答题」</h2>
+      <p>PM 视角：什么场景必须上 RAG？如何设计检索流程？落地的坑在哪里。</p>
+    </div>
+    <div class="badge">手段 02 / 04 · 预防</div>
+  </div>
+
+  <div class="main-area">
+    <div class="left-panel">
+      <div>
+        <div class="section-label">选择业务场景</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="scene-card active" onclick="selectScene(0)">
+            <div class="scene-tag">场景 A · 法律 / 合规</div>
+            <div class="scene-name">合同审查 / 法规查询助手</div>
+            <div class="scene-desc">法规频繁更新，模型训练数据有截止日期，极易引用"已废除的旧条文"。</div>
+          </div>
+          <div class="scene-card" onclick="selectScene(1)">
+            <div class="scene-tag">场景 B · 医疗健康</div>
+            <div class="scene-name">药品说明 / 用药建议助手</div>
+            <div class="scene-desc">用药方案高度个性化，模型"通用知识"无法反映患者具体情况与医院规范。</div>
+          </div>
+          <div class="scene-card" onclick="selectScene(2)">
+            <div class="scene-tag">场景 C · 产品文档</div>
+            <div class="scene-name">SaaS 产品技术支持机器人</div>
+            <div class="scene-desc">产品迭代快，版本号、功能路径频繁变化，模型只记得训练时的旧版本。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-box">
+        <div class="decision-title">PM 决策框架：什么时候必须上 RAG？</div>
+        <div class="decision-row">
+          <div class="decision-icon">✅</div>
+          <div class="decision-text"><b>知识时效性强</b>——政策/产品/价格频繁更新，模型训练数据赶不上</div>
+        </div>
+        <div class="decision-row">
+          <div class="decision-icon">✅</div>
+          <div class="decision-text"><b>私有知识库</b>——公司内部文档、产品手册，模型根本没见过</div>
+        </div>
+        <div class="decision-row">
+          <div class="decision-icon">✅</div>
+          <div class="decision-text"><b>答错代价高</b>——法律、医疗、金融场景，错一句可能引发事故</div>
+        </div>
+        <div class="decision-row">
+          <div class="decision-icon">⚠️</div>
+          <div class="decision-text"><b>闲聊/创意场景不需要</b>——RAG 反而让回答更死板</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="right-top">
+        <h3 id="rightTitle">对话对比</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="replay-btn" id="replayBtn" onclick="playAnimation()" style="display:none;">↺ 重播</button>
+          <div class="tab-group">
+            <button class="tab-btn active" onclick="setTab('compare')">对比视图</button>
+            <button class="tab-btn" onclick="setTab('flow')">RAG 流程图</button>
+            <button class="tab-btn" onclick="setTab('why')">为什么有效</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compare view -->
+      <div class="compare-area" id="viewCompare">
+        <div class="compare-col">
+          <div class="col-label"><span class="dot red"></span><span>无 RAG（闭卷）</span></div>
+          <div class="convo-box" id="boxBad"></div>
+          <div class="verdict bad" id="verdictBad"></div>
+        </div>
+        <div class="compare-col">
+          <div class="col-label"><span class="dot green"></span><span>有 RAG（开卷）</span></div>
+          <div class="convo-box" id="boxGood"></div>
+          <div class="verdict good" id="verdictGood"></div>
+        </div>
+      </div>
+
+      <!-- Flow view: 左步骤列表 + 右详情 -->
+      <div class="flow-view" id="viewFlow" style="display:none;flex-direction:row;gap:14px;">
+
+        <!-- 左：步骤列表 + 控制按钮 -->
+        <div style="width:46%;display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+          <div id="ragStepper" style="background:white;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.07);flex:1;"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="ragNextBtn" onclick="ragNext()" style="background:var(--accent);color:white;border:none;padding:8px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">下一步 →</button>
+            <button onclick="ragReset()" style="background:white;color:var(--text-sub);border:1px solid rgba(0,0,0,0.1);padding:8px 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">重置</button>
+            <span id="ragProgress" style="font-size:13px;color:var(--text-sub);">第 0 / 7 步</span>
+          </div>
+        </div>
+
+        <!-- 右：步骤详情 -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-sub);flex-shrink:0;" id="ragVisTitle">步骤 1：点击"下一步"开始</div>
+          <div id="ragVisArea" style="background:white;border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:16px 20px;font-size:14px;line-height:1.85;flex:1;overflow-y:auto;min-height:0;">
+            <span style="color:var(--text-sub);">点击左侧"下一步"查看每步细节 →</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Why it works view -->
+      <div id="viewWhy" style="display:none;flex:1;min-height:0;background:white;border-radius:14px;padding:28px 32px;flex-direction:column;gap:22px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;gap:16px;flex:1;min-height:0;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">无 RAG：闭卷考试</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,0,0,0.05);color:var(--text-sub);">问题</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">→</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(229,62,62,0.08);color:var(--danger);border:1px solid rgba(229,62,62,0.2);">× 训练记忆推断</span>
+            </div>
+            <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">前文只有问题本身，模型只能靠训练数据里的印象来推 Token</div>
+          </div>
+          <div style="width:1px;background:rgba(0,0,0,0.06);flex-shrink:0;"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">有 RAG：开卷考试</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(22,163,106,0.1);color:var(--success);border:1px solid rgba(22,163,106,0.2);">真实文档片段</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">+</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(0,0,0,0.05);color:var(--text-sub);">问题</span>
+              <span style="color:var(--text-sub);font-size:18px;font-weight:700;">→</span>
+              <span style="padding:7px 16px;border-radius:8px;font-size:15px;font-weight:700;background:rgba(22,163,106,0.1);color:var(--success);border:1px solid rgba(22,163,106,0.2);">✓ 准确回答</span>
+            </div>
+            <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">检索到的文档成为前文的一部分，直接影响每步 Token 的概率分布</div>
+          </div>
+        </div>
+        <div style="background:rgba(22,163,106,0.05);border:1px solid rgba(22,163,106,0.15);border-radius:12px;padding:20px 24px;flex-shrink:0;">
+          <div style="font-size:16px;color:var(--text-main);line-height:1.9;">
+            模型本质是 <b>Token 推 Token</b>，推出什么取决于前文是什么。
+            RAG 就是<span style="color:var(--success);font-weight:700;">「用检索到的真实文档作为高质量前文」</span>注入上下文——
+            相同的模型，前文换了，后文的概率分布就变了。
+            <b>不是让模型"变聪明"，而是给它一个更好的起点。</b>
+          </div>
+        </div>
+        <div style="background:rgba(229,62,62,0.04);border:1px solid rgba(229,62,62,0.15);border-radius:12px;padding:16px 22px;flex-shrink:0;">
+          <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:10px;letter-spacing:0.3px;">⚠ 局限性：RAG 不是银弹</div>
+          <div style="display:flex;gap:20px;">
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">检索本身可能出错</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                检索召回的文档片段不准确时，模型会把错误文档当作"真实依据"——<span style="color:var(--danger);font-weight:600;">幻觉不但没减少，还多了一个"权威出处"的外衣</span>
+              </div>
+            </div>
+            <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">模型仍会"脑补"文档外的内容</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                检索到的上下文窗口有限，超出范围的部分模型仍会用训练记忆补全——<span style="color:var(--danger);font-weight:600;">RAG + 幻觉混合输出，比纯幻觉更难被用户识别</span>
+              </div>
+            </div>
+            <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">PM 应对策略</div>
+              <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                RAG 的质量上限 = 知识库质量。需要建立<span style="color:var(--accent);font-weight:600;">检索命中率评测</span>，同时用<span style="color:var(--amber);font-weight:600;">引用来源强制显示</span>让用户可核查
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script>
+const SCENES = [
+  {
+    bad: [
+      { type: 'user', text: '劳动合同法里，试用期最长能签几个月？' },
+      { type: 'ai', bad: true, htmlParts: [
+        { text: '根据劳动合同法规定，试用期最长可签' },
+        { text: '6个月', cls: 'hl-red' },
+        { text: '，三年以下合同可以约定1-3个月试用期，' },
+        { text: '无固定期限合同最多可签12个月', cls: 'hl-red' },
+        { text: '试用期……' },
+      ]},
+    ],
+    good: [
+      { type: 'retrieval', text: '已检索：《劳动合同法》第19条（2024版）· 相似度 0.94' },
+      { type: 'user', text: '劳动合同法里，试用期最长能签几个月？' },
+      { type: 'ai', bad: false, htmlParts: [
+        { text: '根据检索结果：\n• 合同期 3 个月至 1 年 → 试用期' },
+        { text: '不超过 1 个月', cls: 'hl-green' },
+        { text: '\n• 合同期 1 年至 3 年 → 试用期' },
+        { text: '不超过 2 个月', cls: 'hl-green' },
+        { text: '\n• 3 年以上或无固定期限 → 试用期' },
+        { text: '不超过 6 个月', cls: 'hl-green' },
+        { text: ' ', tag: 'source-tag', tagText: '来源：劳动合同法第19条' },
+      ]},
+    ],
+    verdictBad: '✗ 模型捏造了"无固定期限12个月"——实际上法律规定上限是6个月，答错会误导 HR 违法操作。',
+    verdictGood: '✓ 精确引用法条，分场景给出不同上限，并标注来源，可核查。',
+  },
+  {
+    bad: [
+      { type: 'user', text: '我有高血压，可以服用布洛芬止痛吗？' },
+      { type: 'ai', bad: true, htmlParts: [
+        { text: '高血压患者' },
+        { text: '可以短期服用布洛芬', cls: 'hl-red' },
+        { text: '，每次200-400mg，每日不超过3次。建议饭后服用，一般' },
+        { text: '不影响血压控制', cls: 'hl-red' },
+        { text: '……' },
+      ]},
+    ],
+    good: [
+      { type: 'retrieval', text: '已检索：布洛芬说明书·禁忌症 + 《高血压患者用药指南》· 相似度 0.91' },
+      { type: 'user', text: '我有高血压，可以服用布洛芬止痛吗？' },
+      { type: 'ai', bad: false, htmlParts: [
+        { text: '根据用药指南：布洛芬属于 NSAIDs 类药物，' },
+        { text: '高血压患者需谨慎使用', cls: 'hl-green' },
+        { text: '——可能升高血压、影响降压药效果。', tag: 'source-tag', tagText: '用药指南' },
+        { text: '\n\n建议：' },
+        { text: '请在医生或药师的指导下用药', cls: 'hl-green' },
+        { text: '，我无法替代专业医疗建议。' },
+      ]},
+    ],
+    verdictBad: '✗ 模型给出了危险的错误建议——NSAIDs 对高血压患者有禁忌，可能加重病情甚至引发事故。',
+    verdictGood: '✓ 检索到真实指南，给出准确警示，并明确引导到专业医疗渠道。',
+  },
+  {
+    bad: [
+      { type: 'user', text: '怎么在你们产品里设置多因素认证 MFA？' },
+      { type: 'ai', bad: true, htmlParts: [
+        { text: '设置 MFA 请进入「设置」→「' },
+        { text: '账户安全', cls: 'hl-red' },
+        { text: '」→「' },
+        { text: '双重验证', cls: 'hl-red' },
+        { text: '」，点击「启用」后扫描二维码……' },
+      ]},
+    ],
+    good: [
+      { type: 'retrieval', text: '已检索：产品文档 v3.2「安全配置」章节 · 相似度 0.96' },
+      { type: 'user', text: '怎么在你们产品里设置多因素认证 MFA？' },
+      { type: 'ai', bad: false, htmlParts: [
+        { text: '根据最新文档（v3.2）：\n进入「工作台」→「组织管理」→「' },
+        { text: '安全策略', cls: 'hl-green' },
+        { text: '」→「MFA 设置」，选择认证方式后点击保存。', tag: 'source-tag', tagText: '文档 v3.2 §4.3' },
+        { text: '\n\n如您使用的是旧版本，路径可能不同，请告知版本号。' },
+      ]},
+    ],
+    verdictBad: '✗ 模型记的是旧版本路径（已在 v3.0 改版），用户按提示根本找不到入口，产生大量客诉。',
+    verdictGood: '✓ 检索到当前文档版本，给出精确路径，并主动提示版本差异。',
+  }
+];
+
+let currentScene = 0;
+let currentTab = 'compare';
+let animTimers = [];
+
+function clearTimers() {
+  animTimers.forEach(t => clearTimeout(t));
+  animTimers = [];
+}
+
+function delay(fn, ms) {
+  const t = setTimeout(fn, ms);
+  animTimers.push(t);
+  return t;
+}
+
+function selectScene(i) {
+  currentScene = i;
+  document.querySelectorAll('.scene-card').forEach((c, j) => c.classList.toggle('active', j === i));
+  if (currentTab === 'compare') playAnimation();
+}
+
+function setTab(t) {
+  currentTab = t;
+  const tabs = ['compare', 'flow', 'why'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === t));
+  document.getElementById('viewCompare').style.display = t === 'compare' ? 'flex' : 'none';
+  document.getElementById('viewFlow').style.display = t === 'flow' ? 'flex' : 'none';
+  const whyEl = document.getElementById('viewWhy');
+  whyEl.style.display = t === 'why' ? 'flex' : 'none';
+  document.getElementById('replayBtn').style.display = t === 'compare' ? 'inline-block' : 'none';
+  if (t === 'compare') playAnimation();
+}
+
+// 把 htmlParts 展平为纯文本 tokens（含标记）
+function flattenParts(parts) {
+  const tokens = [];
+  parts.forEach(p => {
+    if (p.tag === 'source-tag') {
+      tokens.push({ html: `<span class="source-tag">${p.tagText}</span>` });
+    } else if (p.cls) {
+      // 带颜色的词，整段作为一个 token
+      tokens.push({ html: `<span class="${p.cls}">${p.text}</span>`, isSpecial: true });
+    } else {
+      // 普通文本，逐字拆分
+      const chars = [...p.text];
+      chars.forEach(c => tokens.push({ html: c === '\n' ? '<br>' : c }));
+    }
+  });
+  return tokens;
+}
+
+// 逐 token 打字
+function typeTokens(el, tokens, charDelay, onDone) {
+  el.innerHTML = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'bubble-typing';
+  el.appendChild(cursor);
+
+  let i = 0;
+  function step() {
+    if (i >= tokens.length) {
+      el.removeChild(cursor);
+      if (onDone) onDone();
+      return;
+    }
+    const tok = tokens[i++];
+    const span = document.createElement('span');
+    span.innerHTML = tok.html;
+    el.insertBefore(span, cursor);
+    el.parentElement.scrollTop = el.parentElement.scrollHeight;
+    delay(step, tok.isSpecial ? charDelay * 3 : charDelay);
+  }
+  step();
+}
+
+function playAnimation() {
+  clearTimers();
+  const s = SCENES[currentScene];
+
+  // 清空
+  const boxBad = document.getElementById('boxBad');
+  const boxGood = document.getElementById('boxGood');
+  boxBad.innerHTML = '';
+  boxGood.innerHTML = '';
+  const vBad = document.getElementById('verdictBad');
+  const vGood = document.getElementById('verdictGood');
+  vBad.textContent = '';
+  vGood.textContent = '';
+  vBad.classList.remove('show');
+  vGood.classList.remove('show');
+
+  // === 左侧：无 RAG ===
+  // 用户消息
+  const uBad = document.createElement('div');
+  uBad.className = 'bubble-user';
+  uBad.textContent = s.bad[0].text;
+  boxBad.appendChild(uBad);
+  delay(() => uBad.classList.add('show'), 100);
+
+  // AI 气泡
+  const aiBad = document.createElement('div');
+  aiBad.className = 'bubble-ai show';
+  boxBad.appendChild(aiBad);
+  const badTokens = flattenParts(s.bad[1].htmlParts);
+
+  delay(() => typeTokens(aiBad, badTokens, 28, () => {
+    vBad.textContent = s.verdictBad;
+    delay(() => vBad.classList.add('show'), 100);
+  }), 700);
+
+  // === 右侧：有 RAG ===
+  const goodMsgs = s.good;
+  // 检索消息先出现
+  const retEl = document.createElement('div');
+  retEl.className = 'bubble-retrieval';
+  retEl.textContent = '🔍 ' + goodMsgs[0].text;
+  boxGood.appendChild(retEl);
+  delay(() => retEl.classList.add('show'), 400);
+
+  // 用户消息
+  const uGood = document.createElement('div');
+  uGood.className = 'bubble-user';
+  uGood.textContent = goodMsgs[1].text;
+  boxGood.appendChild(uGood);
+  delay(() => uGood.classList.add('show'), 900);
+
+  // AI 气泡（在左侧打字开始后稍微延迟）
+  const aiGood = document.createElement('div');
+  aiGood.className = 'bubble-ai show';
+  boxGood.appendChild(aiGood);
+  const goodTokens = flattenParts(goodMsgs[2].htmlParts);
+
+  delay(() => typeTokens(aiGood, goodTokens, 22, () => {
+    vGood.textContent = s.verdictGood;
+    delay(() => vGood.classList.add('show'), 100);
+  }), 1200);
+}
+
+// ── RAG 7步交互动画（含知识库构建阶段）──
+const RAG_STEPS = [
+  {
+    num:'1', icon:'📄', title:'原始文档拆段（Chunking）',
+    desc:'把长文档切成小块，每块约 512–800 Token，以段落/标题为边界',
+    phase: 'build',  // 知识库构建阶段（灰色标注）
+    vis:`<b>知识库构建阶段（一次性，离线完成）</b><br><br>
+<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+  <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">原始文档：退款政策手册（共 42 页）</div>
+  <div style="display:flex;align-items:flex-start;gap:10px;">
+    <div style="flex:1;background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;">
+      <div style="font-size:10px;font-weight:800;color:var(--text-sub);margin-bottom:4px;">原文（整段）</div>
+      第三章 退款政策<br>§3.1 适用范围……§3.2 支持7天无理由退款，商品需保持原包装，非定制品……§3.3 退款处理周期……§3.4 特殊品类……
+    </div>
+    <div style="display:flex;align-items:center;font-size:20px;color:var(--text-sub);">✂</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+      <div style="background:rgba(0,102,255,0.06);border:1px solid rgba(0,102,255,0.15);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;"><b style="color:var(--accent);font-size:10px;">块 #1 · 约 180 Token</b><br>§3.2 支持7天无理由退款，商品需保持原包装，非定制品……</div>
+      <div style="background:rgba(0,102,255,0.06);border:1px solid rgba(0,102,255,0.15);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;"><b style="color:var(--accent);font-size:10px;">块 #2 · 约 150 Token</b><br>§3.3 退款处理周期为3-5个工作日……</div>
+      <div style="background:rgba(0,102,255,0.06);border:1px solid rgba(0,102,255,0.15);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;"><b style="color:var(--accent);font-size:10px;">块 #3 · 约 200 Token</b><br>§3.4 特殊品类（食品/定制品）不适用无理由退款……</div>
+    </div>
+  </div>
+</div>
+<div style="margin-top:10px;font-size:12px;color:var(--amber);background:rgba(217,119,6,0.05);border:1px solid rgba(217,119,6,0.15);border-radius:8px;padding:8px 12px;">
+  ⚠ <b>PM 注意</b>：切块粒度影响检索质量。太大注入冗余 Token 浪费钱；太小丢失上下文。最佳约 512–800 Token/块。
+</div>`
+  },
+  {
+    num:'2', icon:'🔢', title:'Embedding 入库',
+    desc:'每个文档块经过 Embedding 模型转为向量，存入向量数据库',
+    phase: 'build',
+    vis:`<b>知识库构建阶段（一次性，离线完成）</b><br><br>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;">
+  <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);margin-bottom:2px;">文档块（文本）</div>
+    <div style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;">§3.2 支持7天无理由退款，商品需保持原包装……</div>
+    <div style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;">§3.3 退款处理周期为3-5个工作日……</div>
+    <div style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;">FAQ 第12条：退款申请需在购买日期7天内……</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0 8px;">
+    <div style="font-size:11px;font-weight:700;color:var(--accent);text-align:center;">Embedding<br>模型</div>
+    <div style="font-size:20px;">→</div>
+  </div>
+  <div style="flex:1;">
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);margin-bottom:6px;">向量数据库（每行1536维）</div>
+    <div style="background:#1c1c1e;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:10px;color:#6ee7b7;line-height:1.8;">
+      id:1 [0.231, -0.847, 0.562, 0.093, ...]<br>
+      id:2 [0.102,  0.445, -0.231, 0.671, ...]<br>
+      id:3 [-0.583, 0.312,  0.789, -0.044, ...]<br>
+      <span style="color:#4b5563;">… 共 2847 个块</span>
+    </div>
+    <div style="font-size:11px;color:var(--text-sub);margin-top:8px;line-height:1.6;">语义相近的文本 → 在高维空间中距离更近<br>查询时用<b style="color:var(--text-main)">余弦相似度</b>找最近邻</div>
+  </div>
+</div>`
+  },
+  {
+    num:'3', icon:'❓', title:'用户提问 → 向量化',
+    desc:'用户输入问题，系统用同一 Embedding 模型将问题转为向量',
+    phase: 'query',
+    vis:`<b>查询阶段（每次对话实时执行）</b><br><br>
+<div style="display:flex;gap:10px;align-items:center;margin-top:8px;">
+  <div style="flex:1;background:rgba(0,102,255,0.06);border:1px solid rgba(0,102,255,0.15);border-radius:10px;padding:12px 14px;">
+    <div style="font-size:11px;font-weight:800;color:var(--accent);margin-bottom:6px;">用户问题（自然语言）</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text-main);">"我们公司的退款政策是什么？"</div>
+  </div>
+  <div style="font-size:22px;color:var(--text-sub);">→</div>
+  <div style="flex:1;background:#1c1c1e;border-radius:10px;padding:12px 14px;">
+    <div style="font-size:11px;font-weight:800;color:#6b7280;margin-bottom:6px;">问题向量（Embedding）</div>
+    <div style="font-family:monospace;font-size:10px;color:#6ee7b7;line-height:1.8;">[0.218, -0.831, 0.541, 0.087,<br>-0.308, 0.771, 0.124, -0.452, ...]<br><span style="color:#4b5563;">共 1536 维浮点数</span></div>
+  </div>
+</div>
+<div style="margin-top:10px;font-size:12px;color:var(--text-sub);line-height:1.7;">
+  关键：问题向量 与 文档块向量 使用<b style="color:var(--text-main)">同一个 Embedding 模型</b>生成，才能在同一语义空间内做相似度比较。
+</div>`
+  },
+  {
+    num:'4', icon:'🔍', title:'向量检索（Top-K）',
+    desc:'计算问题向量与所有文档块向量的余弦相似度，返回最相关的 Top-K 块',
+    phase: 'query',
+    vis:`<b>在向量数据库中搜索 Top-3 最相关片段：</b><br>
+<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+  <div style="background:rgba(0,102,255,0.06);border:1px solid rgba(0,102,255,0.2);border-radius:8px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:12px;">
+    <div style="flex-shrink:0;">
+      <div style="font-size:18px;font-weight:900;color:var(--accent);">0.94</div>
+      <div style="font-size:9px;color:var(--text-sub);text-align:center;">相似度</div>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--text-main);margin-bottom:2px;">退款政策文档 §3.2</div>
+      <div style="color:var(--text-sub);">"支持 7 天无理由退款，商品需保持原包装…"</div>
+    </div>
+  </div>
+  <div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.07);border-radius:8px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:12px;">
+    <div style="flex-shrink:0;">
+      <div style="font-size:18px;font-weight:900;color:var(--text-sub);">0.81</div>
+      <div style="font-size:9px;color:var(--text-sub);text-align:center;">相似度</div>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--text-main);margin-bottom:2px;">FAQ 第 12 条</div>
+      <div style="color:var(--text-sub);">"退款处理周期为 3-5 个工作日…"</div>
+    </div>
+  </div>
+  <div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.07);border-radius:8px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:12px;">
+    <div style="flex-shrink:0;">
+      <div style="font-size:18px;font-weight:900;color:var(--text-sub);">0.76</div>
+      <div style="font-size:9px;color:var(--text-sub);text-align:center;">相似度</div>
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--text-main);margin-bottom:2px;">客服手册 p.18</div>
+      <div style="color:var(--text-sub);">"退款申请需在购买日期 7 天内提交…"</div>
+    </div>
+  </div>
+</div>
+<div style="margin-top:8px;font-size:12px;color:var(--text-sub);line-height:1.6;">不是找<b style="color:var(--text-main)">关键词</b>，而是找<b style="color:var(--text-main)">语义相近</b>。"怎么申请退货"和"退款政策"的向量也会很接近。</div>`
+  },
+  {
+    num:'5', icon:'📋', title:'构建 Prompt',
+    desc:'将检索到的文档块拼入 Prompt，作为"参考资料"注入上下文',
+    phase: 'query',
+    vis:`<b>发送给 LLM 的 Prompt：</b>
+<div style="background:#1c1c1e;border-radius:8px;padding:12px 16px;font-family:monospace;font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.9;white-space:pre-wrap;"><span style="color:#f38ba8;">System:</span> 你是客服助手。只根据以下参考资料回答，不得引用其他内容。
+
+<span style="color:#a6e3a1;">[参考资料]
+1. 退款政策文档 §3.2：支持7天无理由退款，商品需保持原包装…
+2. FAQ 第12条：退款处理周期为3-5个工作日…
+3. 客服手册 p.18：退款申请需在购买日期7天内提交…</span>
+
+<span style="color:#89dceb;">User:</span> 我们公司的退款政策是什么？
+<span style="color:#cba6f7;">Assistant:</span></div>
+<div style="margin-top:8px;font-size:12px;color:var(--text-sub);line-height:1.6;">绿色部分 = 检索注入的文档块，它们成为模型的"上下文前文"，直接影响后续每个 Token 的概率分布。</div>`
+  },
+  {
+    num:'6', icon:'🤖', title:'LLM 生成回答',
+    desc:'模型阅读注入的文档后，生成有来源依据的准确回答',
+    phase: 'query',
+    vis:`<b>AI 生成的回答：</b><br><br>
+根据公司退款政策：<br>
+<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.8;">
+  <div>· 支持 <b>7 天无理由退款</b>（购买日期起计算）</div>
+  <div>· 退款申请需在购买日期 <b>7 天内</b>提交</div>
+  <div>· 商品需保持 <b>原包装</b></div>
+  <div>· 退款处理周期为 <b>3-5 个工作日</b></div>
+</div>
+<div style="margin-top:10px;font-size:12px;color:var(--success);font-weight:600;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:8px 12px;">✅ 信息来源：退款政策文档 §3.2 + FAQ 第12条 + 客服手册 p.18</div>
+<div style="margin-top:8px;font-size:12px;color:var(--text-sub);line-height:1.6;">模型基于注入的真实文档作答，无需从训练参数里"猜"——幻觉大幅降低。</div>`
+  },
+  {
+    num:'7', icon:'📤', title:'返回答案（含来源）',
+    desc:'将回答和引用来源一起返回给用户，答案可溯源、可核查',
+    phase: 'query',
+    vis:`<b>最终展示给用户：</b><br><br>
+<div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px;padding:16px;font-size:14px;line-height:1.8;">
+  根据退款政策，支持购买后 <b>7 天内</b>无理由退款，退款处理周期 <b>3-5 个工作日</b>，商品需保持原包装。<br><br>
+  <div style="font-size:12px;color:var(--success);font-weight:600;">📎 引用来源：退款政策文档 §3.2 / FAQ 第12条 / 客服手册 p.18</div>
+</div>
+<div style="margin-top:10px;display:flex;gap:10px;">
+  <div style="flex:1;background:rgba(0,102,255,0.05);border:1px solid rgba(0,102,255,0.15);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;">
+    <b style="color:var(--accent);">🔗 来源可溯</b><br>用户可点击来源核查原文，信任度大幅提升
+  </div>
+  <div style="flex:1;background:rgba(22,163,74,0.05);border:1px solid rgba(22,163,74,0.15);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;">
+    <b style="color:var(--success);">✅ 知识实时</b><br>更新知识库即可更新答案，无需重训模型
+  </div>
+  <div style="flex:1;background:rgba(217,119,6,0.05);border:1px solid rgba(217,119,6,0.15);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;">
+    <b style="color:var(--amber);">🔒 范围可控</b><br>只基于提供的文档回答，不乱说文档外的内容
+  </div>
+</div>`
+  },
+];
+
+let ragStep = 0;
+function ragBuildStepper() {
+  const el = document.getElementById('ragStepper');
+  el.innerHTML = '';
+
+  // 阶段分隔标签
+  let prevPhase = null;
+  RAG_STEPS.forEach((s, i) => {
+    // 插入阶段分隔行
+    if (s.phase !== prevPhase) {
+      const sep = document.createElement('div');
+      const isBuild = s.phase === 'build';
+      sep.style.cssText = `padding:5px 16px 4px;font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:${isBuild ? '#8e8e93' : 'var(--accent)'};background:${isBuild ? 'rgba(0,0,0,0.03)' : 'rgba(0,102,255,0.04)'};border-bottom:1px solid rgba(0,0,0,0.05);`;
+      sep.textContent = isBuild ? '📦 知识库构建阶段（一次性离线）' : '⚡ 查询阶段（每次实时执行）';
+      el.appendChild(sep);
+      prevPhase = s.phase;
+    }
+
+    const div = document.createElement('div');
+    div.dataset.step = i;
+    div.style.cssText = 'display:flex;gap:0;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,0.05);align-items:flex-start;opacity:0.4;transition:all 0.3s;';
+    div.innerHTML = `<div style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-right:12px;border:2px solid rgba(0,0,0,0.1);background:#f0f0f0;color:#8e8e93;transition:all 0.3s;">${s.num}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;">${s.icon} ${s.title}</div>
+        <div style="font-size:13px;color:var(--text-sub);margin-top:3px;max-height:0;overflow:hidden;transition:max-height 0.3s;line-height:1.55;">${s.desc}</div>
+      </div>`;
+    if (i === RAG_STEPS.length - 1) div.style.borderBottom = 'none';
+    el.appendChild(div);
+  });
+}
+
+function ragGetStepDivs() {
+  return Array.from(document.getElementById('ragStepper').querySelectorAll('[data-step]'));
+}
+
+function ragNext() {
+  if (ragStep >= RAG_STEPS.length) return;
+  const steps = ragGetStepDivs();
+  if (ragStep > 0) {
+    const prev = steps[ragStep - 1];
+    prev.style.opacity = '1';
+    prev.style.background = 'rgba(22,163,74,0.04)';
+    const num = prev.querySelector('div');
+    num.style.background = '#16a34a';
+    num.style.color = 'white';
+    num.style.borderColor = '#16a34a';
+  }
+  const cur = steps[ragStep];
+  cur.style.opacity = '1';
+  const isBuild = RAG_STEPS[ragStep].phase === 'build';
+  cur.style.background = isBuild ? 'rgba(0,0,0,0.03)' : 'rgba(0,102,255,0.04)';
+  const num = cur.querySelector('div');
+  num.style.background = isBuild ? '#6b7280' : 'var(--accent)';
+  num.style.color = 'white';
+  num.style.borderColor = isBuild ? '#6b7280' : 'var(--accent)';
+  // 展开描述
+  const descEl = cur.querySelector('div:last-child div:last-child');
+  if (descEl) descEl.style.maxHeight = '60px';
+
+  const phaseLabel = RAG_STEPS[ragStep].phase === 'build' ? '【构建】' : '【查询】';
+  document.getElementById('ragVisTitle').textContent = `步骤 ${ragStep+1}：${RAG_STEPS[ragStep].title}`;
+  document.getElementById('ragVisArea').innerHTML = RAG_STEPS[ragStep].vis;
+  ragStep++;
+  document.getElementById('ragProgress').textContent = `第 ${ragStep} / ${RAG_STEPS.length} 步`;
+  if (ragStep >= RAG_STEPS.length) {
+    document.getElementById('ragNextBtn').disabled = true;
+    document.getElementById('ragNextBtn').style.opacity = '0.5';
+  }
+}
+function ragReset() {
+  ragStep = 0;
+  document.getElementById('ragNextBtn').disabled = false;
+  document.getElementById('ragNextBtn').style.opacity = '1';
+  document.getElementById('ragProgress').textContent = `第 0 / ${RAG_STEPS.length} 步`;
+  document.getElementById('ragVisArea').innerHTML = '<span style="color:var(--text-sub);">点击左侧"下一步"查看每步细节 →</span>';
+  document.getElementById('ragVisTitle').textContent = '步骤详情：';
+  ragBuildStepper();
+}
+
+// 初始化
+setTab('compare');
+ragBuildStepper();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

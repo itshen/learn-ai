@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>chat/completions 之谜 · 为什么叫补全</title>
+<script src="../global-attn.js"></script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --amber: #d97706;
+  --success: #16a34a;
+  --danger: #e53e3e;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+.header {
+  padding: 20px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  background-color: var(--bg-color);
+}
+.title-area h2 { font-size: 22px; font-weight: 800; color: var(--text-main); }
+.title-area p { font-size: 13px; color: var(--text-sub); margin-top: 3px; }
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; filter: none; }
+.btn-replay {
+  background: white; color: var(--text-main); border: 1px solid rgba(0,0,0,0.12);
+  padding: 10px 20px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-replay:hover { background: rgba(0,0,0,0.05); }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left-panel {
+  width: 40%; padding: 28px 32px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+}
+.step-label {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.big-question {
+  font-size: 32px; font-weight: 800; color: var(--text-main);
+  line-height: 1.35;
+}
+.desc-text { font-size: 16px; color: var(--text-sub); line-height: 1.75; }
+
+.api-compare {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.api-row {
+  display: flex; align-items: stretch; gap: 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.08);
+  opacity: 0; transform: translateY(6px);
+  transition: all 0.4s ease;
+}
+.api-row.show { opacity: 1; transform: translateY(0); }
+.api-brand {
+  width: 110px; padding: 14px 16px;
+  font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.brand-openai { background: rgba(0,0,0,0.05); color: #374151; }
+.brand-anthropic { background: rgba(124,58,237,0.08); color: var(--purple); }
+.api-endpoint {
+  flex: 1; padding: 14px 16px;
+  font-size: 17px; font-weight: 700;
+  font-family: 'SF Mono', Menlo, monospace;
+  display: flex; align-items: center;
+  background: white;
+}
+.api-note {
+  padding: 14px 16px; width: 140px;
+  font-size: 13px; color: var(--text-sub);
+  display: flex; align-items: center;
+  background: white; border-left: 1px solid rgba(0,0,0,0.06);
+}
+
+.answer-card {
+  border-radius: 12px; padding: 16px 18px;
+  display: none;
+}
+.answer-card.show { display: block; }
+.answer-card.amber { background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.2); }
+.answer-card.blue { background: rgba(0,102,255,0.05); border: 1px solid rgba(0,102,255,0.15); }
+.answer-card .label { font-size: 13px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
+.answer-card .val { font-size: 15px; color: var(--text-main); line-height: 1.75; }
+
+/* ── Right ── */
+.right-panel {
+  flex: 1; padding: 28px 36px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+}
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+
+/* 补全视角演示 */
+.completion-demo {
+  background: white; border-radius: 14px; padding: 24px 28px;
+  border: 1px solid rgba(0,0,0,0.07);
+  display: flex; flex-direction: column; gap: 16px;
+  flex: 1;
+}
+.cd-label { font-size: 13px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.3px; margin-bottom: 6px; }
+.cd-text {
+  font-size: 18px; line-height: 1.9; color: var(--text-main);
+  font-family: 'SF Mono', Menlo, monospace;
+}
+.cd-user { color: var(--accent); font-weight: 700; }
+.cd-ai { color: var(--success); font-weight: 700; }
+.cd-system { color: var(--amber); font-weight: 700; }
+.cd-blank {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--success); vertical-align: text-bottom;
+  animation: blink 0.9s step-start infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.cd-segment {
+  opacity: 0; transform: translateY(4px);
+  transition: all 0.35s ease;
+}
+.cd-segment.show { opacity: 1; transform: translateY(0); }
+
+.insight-row {
+  display: flex; gap: 14px;
+  opacity: 0; transition: opacity 0.5s;
+}
+.insight-row.show { opacity: 1; }
+.insight-item {
+  flex: 1; background: rgba(0,0,0,0.03); border-radius: 10px;
+  padding: 12px 14px;
+}
+.ii-title { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+.ii-desc { font-size: 13px; color: var(--text-sub); line-height: 1.65; }
+
+/* 世界影响收尾 */
+.world-impact {
+  display: flex; align-items: stretch; gap: 0;
+  background: linear-gradient(135deg, rgba(0,102,255,0.06) 0%, rgba(124,58,237,0.06) 100%);
+  border: 1.5px solid rgba(0,102,255,0.2);
+  border-radius: 14px; overflow: hidden;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.5s, transform 0.5s;
+  flex-shrink: 0;
+}
+.world-impact.show { opacity: 1; transform: translateY(0); }
+.wi-left {
+  padding: 16px 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  min-width: 260px; flex-shrink: 0;
+}
+.wi-tag {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--accent);
+}
+.wi-title {
+  font-size: 20px; font-weight: 900; color: var(--text); line-height: 1.35;
+}
+.wi-divider {
+  width: 1px; background: rgba(0,102,255,0.15); flex-shrink: 0; margin: 10px 0;
+}
+.wi-right {
+  flex: 1; padding: 16px 22px; display: flex; flex-direction: column; justify-content: center; gap: 10px;
+}
+.wi-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; color: var(--text); line-height: 1.55;
+}
+.wi-item-icon {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: rgba(22,163,74,0.1); color: var(--success);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.wi-item code {
+  font-family: 'SF Mono', Menlo, monospace; font-size: 13px;
+  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; color: var(--accent);
+}
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+
+  <div class="header">
+    <div class="title-area">
+      <h2>你有没有好奇过：OpenAI 的 API 为什么叫 chat/completions？</h2>
+      <p>明明是在和大模型对话，为什么路径里写的是「补全」？</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-replay" id="replayBtn" onclick="replayAll()" style="display:none;">↺ 重播</button>
+      <button class="btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+
+    <!-- Left -->
+    <div class="left-panel">
+      <div>
+        <div class="step-label">一个有意思的问题</div>
+        <div class="big-question">
+          明明是「聊天」，<br>
+          为什么叫「<span style="color:var(--accent);">补全</span>」？
+        </div>
+      </div>
+
+      <div class="desc-text">两家公司，两个截然不同的命名——背后藏着对大模型本质的不同理解。</div>
+
+      <div class="api-compare" id="apiCompare">
+        <div class="api-row" id="apiRow0">
+          <div class="api-brand brand-openai">OpenAI</div>
+          <div class="api-endpoint">/chat/<span style="color:var(--accent);">completions</span></div>
+          <div class="api-note">聊天 / <strong style="color:var(--accent);">补全</strong></div>
+        </div>
+        <div class="api-row" id="apiRow1">
+          <div class="api-brand brand-anthropic">Anthropic</div>
+          <div class="api-endpoint">/v1/<span style="color:var(--purple);">messages</span></div>
+          <div class="api-note">正儿八经的消息</div>
+        </div>
+      </div>
+
+      <div class="answer-card amber" id="cardAmber">
+        <div class="label">OpenAI 的隐含逻辑</div>
+        <div class="val">
+          大模型的本质是<strong>补全</strong>——给它一段文字，它接着往下写。<br>
+          聊天，不过是把对话格式化成「待补全的文本」，<br>
+          <strong>本质还是在做 Token 补全。</strong>
+        </div>
+      </div>
+
+      <div class="answer-card blue" id="cardBlue">
+        <div class="label">PM 需要懂的关键点</div>
+        <div class="val">
+          你传给大模型的每一条消息，都会被拼成一段文本，<br>
+          然后模型从这段文本的末尾开始<strong>继续生成</strong>。<br>
+          对话只是人类为了方便而加的外壳。
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: 补全视角演示 -->
+    <div class="right-panel">
+      <div class="section-title">从补全视角看一次对话</div>
+
+      <div class="completion-demo">
+        <div>
+          <div class="cd-label">模型实际「看到」的内容（拼接后的文本）</div>
+          <div class="cd-text">
+            <span class="cd-segment" id="seg0">
+              <span class="cd-system">[system]</span> 你是一个有帮助的助手。<br>
+            </span>
+            <span class="cd-segment" id="seg1">
+              <span class="cd-user">[user]</span> 紫霞仙子是谁？<br>
+            </span>
+            <span class="cd-segment" id="seg2">
+              <span class="cd-ai">[assistant]</span> <span id="aiOutput"></span><span class="cd-blank" id="cursor" style="display:none;"></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="insight-row" id="insightRow">
+          <div class="insight-item">
+            <div class="ii-title">模型做的事</div>
+            <div class="ii-desc">从 [assistant] 标记之后，预测下一个概率最高的 Token，一直到生成终止符</div>
+          </div>
+          <div class="insight-item">
+            <div class="ii-title">chat 是假象</div>
+            <div class="ii-desc">你以为在「对话」，模型只是在「把这段文本补全完整」——这就是 completions 的真相</div>
+          </div>
+          <div class="insight-item">
+            <div class="ii-title">为什么 PM 要知道</div>
+            <div class="ii-desc">System Prompt、上下文、历史消息全部拼在一起送给模型——Token 数量就是成本和质量的关键</div>
+          </div>
+        </div>
+
+        <div class="world-impact" id="worldImpact">
+          <div class="wi-left">
+            <div class="wi-tag">OpenAI 的设计决策</div>
+            <div class="wi-title">这个「望文生义」的命名，<br>影响了全世界。</div>
+          </div>
+          <div class="wi-divider"></div>
+          <div class="wi-right">
+            <div class="wi-item">
+              <div class="wi-item-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>GPT + <code>/chat/completions</code> 这套范式，率先引爆了市场</div>
+            </div>
+            <div class="wi-item">
+              <div class="wi-item-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>全球开发者、框架、工具链全部对齐这套接口设计</div>
+            </div>
+            <div class="wi-item">
+              <div class="wi-item-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>理解「对话 = 补全」，是读懂所有 AI 工程化的起点</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let step = 0;
+const AI_ANSWER = '紫霞仙子是电影《大话西游》中的角色，由朱茵饰演，是至尊宝的爱人。';
+let typingTimer = null;
+
+function startTyping() {
+  const btn = document.getElementById('nextBtn');
+  btn.disabled = true;
+  document.getElementById('seg2').classList.add('show');
+  document.getElementById('cursor').style.display = 'inline-block';
+  const output = document.getElementById('aiOutput');
+  output.textContent = '';
+  let idx = 0;
+  typingTimer = setInterval(() => {
+    if (idx >= AI_ANSWER.length) {
+      clearInterval(typingTimer);
+      typingTimer = null;
+      document.getElementById('cursor').style.display = 'none';
+      document.getElementById('insightRow').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('worldImpact').classList.add('show');
+      }, 400);
+      btn.disabled = false;
+      btn.textContent = '完成 ✓';
+      btn.style.background = '#16a34a';
+      btn.onclick = null;
+      document.getElementById('replayBtn').style.display = 'inline-block';
+      return;
+    }
+    output.textContent += AI_ANSWER[idx];
+    idx++;
+  }, 38);
+}
+
+function nextStep() {
+  step++;
+  if (step === 1) {
+    document.getElementById('apiRow0').classList.add('show');
+    setTimeout(() => document.getElementById('apiRow1').classList.add('show'), 250);
+  }
+  else if (step === 2) {
+    document.getElementById('cardAmber').classList.add('show');
+    document.getElementById('seg0').classList.add('show');
+  }
+  else if (step === 3) {
+    document.getElementById('cardBlue').classList.add('show');
+    document.getElementById('seg1').classList.add('show');
+  }
+  else if (step === 4) {
+    startTyping();
+  }
+}
+
+function replayAll() {
+  if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
+  step = 0;
+  const btn = document.getElementById('nextBtn');
+  btn.textContent = '下一步 →';
+  btn.onclick = nextStep;
+  btn.disabled = false;
+  document.getElementById('replayBtn').style.display = 'none';
+
+  // 重置 API 行
+  document.getElementById('apiRow0').classList.remove('show');
+  document.getElementById('apiRow1').classList.remove('show');
+  // 重置卡片
+  document.getElementById('cardAmber').classList.remove('show');
+  document.getElementById('cardBlue').classList.remove('show');
+  // 重置右侧
+  document.getElementById('seg0').classList.remove('show');
+  document.getElementById('seg1').classList.remove('show');
+  document.getElementById('seg2').classList.remove('show');
+  document.getElementById('aiOutput').textContent = '';
+  document.getElementById('cursor').style.display = 'none';
+  document.getElementById('insightRow').classList.remove('show');
+  document.getElementById('worldImpact').classList.remove('show');
+  btn.style.background = '';
+}
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

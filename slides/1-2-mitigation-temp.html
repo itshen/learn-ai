@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>参数调优：Temperature 与 Top-P</title>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+  --success: #16a34a;
+  --amber: #d97706;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0; background-color: var(--bg-color);
+}
+.badge {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 14px; border-radius: 8px; white-space: nowrap;
+  background: rgba(124,58,237,0.1); color: var(--purple);
+}
+.title-area h2 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* Left */
+.left-panel {
+  width: 32%; padding: 20px 22px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+}
+.left-panel::-webkit-scrollbar { width: 3px; }
+.left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.section-label {
+  font-size: 12px; font-weight: 800; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+.scene-grid { display: flex; flex-direction: column; gap: 7px; }
+.scene-card {
+  background: white; border-radius: 12px; padding: 11px 14px;
+  border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 12px;
+}
+.scene-card:hover { border-color: rgba(124,58,237,0.2); }
+.scene-card.active { border-color: var(--purple); background: rgba(124,58,237,0.03); }
+.scene-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.scene-name { font-size: 14px; font-weight: 700; color: var(--text-main); }
+.scene-params { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.scene-params b { color: var(--purple); }
+
+.param-guide {
+  background: white; border-radius: 12px; padding: 14px 16px; flex-shrink: 0;
+}
+.param-guide-title { font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 10px; }
+.param-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.param-row:last-child { margin-bottom: 0; }
+.param-name { font-size: 14px; font-weight: 700; color: var(--text-main); min-width: 90px; }
+.param-scale {
+  flex: 1; height: 10px; border-radius: 5px;
+  background: linear-gradient(to right, #22c55e, #f59e0b, #ef4444);
+  position: relative;
+}
+.param-marker {
+  position: absolute; top: -4px; width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--text-main);
+  transform: translateX(-50%); transition: left 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.param-hint { font-size: 13px; min-width: 56px; text-align: right; font-weight: 700; }
+.param-hint.conservative { color: var(--success); }
+.param-hint.creative { color: var(--danger); }
+
+/* Right */
+.right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 28px; min-width: 0; gap: 14px;
+}
+.right-top { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.right-top h3 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+.tab-group { display: flex; gap: 5px; }
+.tab-btn {
+  padding: 6px 16px; border-radius: 9px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: white; color: var(--text-sub); transition: all 0.15s;
+}
+.tab-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+/* Tab: sliders + output */
+.sliders-area {
+  background: white; border-radius: 14px; padding: 18px 22px; flex-shrink: 0;
+}
+.slider-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.slider-row:last-child { margin-bottom: 0; }
+.slider-label { font-size: 15px; font-weight: 700; color: var(--text-main); min-width: 110px; }
+.slider-label span { font-size: 12px; font-weight: 600; color: var(--text-sub); display: block; }
+input[type=range] {
+  -webkit-appearance: none; flex: 1; height: 8px; border-radius: 4px;
+  background: rgba(0,0,0,0.08); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: white; border: 2px solid var(--purple);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15); cursor: pointer;
+}
+.slider-val {
+  font-size: 18px; font-weight: 800; color: var(--purple);
+  min-width: 46px; text-align: right; font-variant-numeric: tabular-nums;
+}
+.output-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.output-label { font-size: 12px; font-weight: 800; color: var(--text-sub); letter-spacing: 0.3px; flex-shrink: 0; }
+.output-samples { flex: 1; display: flex; gap: 16px; min-height: 0; align-items: stretch; }
+.output-col { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.output-col-label { font-size: 13px; font-weight: 700; color: var(--text-sub); flex-shrink: 0; }
+.sample-box {
+  flex: 1; background: rgba(0,0,0,0.03); border-radius: 12px; padding: 14px 16px;
+  font-size: 14px; line-height: 1.8; color: var(--text-main); overflow-y: auto;
+  border: 1px solid transparent; transition: border-color 0.3s;
+}
+.sample-box::-webkit-scrollbar { width: 3px; }
+.sample-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.sample-box.risk-low { border-color: rgba(22,163,106,0.2); }
+.sample-box.risk-med { border-color: rgba(217,119,6,0.2); }
+.sample-box.risk-high { border-color: rgba(229,62,62,0.25); }
+.risk-tag {
+  display: inline-block; font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 5px; margin-bottom: 8px;
+}
+.risk-tag.low { background: rgba(22,163,106,0.1); color: var(--success); }
+.risk-tag.med { background: rgba(217,119,6,0.1); color: var(--amber); }
+.risk-tag.high { background: rgba(229,62,62,0.1); color: var(--danger); }
+.hl-red { color: var(--danger); font-weight: 600; }
+.hl-green { color: var(--success); font-weight: 600; }
+
+/* Tab: Why it works */
+.why-view {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px;
+}
+.why-top-row { display: flex; gap: 14px; min-height: 0; flex: 1; }
+.why-card {
+  flex: 1; background: white; border-radius: 14px; padding: 22px 26px;
+  display: flex; flex-direction: column; gap: 14px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.why-card-title {
+  font-size: 13px; font-weight: 800; color: var(--text-sub); letter-spacing: 0.5px; text-transform: uppercase;
+}
+.dist-section { display: flex; gap: 20px; align-items: flex-end; flex: 1; }
+.dist-col { flex: 1; display: flex; flex-direction: column; }
+.dist-col-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.dist-bars {
+  display: flex; align-items: flex-end; gap: 5px; height: 90px; margin-bottom: 8px;
+}
+.dist-bar {
+  flex: 1; border-radius: 4px 4px 0 0; transition: height 0.5s ease;
+}
+.dist-word-row {
+  display: flex; gap: 5px;
+}
+.dist-word {
+  flex: 1; font-size: 11px; text-align: center; color: var(--text-sub); font-weight: 600;
+}
+.dist-desc { font-size: 13px; color: var(--text-sub); margin-top: 6px; line-height: 1.6; }
+
+.why-insight-row {
+  background: rgba(124,58,237,0.05); border: 1px solid rgba(124,58,237,0.12); border-radius: 12px; padding: 18px 22px;
+  flex-shrink: 0;
+}
+.why-insight-text {
+  font-size: 15px; color: var(--text-main); line-height: 1.8;
+}
+.why-insight-text b { color: var(--text-main); }
+.why-insight-text .key { color: var(--purple); font-weight: 700; }
+.why-insight-text .key-g { color: var(--success); font-weight: 700; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+  <div class="header">
+    <div class="title-area">
+      <h2>参数调优：Temperature 与 Top-P</h2>
+      <p>PM 视角：API 接入时如何配置采样参数，不同业务场景的推荐值与风险边界。</p>
+    </div>
+    <div class="badge">手段 03 / 04 · 预防</div>
+  </div>
+
+  <div class="main-area">
+    <div class="left-panel">
+      <div>
+        <div class="section-label">业务场景推荐参数</div>
+        <div class="scene-grid">
+          <div class="scene-card active" onclick="selectScene(0)">
+            <div class="scene-icon" style="background:rgba(229,62,62,0.08);">⚖️</div>
+            <div class="scene-info">
+              <div class="scene-name">法律 / 合规 / 客服</div>
+              <div class="scene-params">推荐：<b>T=0.1  Top-P=0.8</b></div>
+            </div>
+          </div>
+          <div class="scene-card" onclick="selectScene(1)">
+            <div class="scene-icon" style="background:rgba(0,102,255,0.08);">📊</div>
+            <div class="scene-info">
+              <div class="scene-name">报告撰写 / 摘要总结</div>
+              <div class="scene-params">推荐：<b>T=0.3  Top-P=0.9</b></div>
+            </div>
+          </div>
+          <div class="scene-card" onclick="selectScene(2)">
+            <div class="scene-icon" style="background:rgba(22,163,106,0.08);">💬</div>
+            <div class="scene-info">
+              <div class="scene-name">通用对话 / 解答咨询</div>
+              <div class="scene-params">推荐：<b>T=0.7  Top-P=0.95</b></div>
+            </div>
+          </div>
+          <div class="scene-card" onclick="selectScene(3)">
+            <div class="scene-icon" style="background:rgba(124,58,237,0.08);">✍️</div>
+            <div class="scene-info">
+              <div class="scene-name">创意写作 / 头脑风暴</div>
+              <div class="scene-params">推荐：<b>T=1.2  Top-P=1.0</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-guide">
+        <div class="param-guide-title">参数当前位置</div>
+        <div class="param-row">
+          <div class="param-name">Temperature</div>
+          <div class="param-scale"><div class="param-marker" id="tMarker" style="left:50%;"></div></div>
+          <div class="param-hint" id="tHint">-</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-sub);margin-bottom:10px;padding:0 0 0 100px;">
+          <span>保守</span><span>平衡</span><span>发散</span>
+        </div>
+        <div class="param-row">
+          <div class="param-name">Top-P</div>
+          <div class="param-scale"><div class="param-marker" id="pMarker" style="left:50%;"></div></div>
+          <div class="param-hint" id="pHint">-</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-sub);padding:0 0 0 100px;">
+          <span>窄候选</span><span>适中</span><span>全集</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="right-top">
+        <h3 id="rightTitle">参数调节 × 输出质量</h3>
+        <div class="tab-group">
+          <button class="tab-btn active" onclick="setTab('demo')">交互演示</button>
+          <button class="tab-btn" onclick="setTab('why')">为什么有效</button>
+        </div>
+      </div>
+
+      <!-- Tab: Demo -->
+      <div id="tabDemo" style="flex:1;display:flex;flex-direction:column;gap:14px;min-height:0;">
+        <div class="sliders-area">
+          <div class="slider-row">
+            <div class="slider-label">Temperature<span>控制随机程度</span></div>
+            <input type="range" id="tempSlider" min="0" max="200" value="10" oninput="onParamChange()">
+            <div class="slider-val" id="tempVal">0.10</div>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Top-P<span>控制候选词范围</span></div>
+            <input type="range" id="topPSlider" min="0" max="100" value="80" oninput="onParamChange()">
+            <div class="slider-val" id="topPVal">0.80</div>
+          </div>
+        </div>
+        <div class="output-area">
+          <div class="output-label">当前参数下的输出质量预估</div>
+          <div class="output-samples" id="outputSamples"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Why -->
+      <div id="tabWhy" style="flex:1;min-height:0;display:none;">
+        <div class="why-view">
+          <div class="why-top-row">
+            <div class="why-card">
+              <div class="why-card-title">Token 推 Token 的概率分布</div>
+              <div class="dist-section">
+                <div class="dist-col">
+                  <div class="dist-col-title" style="color:var(--success);">低温 T = 0.1　分布尖锐</div>
+                  <div class="dist-bars">
+                    <div class="dist-bar" style="height:95%;background:#16a34a;"></div>
+                    <div class="dist-bar" style="height:14%;background:rgba(22,163,106,0.3);"></div>
+                    <div class="dist-bar" style="height:7%;background:rgba(22,163,106,0.18);"></div>
+                    <div class="dist-bar" style="height:3%;background:rgba(22,163,106,0.1);"></div>
+                    <div class="dist-bar" style="height:2%;background:rgba(22,163,106,0.07);"></div>
+                  </div>
+                  <div class="dist-word-row">
+                    <div class="dist-word" style="color:var(--success);">六个月</div>
+                    <div class="dist-word">三个月</div>
+                    <div class="dist-word">一年</div>
+                    <div class="dist-word">…</div>
+                    <div class="dist-word">…</div>
+                  </div>
+                  <div class="dist-desc">最高概率词几乎被"锁定"，<br>模型输出稳定、可预期</div>
+                </div>
+                <div class="dist-col">
+                  <div class="dist-col-title" style="color:var(--danger);">高温 T = 2.0　分布平坦</div>
+                  <div class="dist-bars">
+                    <div class="dist-bar" style="height:30%;background:#e53e3e;"></div>
+                    <div class="dist-bar" style="height:27%;background:rgba(229,62,62,0.65);"></div>
+                    <div class="dist-bar" style="height:22%;background:rgba(229,62,62,0.45);"></div>
+                    <div class="dist-bar" style="height:18%;background:rgba(229,62,62,0.3);"></div>
+                    <div class="dist-bar" style="height:14%;background:rgba(229,62,62,0.2);"></div>
+                  </div>
+                  <div class="dist-word-row">
+                    <div class="dist-word">六个月</div>
+                    <div class="dist-word">三个月</div>
+                    <div class="dist-word" style="color:var(--danger);">永远</div>
+                    <div class="dist-word" style="color:var(--danger);">随便</div>
+                    <div class="dist-word" style="color:var(--danger);">…</div>
+                  </div>
+                  <div class="dist-desc">低概率词也有机会被选中，<br>幻觉和"意外词"随之增加</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="why-insight-row">
+            <div class="why-insight-text">
+              每步推 Token 时，模型先算出候选词的 logits，再经过 softmax 得到概率分布。
+              Temperature <span class="key">在 softmax 之前对 logits 做等比缩放</span>——
+              T 越小，缩放后差距越大，分布越尖锐；T 越大，差距越小，分布越平坦。
+              <b>这是最直接干预"每步采样随机性"的手段，</b>
+              但它不能区分哪步该保守、哪步可以发散——<span class="key-g">所以事实问答场景要全程低温，创意场景才适合放开。</span>
+            </div>
+          </div>
+
+          <div style="background:rgba(229,62,62,0.04);border:1px solid rgba(229,62,62,0.15);border-radius:12px;padding:16px 22px;flex-shrink:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:10px;letter-spacing:0.3px;">⚠ 局限性：参数调低不等于消灭幻觉</div>
+            <div style="display:flex;gap:20px;">
+              <div style="flex:1;">
+                <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">低温锁定的是"最可能"，而非"最正确"</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                  T=0 只是让模型每步都选概率最高的词——但如果训练数据里那个问题本身就是错的，<span style="color:var(--danger);font-weight:600;">最高概率词依然是错误答案，且输出极其稳定地错</span>
+                </div>
+              </div>
+              <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">只影响随机性，不影响知识边界</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                  Temperature 控制的是"每步怎么采样"，不能给模型注入它没有的知识——<span style="color:var(--danger);font-weight:600;">模型不知道的事，低温下也照样编，只是编得更"一致"</span>
+                </div>
+              </div>
+              <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+              <div style="flex:1;">
+                <div style="font-size:14px;color:var(--text-main);font-weight:700;margin-bottom:4px;">PM 应对策略</div>
+                <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+                  参数调优是<span style="color:var(--accent);font-weight:600;">成本最低的第一道防线</span>，但不能单独依赖。事实准确性要求高的场景，必须搭配 <span style="color:var(--success);font-weight:600;">RAG</span> 或<span style="color:var(--amber);font-weight:600;">人工审核</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 场景默认参数（用于点击时自动设置滑块）
+const SCENES = [
+  { t: 10, p: 80 },
+  { t: 30, p: 90 },
+  { t: 70, p: 95 },
+  { t: 120, p: 100 },
+];
+
+// 每个场景有多档输出，按 T 值选择对应档
+const SCENE_OUTPUTS = [
+  {
+    name: '法律 / 合规 / 客服',
+    prompt: '试用期最长可以签多久？',
+    tiers: [
+      { maxT: 0.3, risk: 'low',  label: 'T ≤ 0.3 · 精准稳定',
+        text: '根据《劳动合同法》第19条，劳动合同期限三年以上或无固定期限的，试用期<b>不得超过六个月</b>。' },
+      { maxT: 0.7, risk: 'low',  label: 'T 0.3–0.7 · 稍有变化',
+        text: '根据劳动合同法，试用期上限因合同期限而不同，最长<b>不超过六个月</b>。建议您以实际签订的合同期限为准进行核算。' },
+      { maxT: 1.2, risk: 'med',  label: 'T 0.7–1.2 · 开始偏差',
+        text: '试用期一般来说是<b>不超过六个月</b>的，不过<span class="hl-red">有些特殊情况可能会延长到一年</span>，具体还是要看合同约定……' },
+      { maxT: 2.0, risk: 'high', label: 'T > 1.2 · 明显幻觉',
+        text: '试用期最长可以签<span class="hl-red">十二个月</span>，甚至<span class="hl-red">某些行业规定可达十八个月</span>。具体参考<span class="hl-red">《劳动保障促进条例》第37条</span>……' },
+    ]
+  },
+  {
+    name: '报告撰写 / 摘要总结',
+    prompt: '请总结本季度业绩亮点',
+    tiers: [
+      { maxT: 0.3, risk: 'low',  label: 'T ≤ 0.3 · 结构清晰',
+        text: '本季度核心指标达成率 <b>98.2%</b>，用户留存率环比提升 <b>12%</b>，获客成本上升 <b>18%</b>，建议加大自然流量投入。' },
+      { maxT: 0.7, risk: 'low',  label: 'T 0.3–0.7 · 表达稍多',
+        text: '整体来看本季度运营稳健，<b>用户留存表现亮眼</b>，增长 12%。需关注获客成本上行趋势，建议着力优化自然流量渠道以降低边际成本。' },
+      { maxT: 1.2, risk: 'med',  label: 'T 0.7–1.2 · 数据不稳',
+        text: '本季度增长态势良好，留存提升明显，<span class="hl-red">DAU 突破 500 万</span>，<span class="hl-red">营收同比增长 35%</span>——整体超出市场预期，值得重点关注……' },
+      { maxT: 2.0, risk: 'high', label: 'T > 1.2 · 编造数据',
+        text: '<span class="hl-red">本季度营收 8.7 亿</span>，同比大涨 <span class="hl-red">67%</span>，<span class="hl-red">净利润率达 23%</span>，创历史新高！用户规模突破<span class="hl-red"> 2000 万</span>……' },
+    ]
+  },
+  {
+    name: '通用对话 / 解答咨询',
+    prompt: '这个功能从哪个版本开始支持？',
+    tiers: [
+      { maxT: 0.3, risk: 'low',  label: 'T ≤ 0.3 · 保守回答',
+        text: '我需要确认一下具体版本信息，目前无法确定该功能的上线版本，建议查阅官方发布日志或联系技术支持。' },
+      { maxT: 0.7, risk: 'low',  label: 'T 0.3–0.7 · 正常对话',
+        text: '这个功能应该是在<b>最近几个版本</b>中加入的，您可以在设置里查看版本号，然后对比官方更新日志确认。' },
+      { maxT: 1.2, risk: 'med',  label: 'T 0.7–1.2 · 含糊推断',
+        text: '这个功能<span class="hl-red">大概</span>是在 v2.1 就已经支持了，不过具体细节可能需要再核实一下，我<span class="hl-red">印象里</span>是这样……' },
+      { maxT: 2.0, risk: 'high', label: 'T > 1.2 · 幻觉版本号',
+        text: '从 <span class="hl-red">v1.4.2</span> 开始就已经支持了！你只需要在<span class="hl-red">「高级设置 > 实验功能」</span>里开启就好，这个功能当时还上了<span class="hl-red">官方博客头条</span>呢。' },
+    ]
+  },
+  {
+    name: '创意写作 / 头脑风暴',
+    prompt: '写一个关于月光宝盒的句子',
+    tiers: [
+      { maxT: 0.3, risk: 'low',  label: 'T ≤ 0.3 · 平稳保守',
+        text: '月光宝盒是一件神奇的法器，可以穿越时空，带人回到过去。' },
+      { maxT: 0.7, risk: 'low',  label: 'T 0.3–0.7 · 有些文采',
+        text: '月光宝盒碎了。碎成了七块，每块流入了不同人的梦里，带着各自不愿醒来的从前。' },
+      { maxT: 1.2, risk: 'low',  label: 'T 0.7–1.2 · 创意涌现',
+        text: '月光宝盒藏在时间的褶皱里，每打开一次，就会有一段被遗忘的记忆悄悄溜走——你永远不知道失去的是哪一天。' },
+      { maxT: 2.0, risk: 'high', label: 'T > 1.2 · 跑偏幻觉',
+        text: '月光宝盒和<span class="hl-red">紫薇格格</span>在<span class="hl-red">天宫的麦当劳</span>相遇，宝玉点了一杯<span class="hl-red">至尊宝奶茶</span>，贾母刷抖音发现了<span class="hl-red">哈利波特</span>……' },
+    ]
+  }
+];
+
+let currentScene = 0;
+let currentTab = 'demo';
+
+function selectScene(i) {
+  currentScene = i;
+  document.querySelectorAll('.scene-card').forEach((c, j) => c.classList.toggle('active', j === i));
+  const s = SCENES[i];
+  document.getElementById('tempSlider').value = s.t;
+  document.getElementById('topPSlider').value = s.p;
+  onParamChange();
+}
+
+function setTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', (i === 0) === (t === 'demo')));
+  document.getElementById('tabDemo').style.display = t === 'demo' ? 'flex' : 'none';
+  document.getElementById('tabWhy').style.display = t === 'why' ? 'block' : 'none';
+}
+
+function onParamChange() {
+  const t = document.getElementById('tempSlider').value / 100;
+  const p = document.getElementById('topPSlider').value / 100;
+  document.getElementById('tempVal').textContent = t.toFixed(2);
+  document.getElementById('topPVal').textContent = p.toFixed(2);
+
+  document.getElementById('tMarker').style.left = (t / 2 * 100) + '%';
+  document.getElementById('pMarker').style.left = (p * 100) + '%';
+
+  const tHint = document.getElementById('tHint');
+  if (t <= 0.3) { tHint.textContent = '保守'; tHint.className = 'param-hint conservative'; }
+  else if (t <= 0.9) { tHint.textContent = '平衡'; tHint.className = 'param-hint'; tHint.style.color = 'var(--amber)'; }
+  else { tHint.textContent = '发散'; tHint.className = 'param-hint creative'; }
+
+  const pHint = document.getElementById('pHint');
+  if (p <= 0.7) { pHint.textContent = '保守'; pHint.className = 'param-hint conservative'; }
+  else if (p <= 0.9) { pHint.textContent = '平衡'; pHint.className = 'param-hint'; pHint.style.color = 'var(--amber)'; }
+  else { pHint.textContent = '宽泛'; pHint.className = 'param-hint creative'; }
+
+  renderOutputs();
+}
+
+function getTier(sceneIdx, t) {
+  const tiers = SCENE_OUTPUTS[sceneIdx].tiers;
+  for (const tier of tiers) {
+    if (t <= tier.maxT) return tier;
+  }
+  return tiers[tiers.length - 1];
+}
+
+function renderOutputs() {
+  const container = document.getElementById('outputSamples');
+  const t = document.getElementById('tempSlider').value / 100;
+  const p = document.getElementById('topPSlider').value / 100;
+  const sceneData = SCENE_OUTPUTS[currentScene];
+  const tier = getTier(currentScene, t);
+
+  const riskMap = { low: '✓ 幻觉风险低', med: '△ 有偏差风险', high: '⚠ 高幻觉风险' };
+
+  container.innerHTML = `
+    <div class="output-col" style="flex:1;">
+      <div class="output-col-label" style="font-size:14px;margin-bottom:6px;">用户提问</div>
+      <div style="background:var(--accent);color:white;padding:12px 16px;border-radius:12px;font-size:15px;line-height:1.7;align-self:flex-end;max-width:90%;margin-bottom:8px;">
+        ${sceneData.prompt}
+      </div>
+      <div class="output-col-label" style="font-size:14px;margin-bottom:6px;">AI 回答 · <span style="color:var(--purple)">T = ${t.toFixed(2)}  Top-P = ${p.toFixed(2)}</span></div>
+      <div class="sample-box risk-${tier.risk}" style="flex:1;font-size:15px;line-height:1.9;">
+        <div class="risk-tag ${tier.risk}" style="margin-bottom:10px;">${riskMap[tier.risk]}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px;font-weight:600;">${tier.label}</div>
+        <div>${tier.text}</div>
+      </div>
+    </div>
+    <div style="width:1px;background:rgba(0,0,0,0.06);flex-shrink:0;"></div>
+    <div class="output-col" style="flex:1;">
+      <div class="output-col-label" style="font-size:14px;margin-bottom:6px;">概率分布 + Top-P 截断</div>
+      <div style="background:white;border-radius:12px;padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;color:var(--text-sub);font-weight:600;">T = ${t.toFixed(2)} 下的概率分布</div>
+          <div style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(124,58,237,0.08);color:var(--purple);">Top-P = ${p.toFixed(2)}</div>
+        </div>
+        ${renderMiniDist(t, p)}
+        <div style="font-size:13px;color:var(--text-sub);line-height:1.7;border-top:1px solid rgba(0,0,0,0.05);padding-top:10px;">
+          ${getDistDesc(t, p)}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderMiniDist(t, p) {
+  const words = ['正确答案', '相关词A', '相关词B', '偏差词', '幻觉词'];
+  const logits = [2.8, 1.6, 0.9, 0.3, -0.5];
+  const scaled = logits.map(l => l / Math.max(t, 0.05));
+  const maxL = Math.max(...scaled);
+  const exps = scaled.map(l => Math.exp(l - maxL));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  const probs = exps.map(e => e / sum);
+
+  // 计算 Top-P 截断：累积概率 >= p 后的词被排除
+  let cumulative = 0;
+  const included = probs.map(prob => {
+    if (cumulative >= p) return false;
+    cumulative += prob;
+    return true;
+  });
+
+  const colors = ['var(--success)', 'var(--success)', 'var(--amber)', 'var(--amber)', 'var(--danger)'];
+
+  return words.map((w, i) => {
+    const isIncluded = included[i];
+    const barColor = isIncluded ? colors[i] : 'rgba(0,0,0,0.1)';
+    const textColor = isIncluded ? colors[i] : 'rgba(0,0,0,0.2)';
+    const cutTag = !isIncluded ? `<span style="font-size:10px;font-weight:700;color:rgba(0,0,0,0.25);margin-left:4px;">截断</span>` : '';
+    return `
+    <div style="display:flex;align-items:center;gap:8px;opacity:${isIncluded ? 1 : 0.4};">
+      <div style="font-size:12px;color:${textColor};font-weight:700;min-width:58px;">${w}${cutTag}</div>
+      <div style="flex:1;height:14px;background:rgba(0,0,0,0.04);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${(probs[i]*100).toFixed(1)}%;background:${barColor};border-radius:4px;transition:width 0.4s ease;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${textColor};min-width:38px;text-align:right;">${(probs[i]*100).toFixed(1)}%</div>
+    </div>`;
+  }).join('');
+}
+
+function getDistDesc(t, p) {
+  const logits = [2.8, 1.6, 0.9, 0.3, -0.5];
+  const scaled = logits.map(l => l / Math.max(t, 0.05));
+  const maxL = Math.max(...scaled);
+  const exps = scaled.map(l => Math.exp(l - maxL));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  const probs = exps.map(e => e / sum);
+  let cumulative = 0;
+  let includedCount = 0;
+  for (const prob of probs) {
+    if (cumulative >= p) break;
+    cumulative += prob;
+    includedCount++;
+  }
+  const tDesc = t <= 0.3 ? `<b style="color:var(--success)">低温</b>分布尖锐` :
+                t <= 0.7 ? `<b style="color:var(--amber)">中温</b>分布适中` :
+                t <= 1.2 ? `<b style="color:var(--amber)">偏高温</b>分布趋平` :
+                           `<b style="color:var(--danger)">高温</b>分布平坦`;
+  const pDesc = includedCount <= 1 ? `Top-P 极窄，<b style="color:var(--success)">只保留 1 个候选词</b>，输出完全确定` :
+                includedCount === 2 ? `Top-P 截断后仅剩 <b style="color:var(--success)">2 个候选词</b>参与采样` :
+                includedCount === 3 ? `Top-P 保留 <b style="color:var(--amber)">3 个候选词</b>，偏差词已被截断` :
+                includedCount === 4 ? `Top-P 保留 <b style="color:var(--amber)">4 个词</b>，偏差词进入但幻觉词被截断` :
+                `Top-P 全开，<b style="color:var(--danger)">所有候选词均可被采样</b>，包括幻觉词`;
+  return `${tDesc}，${pDesc}`;
+}
+
+onParamChange();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

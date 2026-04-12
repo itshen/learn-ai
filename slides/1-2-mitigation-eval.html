@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>评测 + Human-in-the-Loop</title>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+  --success: #16a34a;
+  --amber: #d97706;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0; background-color: var(--bg-color);
+}
+.badge {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 14px; border-radius: 8px; white-space: nowrap;
+  background: rgba(217,119,6,0.1); color: var(--amber);
+}
+.title-area h2 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+.title-area p { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
+.main-area { flex: 1; display: flex; min-height: 0; }
+
+/* Left */
+.left-panel {
+  width: 34%; padding: 20px 24px;
+  border-right: 1px solid rgba(0,0,0,0.06);
+  display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
+}
+.left-panel::-webkit-scrollbar { width: 3px; }
+.left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+.section-label {
+  font-size: 12px; font-weight: 800; color: var(--text-sub);
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+.phase-card {
+  background: white; border-radius: 12px; padding: 14px 18px;
+  border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+}
+.phase-card:hover { border-color: rgba(217,119,6,0.25); }
+.phase-card.active { border-color: var(--amber); background: rgba(217,119,6,0.03); }
+.phase-tag { font-size: 12px; font-weight: 800; color: var(--amber); margin-bottom: 5px; }
+.phase-name { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.phase-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+
+.insight-box {
+  background: rgba(22,163,106,0.04);
+  border: 1px solid rgba(22,163,106,0.15);
+  border-radius: 12px; padding: 14px 18px;
+}
+.insight-title { font-size: 12px; font-weight: 800; color: var(--success); margin-bottom: 10px; letter-spacing: 0.3px; }
+.insight-item {
+  font-size: 13px; color: var(--text-sub); line-height: 1.8; margin-bottom: 6px;
+}
+.insight-item:last-child { margin-bottom: 0; }
+.insight-item b { color: var(--text-main); }
+
+/* Right */
+.right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px 30px; min-width: 0; gap: 14px;
+}
+.right-top { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.right-top h3 { font-size: 17px; font-weight: 700; color: var(--text-main); }
+.right-top .subtitle { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+
+.right-top .tab-btn {
+  padding: 6px 16px; border-radius: 9px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  background: white; color: var(--text-sub); transition: all 0.15s;
+}
+.right-top .tab-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+/* Review simulator */
+.review-area {
+  flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0;
+}
+
+.review-card {
+  background: white; border-radius: 14px; padding: 16px 22px; flex-shrink: 0;
+}
+.review-card-header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
+}
+.review-card-meta { display: flex; gap: 8px; align-items: center; }
+.meta-tag {
+  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 5px;
+}
+.meta-tag.q { background: rgba(0,102,255,0.08); color: var(--accent); }
+.meta-tag.risk-high { background: rgba(229,62,62,0.1); color: var(--danger); }
+.meta-tag.risk-med { background: rgba(217,119,6,0.1); color: var(--amber); }
+.meta-tag.risk-low { background: rgba(22,163,106,0.1); color: var(--success); }
+.review-card-scene { font-size: 13px; color: var(--text-sub); }
+
+.qa-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.qa-q { font-size: 14px; font-weight: 700; color: var(--text-sub); min-width: 20px; }
+.qa-content { font-size: 15px; color: var(--text-main); line-height: 1.7; flex: 1; }
+.qa-content .hl-red { color: var(--danger); font-weight: 600; text-decoration: underline wavy var(--danger); text-underline-offset: 3px; }
+.qa-content .hl-green { color: var(--success); font-weight: 600; }
+
+.review-actions {
+  display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(0,0,0,0.05);
+  padding-top: 10px; margin-top: 2px;
+}
+.review-actions .action-label { font-size: 14px; color: var(--text-sub); font-weight: 700; margin-right: 4px; }
+.action-btn {
+  padding: 7px 18px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1);
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  background: white; color: var(--text-main);
+}
+.action-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.action-btn.approve { border-color: rgba(22,163,106,0.3); color: var(--success); }
+.action-btn.approve:hover { background: rgba(22,163,106,0.06); }
+.action-btn.reject { border-color: rgba(229,62,62,0.3); color: var(--danger); }
+.action-btn.reject:hover { background: rgba(229,62,62,0.06); }
+.action-btn.edit { border-color: rgba(217,119,6,0.3); color: var(--amber); }
+.action-btn.edit:hover { background: rgba(217,119,6,0.06); }
+
+.review-result {
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  display: none; align-items: center; gap: 8px; flex: 1;
+}
+.review-result.visible { display: flex; }
+.review-result.approved { background: rgba(22,163,106,0.06); color: var(--success); border: 1px solid rgba(22,163,106,0.15); }
+.review-result.rejected { background: rgba(229,62,62,0.06); color: var(--danger); border: 1px solid rgba(229,62,62,0.15); }
+.review-result.edited { background: rgba(217,119,6,0.06); color: var(--amber); border: 1px solid rgba(217,119,6,0.15); }
+
+/* Metrics panel */
+.metrics-row { display: flex; gap: 12px; flex-shrink: 0; }
+.metric-card {
+  flex: 1; background: white; border-radius: 12px; padding: 16px 18px;
+  text-align: center;
+}
+.metric-val { font-size: 28px; font-weight: 800; color: var(--text-main); }
+.metric-val.good { color: var(--success); }
+.metric-val.bad { color: var(--danger); }
+.metric-val.neutral { color: var(--amber); }
+.metric-label { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
+.metric-desc { font-size: 12px; color: var(--text-sub); margin-top: 3px; opacity: 0.8; }
+
+/* Why it works */
+.why-box {
+  background: #1c1c1e; border-radius: 12px; padding: 14px 16px;
+  flex-shrink: 0;
+}
+.why-title {
+  font-size: 11px; font-weight: 800; color: #6b7280;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px;
+}
+.gen-flow {
+  display: flex; align-items: center; gap: 3px; flex-wrap: wrap; gap: 3px; margin-bottom: 10px;
+}
+.gen-tok {
+  padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: 700;
+  background: rgba(255,255,255,0.08); color: #9ca3af;
+}
+.gen-tok.emitted { background: rgba(0,102,255,0.2); color: #93c5fd; }
+.gen-tok.halluc { background: rgba(229,62,62,0.2); color: #fca5a5; border: 1px dashed rgba(229,62,62,0.5); }
+.gen-tok.checked { background: rgba(22,163,106,0.2); color: #6ee7b7; border: 1px solid rgba(22,163,106,0.4); }
+.gen-arrow { color: #374151; font-size: 13px; align-self: center; }
+.why-insight {
+  font-size: 13px; color: #9ca3af; line-height: 1.7;
+  border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;
+}
+.why-insight b { color: #e5e7eb; }
+.why-insight .key { color: #fbbf24; font-weight: 700; }
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+  <div class="header">
+    <div class="title-area">
+      <h2>评测 + Human-in-the-Loop 审核机制</h2>
+      <p>PM 视角：如何量化幻觉风险、设计分级审核流程、让"人在回路中"成为产品安全网。</p>
+    </div>
+    <div class="badge">手段 04 / 04 · 检测 + 纠正</div>
+  </div>
+
+  <div class="main-area">
+    <div class="left-panel">
+      <div>
+        <div class="section-label">PM 需要设计的三个环节</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="phase-card active" onclick="selectPhase(0)">
+            <div class="phase-tag">环节 1 · 上线前</div>
+            <div class="phase-name">评测基线：建立幻觉测试集</div>
+            <div class="phase-desc">用一批"已知正确答案"的问题测试模型，量化幻觉率，设定准入门槛。</div>
+          </div>
+          <div class="phase-card" onclick="selectPhase(1)">
+            <div class="phase-tag">环节 2 · 上线后</div>
+            <div class="phase-name">分级审核：高风险内容人工把关</div>
+            <div class="phase-desc">按风险等级自动路由：低风险直接发出，高风险先人工审核再发送。</div>
+          </div>
+          <div class="phase-card" onclick="selectPhase(2)">
+            <div class="phase-tag">环节 3 · 持续优化</div>
+            <div class="phase-name">错误反馈闭环：用线上数据迭代</div>
+            <div class="phase-desc">把审核中发现的幻觉案例收集为 Bad Case，反哺模型优化和 Prompt 调整。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-box">
+        <div class="insight-title">PM 核心认知</div>
+        <div class="insight-item">
+          <b>幻觉率 ≠ 0</b>——所有 LLM 都有幻觉，PM 的目标是把它控制在<b>业务可接受的阈值内</b>，而不是追求消灭。
+        </div>
+        <div class="insight-item">
+          <b>高风险 = 人工兜底</b>——医疗、法律、金融场景，AI 只做初稿，<b>最终确认必须有人签字</b>。
+        </div>
+        <div class="insight-item">
+          <b>指标要写进 PRD</b>——"幻觉率 &lt; 3%"要像"加载时间 &lt; 2s"一样，成为可量化的验收标准。
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel" id="rightPanel">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+const PHASES = [
+  {
+    title: '评测基线 Demo',
+    subtitle: '模拟运行一批测试用例，统计幻觉率',
+    view: 'metrics'
+  },
+  {
+    title: '人工审核台 Demo',
+    subtitle: '模拟高风险回答的人工审核流程',
+    view: 'review'
+  },
+  {
+    title: '错误反馈闭环 Demo',
+    subtitle: '审核中发现的 Bad Case 如何驱动优化',
+    view: 'feedback'
+  }
+];
+
+const REVIEW_CASES = [
+  {
+    scene: '金融客服 · 理财建议',
+    riskLevel: 'risk-high',
+    riskLabel: '高风险',
+    q: '我有50万，想买一个年化8%的低风险产品，有推荐吗？',
+    a: '我们有一款<span class="hl-red">固定年化8.5%的低风险理财产品</span>，<span class="hl-red">100%保本保息</span>，起购金额5万元……',
+    resultText: { approve: '已通过发送（风险：此类表述可能违反监管规定）', reject: '已拒绝，转人工处理 ✓', edit: '已编辑：移除"保本保息"等不合规表述' }
+  },
+  {
+    scene: '医疗咨询 · 用药建议',
+    riskLevel: 'risk-high',
+    riskLabel: '高风险',
+    q: '我最近血糖高，可以自己加大二甲双胍剂量吗？',
+    a: '血糖高时可以适当<span class="hl-red">自行增加二甲双胍剂量至每日3g</span>，同时注意多喝水……',
+    resultText: { approve: '已通过发送（风险：剂量建议需医生指导）', reject: '已拒绝，强制转接医生 ✓', edit: '已编辑：移除具体剂量，添加"请咨询医生"提示' }
+  },
+  {
+    scene: '产品支持 · 功能咨询',
+    riskLevel: 'risk-low',
+    riskLabel: '低风险',
+    q: '如何导出数据到 Excel？',
+    a: '<span class="hl-green">点击右上角「导出」按钮，选择「Excel格式」，即可下载。支持自定义时间范围和字段筛选。</span>',
+    resultText: { approve: '已通过直接发送 ✓', reject: '已拒绝并重新生成', edit: '已编辑并补充截图链接' }
+  }
+];
+
+const METRICS = [
+  { val: '94.2%', cls: 'good', label: '事实准确率', desc: '测试集 200 题中 188 题无幻觉' },
+  { val: '5.8%', cls: 'bad', label: '幻觉率', desc: '目标 < 3%，当前未达标' },
+  { val: '2.3s', cls: 'neutral', label: '平均响应时延', desc: '含检索时间' },
+  { val: '78%', cls: 'neutral', label: 'RAG 检索命中率', desc: '目标 > 85%，需优化' },
+];
+
+const FEEDBACK_STEPS = [
+  { icon: '🔴', title: 'Bad Case 发现', desc: '审核员标记了一条"编造利率"的错误回答，打上 bad-case 标签', tag: '来源：人工审核' },
+  { icon: '📋', title: '归因分析', desc: '分析根因：Prompt 中未限制"不得引用具体利率数字"，模型自行补全', tag: '根因：Prompt 缺约束' },
+  { icon: '🔧', title: 'Prompt 迭代', desc: '更新 System Prompt，添加约束：禁止提及具体利率，改为"请咨询理财顾问"', tag: '修复：Prompt 工程' },
+  { icon: '✅', title: '回归验证', desc: '将该 bad case 加入测试集，重新评测，验证修复有效、无新增问题', tag: '验证：回归测试' },
+];
+
+let currentPhase = 0;
+let currentTab = 'demo';
+
+function selectPhase(i) {
+  currentPhase = i;
+  currentTab = 'demo';
+  document.querySelectorAll('.phase-card').forEach((c, j) => c.classList.toggle('active', j === i));
+  renderPhase();
+}
+
+const WHY_HTML = `
+  <div style="display:none;" id="viewWhy" style="flex:1;min-height:0;">
+    <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:28px 32px;height:100%;display:flex;flex-direction:column;gap:20px;overflow-y:auto;">
+      <div style="display:flex;gap:16px;flex:1;min-height:0;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;font-weight:800;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;">无人工拦截</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:#1d4ed8;border:1px solid rgba(0,102,255,0.2);">试用期</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:#1d4ed8;border:1px solid rgba(0,102,255,0.2);">最长</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:#dc2626;border:1px dashed rgba(229,62,62,0.35);">20天</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:#dc2626;border:1px dashed rgba(229,62,62,0.35);">…继续编</span>
+          </div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.7;">错了但不知道——模型以错误 Token 为<br>基础继续推，误差不断累积</div>
+        </div>
+        <div style="width:1px;background:rgba(0,0,0,0.07);flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;font-weight:800;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;">有评测 + 人工拦截</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:#1d4ed8;border:1px solid rgba(0,102,255,0.2);">试用期</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:#1d4ed8;border:1px solid rgba(0,102,255,0.2);">最长</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:#dc2626;border:1px dashed rgba(229,62,62,0.35);">20天</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(22,163,106,0.08);color:#15803d;border:1px solid rgba(22,163,106,0.3);">⏸ 拦截</span>
+            <span style="color:#9ca3af;font-size:16px;">→</span>
+            <span style="padding:6px 12px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(22,163,106,0.08);color:#15803d;border:1px solid rgba(22,163,106,0.3);">✓ 纠正</span>
+          </div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.7;">外部纠错层在输出端架设"审查网"，<br>弥补模型单向生成的根本缺陷</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:18px 22px;flex-shrink:0;">
+        <div style="font-size:16px;color:#374151;line-height:1.9;">
+          模型<b style="color:#111827;">没有自我检查机制</b>——推出一个错误 Token 后，它会以这个错误为基础继续往下推，误差累积。
+          评测 + 人工审核是<span style="color:#d97706;font-weight:700;">在模型输出端架一个外部纠错层</span>，
+          弥补了「Token 推 Token 单向不回头」的根本缺陷。
+          <b style="color:#111827;">前三个手段改变概率，这一手段拦截结果。</b>
+        </div>
+      </div>
+      <div style="background:rgba(229,62,62,0.04);border:1px solid rgba(229,62,62,0.15);border-radius:12px;padding:16px 22px;flex-shrink:0;">
+        <div style="font-size:13px;font-weight:800;color:#dc2626;margin-bottom:10px;letter-spacing:0.3px;">⚠ 局限性：评测 + 人工审核不是终点</div>
+        <div style="display:flex;gap:20px;">
+          <div style="flex:1;">
+            <div style="font-size:14px;color:#111827;font-weight:700;margin-bottom:4px;">人工成本不可线性扩展</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.7;">
+              用户量增长后，每条输出都依赖人工审核的模式难以持续——<span style="color:#dc2626;font-weight:600;">HILT 是冷启动阶段的兜底策略，不是规模化阶段的长期方案</span>
+            </div>
+          </div>
+          <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;color:#111827;font-weight:700;margin-bottom:4px;">评测指标有滞后盲区</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.7;">
+              评测集覆盖的是已知风险点，模型在<span style="color:#dc2626;font-weight:600;">评测集之外的长尾问题上仍可能大量幻觉</span>——评测通过 ≠ 全面可靠
+            </div>
+          </div>
+          <div style="width:1px;background:rgba(229,62,62,0.12);flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;color:#111827;font-weight:700;margin-bottom:4px;">PM 应对策略</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.7;">
+              HILT 积累的审核数据应转化为<span style="color:#2563eb;font-weight:600;">评测集持续扩充</span>与<span style="color:#15803d;font-weight:600;">模型微调训练</span>，让人工成本随时间递减而非线性增长
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+function setTab(t) {
+  currentTab = t;
+  const tabs = ['demo', 'why'];
+  document.querySelectorAll('.right-tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === t));
+  document.getElementById('viewDemo').style.display = t === 'demo' ? 'flex' : 'none';
+  document.getElementById('viewWhy').style.display = t === 'why' ? 'flex' : 'none';
+}
+
+function renderPhase() {
+  const p = PHASES[currentPhase];
+  const panel = document.getElementById('rightPanel');
+
+  const tabHeader = `
+    <div class="right-top" style="flex-shrink:0;">
+      <div><h3>${p.title}</h3><div class="subtitle">${p.subtitle}</div></div>
+      <div style="display:flex;gap:5px;">
+        <button class="right-tab-btn tab-btn ${currentTab === 'demo' ? 'active' : ''}" onclick="setTab('demo')">演示</button>
+        <button class="right-tab-btn tab-btn ${currentTab === 'why' ? 'active' : ''}" onclick="setTab('why')">为什么有效</button>
+      </div>
+    </div>`;
+
+  let demoContent = '';
+  if (p.view === 'metrics') {
+    demoContent = `
+      <div class="metrics-row">
+        ${METRICS.map(m => `
+          <div class="metric-card">
+            <div class="metric-val ${m.cls}">${m.val}</div>
+            <div class="metric-label">${m.label}</div>
+            <div class="metric-desc">${m.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="flex:1;min-height:0;background:white;border-radius:14px;padding:18px 22px;overflow-y:auto;">
+        <div class="section-label" style="margin-bottom:12px;">评测用例样例</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+              <th style="text-align:left;padding:8px 12px;color:var(--text-sub);font-weight:700;">测试问题</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-sub);font-weight:700;">标准答案</th>
+              <th style="text-align:left;padding:8px 12px;color:var(--text-sub);font-weight:700;">模型输出</th>
+              <th style="text-align:center;padding:8px 12px;color:var(--text-sub);font-weight:700;">判定</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.04);">
+              <td style="padding:10px 12px;color:var(--text-main);">试用期最长多久？</td>
+              <td style="padding:10px 12px;color:var(--text-sub);">3年以上合同不超过6个月</td>
+              <td style="padding:10px 12px;color:var(--success);">3年以上合同不超过6个月</td>
+              <td style="padding:10px 12px;text-align:center;"><span style="color:var(--success);font-weight:700;">✓ 正确</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.04);">
+              <td style="padding:10px 12px;color:var(--text-main);">工资必须每月发吗？</td>
+              <td style="padding:10px 12px;color:var(--text-sub);">至少每月支付一次</td>
+              <td style="padding:10px 12px;color:var(--success);">至少每月支付一次</td>
+              <td style="padding:10px 12px;text-align:center;"><span style="color:var(--success);font-weight:700;">✓ 正确</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.04);">
+              <td style="padding:10px 12px;color:var(--text-main);">年假最多多少天？</td>
+              <td style="padding:10px 12px;color:var(--text-sub);">工龄20年以上：15天</td>
+              <td style="padding:10px 12px;color:var(--danger);">工龄20年以上：<b>20天</b></td>
+              <td style="padding:10px 12px;text-align:center;"><span style="color:var(--danger);font-weight:700;">✗ 幻觉</span></td>
+            </tr>
+            <tr>
+              <td style="padding:10px 12px;color:var(--text-main);">哺乳期多少月内不能解雇？</td>
+              <td style="padding:10px 12px;color:var(--text-sub);">哺乳期结束前（约12个月）</td>
+              <td style="padding:10px 12px;color:var(--danger);">哺乳期结束前（约<b>18个月</b>）</td>
+              <td style="padding:10px 12px;text-align:center;"><span style="color:var(--danger);font-weight:700;">✗ 幻觉</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+  } else if (p.view === 'review') {
+    demoContent = `
+      <div class="review-area">
+        ${REVIEW_CASES.map((c, idx) => `
+          <div class="review-card" id="card${idx}">
+            <div class="review-card-header">
+              <div class="review-card-meta">
+                <span class="meta-tag q">Q${idx + 1}</span>
+                <span class="meta-tag ${c.riskLevel}">${c.riskLabel}</span>
+              </div>
+              <div class="review-card-scene">${c.scene}</div>
+            </div>
+            <div class="qa-row"><div class="qa-q">用</div><div class="qa-content">${c.q}</div></div>
+            <div class="qa-row"><div class="qa-q">AI</div><div class="qa-content">${c.a}</div></div>
+            <div class="review-actions">
+              <span class="action-label">审核：</span>
+              <button class="action-btn approve" onclick="doAction(${idx},'approve')">✓ 通过</button>
+              <button class="action-btn reject" onclick="doAction(${idx},'reject')">✗ 拒绝</button>
+              <button class="action-btn edit" onclick="doAction(${idx},'edit')">✎ 编辑后通过</button>
+              <div class="review-result" id="result${idx}"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  } else {
+    demoContent = `
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${FEEDBACK_STEPS.map((step, i) => `
+            <div style="background:white;border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;">
+              <div style="width:42px;height:42px;border-radius:12px;background:rgba(0,0,0,0.04);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${step.icon}</div>
+              <div style="flex:1;">
+                <div style="font-size:16px;font-weight:700;color:var(--text-main);margin-bottom:5px;">${i + 1}. ${step.title}</div>
+                <div style="font-size:14px;color:var(--text-sub);line-height:1.7;">${step.desc}</div>
+                <div style="margin-top:8px;display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:5px;background:rgba(0,102,255,0.08);color:var(--accent);">${step.tag}</div>
+              </div>
+            </div>
+          `).join('<div style="text-align:center;font-size:18px;color:var(--text-sub);">↓</div>')}
+        </div>
+        <div style="background:rgba(22,163,106,0.04);border:1px solid rgba(22,163,106,0.15);border-radius:12px;padding:16px 20px;flex-shrink:0;">
+          <div style="font-size:13px;font-weight:800;color:var(--success);margin-bottom:8px;">PM 指标看板：Bad Case 闭环效率</div>
+          <div style="display:flex;gap:24px;">
+            <div style="font-size:14px;color:var(--text-sub);">发现→修复平均周期：<b style="color:var(--text-main);">3.2天</b></div>
+            <div style="font-size:14px;color:var(--text-sub);">本周新增 bad case：<b style="color:var(--danger);">12条</b></div>
+            <div style="font-size:14px;color:var(--text-sub);">已修复归档：<b style="color:var(--success);">47条</b></div>
+            <div style="font-size:14px;color:var(--text-sub);">回归通过率：<b style="color:var(--text-main);">96.8%</b></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  panel.innerHTML = tabHeader + `
+    <div id="viewDemo" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;">
+      ${demoContent}
+    </div>
+    <div id="viewWhy" style="flex:1;min-height:0;display:none;background:white;border-radius:14px;padding:28px 32px;flex-direction:column;gap:20px;border:1px solid rgba(0,0,0,0.06);">
+      <div style="display:flex;gap:16px;flex:1;min-height:0;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">无人工拦截</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.15);">试用期</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.15);">最长</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:var(--danger);border:1px dashed rgba(229,62,62,0.3);">20天</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:var(--danger);border:1px dashed rgba(229,62,62,0.3);">…继续编</span>
+          </div>
+          <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">错了但不知道——模型以错误 Token 为基础继续推，误差不断累积</div>
+        </div>
+        <div style="width:1px;background:rgba(0,0,0,0.06);flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;font-weight:800;color:var(--text-sub);letter-spacing:0.5px;text-transform:uppercase;">有评测 + 人工拦截</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.15);">试用期</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(0,102,255,0.08);color:var(--accent);border:1px solid rgba(0,102,255,0.15);">最长</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(229,62,62,0.08);color:var(--danger);border:1px dashed rgba(229,62,62,0.3);">20天</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(22,163,106,0.1);color:var(--success);border:1px solid rgba(22,163,106,0.2);">⏸ 拦截</span>
+            <span style="color:var(--text-sub);font-size:16px;">→</span>
+            <span style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:700;background:rgba(22,163,106,0.1);color:var(--success);border:1px solid rgba(22,163,106,0.2);">✓ 纠正</span>
+          </div>
+          <div style="font-size:14px;color:var(--text-sub);line-height:1.8;">外部纠错层在输出端架设"审查网"，弥补模型单向生成的根本缺陷</div>
+        </div>
+      </div>
+      <div style="background:rgba(217,119,6,0.05);border:1px solid rgba(217,119,6,0.15);border-radius:12px;padding:20px 24px;flex-shrink:0;">
+        <div style="font-size:16px;color:var(--text-main);line-height:1.9;">
+          模型<b>没有自我检查机制</b>——推出一个错误 Token 后，它会以这个错误为基础继续往下推，误差累积。
+          评测 + 人工审核是<span style="color:var(--amber);font-weight:700;">在模型输出端架一个外部纠错层</span>，
+          弥补了「Token 推 Token 单向不回头」的根本缺陷。
+          <b>前三个手段改变概率，这一手段拦截结果。</b>
+        </div>
+      </div>
+    </div>`;
+
+  if (currentTab === 'why') {
+    document.getElementById('viewDemo').style.display = 'none';
+    document.getElementById('viewWhy').style.display = 'flex';
+  }
+}
+
+function doAction(idx, action) {
+  const c = REVIEW_CASES[idx];
+  const result = document.getElementById(`result${idx}`);
+  result.className = `review-result visible ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'edited'}`;
+  result.textContent = c.resultText[action];
+
+  // Disable buttons
+  document.querySelectorAll(`#card${idx} .action-btn`).forEach(b => {
+    b.disabled = true;
+    b.style.opacity = '0.4';
+    b.style.cursor = 'default';
+  });
+}
+
+renderPhase();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

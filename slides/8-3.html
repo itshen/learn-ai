@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>动态时间戳：最贵的 System Prompt 设计</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--red);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--red)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+/* 左栏 */
+.left{padding:20px 26px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow:auto}
+.desc{font-size:18px;color:var(--sub);line-height:1.7}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sys-box{border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.sys-box-h{padding:8px 12px;font-size:16px;font-weight:700;border-bottom:1px solid var(--border)}
+.sys-box-b{padding:11px 12px}
+.sys-box.bad .sys-box-h{background:rgba(220,38,38,.06);color:var(--red)}
+.sys-box.good .sys-box-h{background:rgba(22,163,74,.06);color:var(--green)}
+.code-blk{background:#1e1b2e;border-radius:7px;padding:9px 11px;font-size:14px;font-family:'Cascadia Code','Fira Code',monospace;line-height:1.6;color:#cdd6f4;margin-bottom:7px}
+.code-blk .ts{background:rgba(220,38,38,.3);border-radius:2px;padding:0 2px;color:#f38ba8}
+.code-blk .stable{background:rgba(22,163,74,.25);border-radius:2px;padding:0 2px;color:#a6e3a1}
+.metric-row{display:flex;gap:6px;font-size:15px}
+.metric-item{flex:1;text-align:center;background:var(--surface2);border-radius:6px;padding:5px}
+.metric-item .v{font-size:17px;font-weight:700}
+.metric-item .l{font-size:11px;color:var(--muted)}
+.killer-box{background:rgba(234,88,12,.07);border:1px solid rgba(234,88,12,.2);border-radius:10px;padding:10px 14px;font-size:17px;color:var(--text);line-height:1.65}
+.killer-box b{color:var(--orange)}
+.killer-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.killer-tag{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:var(--red);padding:3px 9px;border-radius:5px;font-size:15px;font-weight:600}
+/* 右栏 */
+.right{padding:16px 22px;display:flex;flex-direction:column;gap:10px}
+
+/* 实时对比面板 */
+.live-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.live-header{padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:15px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.live-clock{font-family:monospace;font-size:18px;font-weight:900;color:var(--text);letter-spacing:1px}
+.live-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);overflow:hidden}
+
+.vs-col{background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+.vs-col-h{padding:8px 12px;font-size:15px;font-weight:800;border-bottom:1px solid var(--border);flex-shrink:0}
+.vs-col.bad-col .vs-col-h{background:rgba(220,38,38,.05);color:var(--red)}
+.vs-col.good-col .vs-col-h{background:rgba(22,163,74,.05);color:var(--green)}
+
+/* System Prompt 显示框 */
+.sys-display{margin:10px 12px;border-radius:7px;padding:8px 11px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.65;transition:all .25s}
+.vs-col.bad-col .sys-display{background:#1e1b2e;color:#cdd6f4}
+.vs-col.good-col .sys-display{background:#1e1b2e;color:#cdd6f4}
+.dyn-ts{color:#f38ba8;font-weight:800;transition:all .2s}
+.static-ts{color:#a6e3a1;font-weight:800}
+
+/* 缓存状态指示器 */
+.cache-status{margin:0 12px 10px;border-radius:8px;padding:10px 12px;font-size:15px;font-weight:700;text-align:center;transition:all .3s}
+.cache-status.hit{background:rgba(22,163,74,.1);color:var(--green);border:1.5px solid rgba(22,163,74,.3)}
+.cache-status.miss{background:rgba(220,38,38,.1);color:var(--red);border:1.5px solid rgba(220,38,38,.3)}
+@keyframes flash-miss{0%{background:rgba(220,38,38,.5);transform:scale(1.02)}50%{background:rgba(220,38,38,.2)}100%{background:rgba(220,38,38,.1);transform:scale(1)}}
+.cache-status.miss.flash{animation:flash-miss .4s ease}
+
+/* 命中率进度 */
+.hit-bar-wrap{margin:0 12px 10px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.hit-bar-label{font-size:13px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between}
+.hit-bar-track{height:10px;background:var(--surface2);border-radius:5px;overflow:hidden}
+.hit-bar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.vs-col.bad-col .hit-bar-fill{background:var(--red)}
+.vs-col.good-col .hit-bar-fill{background:var(--green)}
+
+/* 请求日志 */
+.req-log{flex:1;overflow-y:auto;margin:0 12px 10px;display:flex;flex-direction:column;gap:4px}
+.req-item{font-size:12px;padding:4px 8px;border-radius:5px;display:flex;align-items:center;gap:6px;flex-shrink:0;animation:log-in .2s ease}
+@keyframes log-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.req-item.hit{background:rgba(22,163,74,.07);color:var(--green)}
+.req-item.miss{background:rgba(220,38,38,.07);color:var(--red)}
+.req-item .req-ts{font-family:monospace;flex:1}
+.req-item .req-tag{font-weight:800;font-size:11px}
+
+/* 统计行 */
+.live-stats{display:flex;gap:8px;flex-shrink:0}
+.live-stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;text-align:center}
+.live-stat .sv{font-size:20px;font-weight:900}
+.live-stat .sl{font-size:11px;color:var(--muted);font-weight:600}
+.live-stat.bad-stat .sv{color:var(--red)}
+.live-stat.good-stat .sv{color:var(--green)}
+.live-stat.neutral .sv{color:var(--text)}
+
+/* 控制 */
+.ctrl-row{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.btn-ctrl{padding:6px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-start{background:var(--green);color:white}
+.btn-stop{background:rgba(220,38,38,.15);color:var(--red);border:1.5px solid rgba(220,38,38,.3)}
+.btn-reset{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{flex:1;font-size:13px;color:var(--muted)}
+
+.takeaway{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:8px 14px;font-size:14px;color:var(--text);display:flex;gap:8px;flex-shrink:0;line-height:1.55}
+.takeaway b{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 4 页</div>
+      <div class="title">动态时间戳：<em>最贵的 System Prompt 设计</em></div>
+    </div>
+    <div style="font-size:16px;color:var(--muted)">点击方案切换对比 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">一个小小的设计错误，可以让你的 KV Cache <strong>完全失效</strong>，每轮对话成本翻倍——那就是在 System Prompt 里写动态时间。</p>
+
+      <div class="compare-grid">
+        <div class="sys-box bad">
+          <div class="sys-box-h">❌ 错误设计</div>
+          <div class="sys-box-b">
+            <div class="code-blk">System: 你是助手。
+当前时间: <span class="ts">2026-04-10 14:35:22</span>
+...</div>
+            <div class="metric-row">
+              <div class="metric-item"><div class="v" style="color:var(--red)">0%</div><div class="l">缓存命中率</div></div>
+              <div class="metric-item"><div class="v" style="color:var(--red)">+100%</div><div class="l">额外成本</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="sys-box good">
+          <div class="sys-box-h">✅ 正确设计</div>
+          <div class="sys-box-b">
+            <div class="code-blk">System: 你是助手。
+<span class="stable">（不含时间）</span>
+User: [<span class="stable">2026-04-10</span>] 请帮我...</div>
+            <div class="metric-row">
+              <div class="metric-item"><div class="v" style="color:var(--green)">~95%</div><div class="l">缓存命中率</div></div>
+              <div class="metric-item"><div class="v" style="color:var(--green)">-70%</div><div class="l">成本节省</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="killer-box">
+        <b>其他常见"KV Cache 杀手"：</b>
+        <div class="killer-tags">
+          <span class="killer-tag">精确到秒的时间戳</span>
+          <span class="killer-tag">随机 Session ID</span>
+          <span class="killer-tag">用户 ID 前缀</span>
+          <span class="killer-tag">A/B 测试变量</span>
+          <span class="killer-tag">随机 emoji 前缀</span>
+          <span class="killer-tag">动态广告文案</span>
+        </div>
+        <div style="font-size:16px;margin-top:8px;color:var(--sub)">任何让 System Prompt 每次不同的内容，都会导致缓存完全失效。</div>
+      </div>
+    </div>
+
+    <!-- 右栏：实时对比动画 -->
+    <div class="right">
+      <div class="live-panel">
+        <div class="live-header">
+          <span>实时对比</span>
+          <span class="live-clock" id="liveClock">--:--:--</span>
+          <span style="font-size:13px;color:var(--muted);margin-left:4px">每秒发一次请求</span>
+        </div>
+        <div class="live-body">
+          <!-- 左：动态时间戳（坏） -->
+          <div class="vs-col bad-col">
+            <div class="vs-col-h">❌ 动态时间戳（精确到秒）</div>
+            <div class="sys-display" id="badSysPrompt">System: 你是助手。<br>当前时间: <span class="dyn-ts" id="dynTs">--:--:--</span><br>...</div>
+            <div class="cache-status miss" id="badCacheStatus">⏳ 等待请求...</div>
+            <div class="hit-bar-wrap">
+              <div class="hit-bar-label"><span>缓存命中率</span><span id="badHitPct">0%</span></div>
+              <div class="hit-bar-track"><div class="hit-bar-fill" id="badHitBar" style="width:0%"></div></div>
+            </div>
+            <div class="req-log" id="badLog"></div>
+          </div>
+          <!-- 右：静态提示词（好） -->
+          <div class="vs-col good-col">
+            <div class="vs-col-h">✅ 静态 System Prompt</div>
+            <div class="sys-display" id="goodSysPrompt">System: 你是助手。<br><span class="static-ts">（不含时间）</span><br>User: [<span class="static-ts" id="staticDate">--</span>] ...</div>
+            <div class="cache-status hit" id="goodCacheStatus">⏳ 等待请求...</div>
+            <div class="hit-bar-wrap">
+              <div class="hit-bar-label"><span>缓存命中率</span><span id="goodHitPct">0%</span></div>
+              <div class="hit-bar-track"><div class="hit-bar-fill" id="goodHitBar" style="width:0%"></div></div>
+            </div>
+            <div class="req-log" id="goodLog"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stat neutral"><div class="sv" id="statReqs">0</div><div class="sl">总请求数</div></div>
+        <div class="live-stat bad-stat"><div class="sv" id="statBadMiss">0</div><div class="sl">左侧 Cache Miss</div></div>
+        <div class="live-stat good-stat"><div class="sv" id="statGoodHit">0</div><div class="sl">右侧 Cache Hit</div></div>
+        <div class="live-stat good-stat"><div class="sv" id="statSave">—</div><div class="sl">右侧节省成本</div></div>
+      </div>
+
+      <div class="ctrl-row">
+        <button class="btn-ctrl btn-start" id="btnStart" onclick="startSim()">▶ 开始模拟</button>
+        <button class="btn-ctrl btn-stop" id="btnStop" onclick="stopSim()" style="display:none">⏹ 暂停</button>
+        <button class="btn-ctrl btn-reset" onclick="resetSim()">重置</button>
+        <div class="ctrl-hint" id="ctrlHint">启动后每秒自动发一次请求，观察两侧 KV Cache 命中差异</div>
+      </div>
+
+      <div class="takeaway">
+        <span style="flex-shrink:0">🔒</span>
+        <span><b>原则：System Prompt = 固定前缀。</b> 把动态内容（时间、用户信息、随机性内容）放到 User 消息里，不要放进 System Prompt。</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+let simTimer = null;
+let totalReqs = 0, badMiss = 0, goodHit = 0;
+let lastBadSysHash = null;  // 上一次 bad 侧 system prompt 的"指纹"
+
+// 模拟时钟基准（加速：每次 tick = +1秒）
+let simSec = 0;
+const BASE_DATE = '2026-04-10';
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function getSimTime() {
+  const h = pad(Math.floor(simSec / 3600) % 24);
+  const m = pad(Math.floor(simSec / 60) % 60);
+  const s = pad(simSec % 60);
+  return { hms: `${h}:${m}:${s}`, date: BASE_DATE };
+}
+
+function addLog(logEl, ts, isHit, label) {
+  const item = document.createElement('div');
+  item.className = 'req-item ' + (isHit ? 'hit' : 'miss');
+  item.innerHTML = `<span class="req-ts">${ts}</span><span class="req-tag">${isHit ? '✓ HIT' : '✗ MISS'}</span><span style="font-size:11px">${label}</span>`;
+  logEl.appendChild(item);
+  // 只保留最近 6 条
+  while (logEl.children.length > 6) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function flashMiss(el) {
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow
+  el.classList.add('flash');
+}
+
+function tick() {
+  simSec++;
+  totalReqs++;
+  const { hms, date } = getSimTime();
+
+  // 更新时钟
+  document.getElementById('liveClock').textContent = hms;
+  document.getElementById('dynTs').textContent = hms;
+  document.getElementById('staticDate').textContent = date;
+
+  // ── Bad 侧：System Prompt 含秒级时间戳，每秒必 MISS ──
+  const badHash = hms; // 每秒不同
+  const badIsHit = (badHash === lastBadSysHash);
+  lastBadSysHash = badHash;
+
+  const badStatusEl = document.getElementById('badCacheStatus');
+  if (badIsHit) {
+    badStatusEl.className = 'cache-status hit';
+    badStatusEl.textContent = '✓ 缓存命中';
+  } else {
+    badMiss++;
+    badStatusEl.className = 'cache-status miss flash';
+    badStatusEl.textContent = '✗ Cache MISS — 重建缓存！';
+    flashMiss(badStatusEl);
+    // 让 sys-display 的时间戳闪红
+    const dynEl = document.getElementById('dynTs');
+    dynEl.style.background = 'rgba(220,38,38,.5)';
+    dynEl.style.color = '#ff6b6b';
+    setTimeout(() => {
+      dynEl.style.background = '';
+      dynEl.style.color = '';
+    }, 350);
+  }
+  addLog(document.getElementById('badLog'), hms, badIsHit, badIsHit ? '' : '全量重算');
+  const badHitCount = totalReqs - badMiss;
+  const badHitPct = totalReqs > 0 ? Math.round(badHitCount / totalReqs * 100) : 0;
+  document.getElementById('badHitPct').textContent = badHitPct + '%';
+  document.getElementById('badHitBar').style.width = badHitPct + '%';
+
+  // ── Good 侧：System Prompt 固定，仅首次建立缓存，后续全部命中 ──
+  const goodIsHit = (totalReqs > 1); // 第一次建立，之后全命中
+  if (goodIsHit) goodHit++;
+  const goodStatusEl = document.getElementById('goodCacheStatus');
+  if (goodIsHit) {
+    goodStatusEl.className = 'cache-status hit';
+    goodStatusEl.textContent = '✓ 缓存命中 — 仅算新 Token';
+  } else {
+    goodStatusEl.className = 'cache-status miss';
+    goodStatusEl.textContent = '⚡ 首次建立缓存（仅 1 次）';
+  }
+  addLog(document.getElementById('goodLog'), hms, goodIsHit, goodIsHit ? '仅算新增' : '初始化');
+  const goodHitPct = totalReqs > 0 ? Math.round(goodHit / totalReqs * 100) : 0;
+  document.getElementById('goodHitPct').textContent = goodHitPct + '%';
+  document.getElementById('goodHitBar').style.width = goodHitPct + '%';
+
+  // 统计
+  document.getElementById('statReqs').textContent = totalReqs;
+  document.getElementById('statBadMiss').textContent = badMiss;
+  document.getElementById('statGoodHit').textContent = goodHit;
+  const savePct = totalReqs > 1 ? Math.round(goodHit / totalReqs * 100) : 0;
+  document.getElementById('statSave').textContent = savePct > 0 ? '~' + savePct + '%' : '—';
+
+  // 提示文字
+  if (totalReqs > 3) {
+    document.getElementById('ctrlHint').textContent =
+      `左侧 ${totalReqs} 次请求，${badMiss} 次 MISS；右侧 ${goodHit} 次命中，节省约 ${savePct}% 成本`;
+  }
+
+  if (totalReqs >= 20) stopSim();
+}
+
+function startSim() {
+  if (simTimer) return;
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnStop').style.display = '';
+  simTimer = setInterval(tick, 800);
+  tick();
+}
+
+function stopSim() {
+  clearInterval(simTimer);
+  simTimer = null;
+  document.getElementById('btnStart').style.display = '';
+  document.getElementById('btnStop').style.display = 'none';
+  if (totalReqs >= 20) {
+    document.getElementById('btnStart').textContent = '▶ 继续';
+    document.getElementById('ctrlHint').textContent = '20 轮演示完毕 — 点"重置"再来一次';
+  }
+}
+
+function resetSim() {
+  stopSim();
+  totalReqs = 0; badMiss = 0; goodHit = 0; simSec = 0; lastBadSysHash = null;
+  document.getElementById('btnStart').textContent = '▶ 开始模拟';
+  document.getElementById('liveClock').textContent = '--:--:--';
+  document.getElementById('dynTs').textContent = '--:--:--';
+  document.getElementById('staticDate').textContent = '--';
+  document.getElementById('badCacheStatus').className = 'cache-status miss';
+  document.getElementById('badCacheStatus').textContent = '⏳ 等待请求...';
+  document.getElementById('goodCacheStatus').className = 'cache-status hit';
+  document.getElementById('goodCacheStatus').textContent = '⏳ 等待请求...';
+  document.getElementById('badLog').innerHTML = '';
+  document.getElementById('goodLog').innerHTML = '';
+  document.getElementById('badHitPct').textContent = '0%';
+  document.getElementById('goodHitPct').textContent = '0%';
+  document.getElementById('badHitBar').style.width = '0%';
+  document.getElementById('goodHitBar').style.width = '0%';
+  document.getElementById('statReqs').textContent = '0';
+  document.getElementById('statBadMiss').textContent = '0';
+  document.getElementById('statGoodHit').textContent = '0';
+  document.getElementById('statSave').textContent = '—';
+  document.getElementById('ctrlHint').textContent = '启动后每秒自动发一次请求，观察两侧 KV Cache 命中差异';
+}
+</script>
+</body>
+</html>

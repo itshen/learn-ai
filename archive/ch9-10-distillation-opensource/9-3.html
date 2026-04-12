@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>蒸馏的副作用：模型同质化</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0; --text: #1c1c1e; --sub: #6b7280;
+  --cyan: #0891b2; --success: #16a34a;
+  --danger: #dc2626; --border: rgba(0,0,0,0.07);
+  --orange: #ea580c; --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px; aspect-ratio: 16/9;
+  background: var(--bg); border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.header {
+  padding: 14px 36px; flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.header h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+.header p  { font-size: 13px; color: var(--sub); margin-top: 2px; }
+.btn-next {
+  background: var(--orange); color: white; border: none;
+  padding: 10px 24px; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-next:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+.body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: hidden; }
+.panel { padding: 18px 24px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.panel-l { border-right: 1px solid var(--border); }
+.tag { font-size: 12px; font-weight: 700; color: var(--orange); letter-spacing: 1px; text-transform: uppercase; }
+
+/* 论文卡 */
+.paper-card {
+  background: white; border-radius: 13px; border: 1.5px solid var(--border);
+  padding: 13px 16px; opacity: 0; transform: translateY(8px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.paper-card.show { opacity: 1; transform: translateY(0); }
+.paper-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.paper-icon { font-size: 20px; flex-shrink: 0; }
+.paper-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.paper-meta  { font-size: 12px; color: var(--cyan); font-weight: 600; }
+.paper-finding {
+  background: rgba(234,88,12,0.06); border-radius: 8px;
+  border: 1px solid rgba(234,88,12,0.15); padding: 9px 12px;
+  font-size: 14px; color: var(--text); line-height: 1.6;
+}
+.paper-finding strong { color: var(--orange); }
+
+/* 真实事件 */
+.event-card {
+  background: white; border-radius: 13px; border: 1.5px solid var(--border);
+  padding: 13px 16px; opacity: 0; transform: translateY(8px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.event-card.show { opacity: 1; transform: translateY(0); }
+.event-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.ebadge { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 700; background: rgba(220,38,38,0.1); color: var(--danger); }
+.event-item { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--sub); line-height: 1.55; margin-bottom: 6px; }
+.event-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); flex-shrink: 0; margin-top: 7px; }
+.cite { font-size: 11px; color: rgba(0,0,0,0.3); font-style: italic; border-top: 1px solid var(--border); padding-top: 7px; margin-top: 4px; }
+
+/* 右侧：具体现象 */
+.symptom-card {
+  background: white; border-radius: 13px; border: 1.5px solid var(--border);
+  padding: 13px 16px; opacity: 0; transform: translateX(10px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.symptom-card.show { opacity: 1; transform: translateX(0); }
+.sym-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sym-num { width: 28px; height: 28px; border-radius: 8px; background: var(--orange); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+.sym-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.sym-src { font-size: 11px; color: var(--cyan); font-weight: 600; }
+.sym-body { font-size: 14px; color: var(--sub); line-height: 1.65; }
+.sym-body strong { color: var(--text); }
+.sym-example {
+  margin-top: 8px; background: rgba(0,0,0,0.03); border-radius: 8px;
+  border: 1px solid var(--border); padding: 8px 12px;
+  font-size: 13px; font-family: "PingFang SC", sans-serif; line-height: 1.7;
+  color: var(--sub);
+}
+.sym-example .highlight { color: var(--orange); font-weight: 700; }
+
+.callout {
+  background: rgba(234,88,12,0.07); border: 1.5px solid rgba(234,88,12,0.2);
+  border-radius: 12px; padding: 13px 16px; font-size: 15px; line-height: 1.65;
+  opacity: 0; transition: opacity 0.4s;
+}
+.callout.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <h2>蒸馏的副作用：<span style="color:var(--orange)">模型同质化</span></h2>
+      <p>Generative Monoculture · 模块九 第 3 页</p>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="nextStep()">下一步 ›</button>
+  </div>
+  <div class="body">
+    <!-- 左侧：学术来源 + 真实事件 -->
+    <div class="panel panel-l">
+      <div class="tag">学术研究与真实事件</div>
+
+      <div class="paper-card" id="p1">
+        <div class="paper-top">
+          <div class="paper-icon">📄</div>
+          <div>
+            <div class="paper-title">Generative Monoculture in Large Language Models</div>
+            <div class="paper-meta">Wu & Black · arXiv:2407.02209 · 2024</div>
+          </div>
+        </div>
+        <div class="paper-finding">
+          实验证明：多个 LLM 基于相同大模型蒸馏后，<strong>输出多样性显著下降</strong>——书评、代码生成任务中不同模型输出高度趋同，"单一文化"已成现实。
+        </div>
+      </div>
+
+      <div class="paper-card" id="p2">
+        <div class="paper-top">
+          <div class="paper-icon">📄</div>
+          <div>
+            <div class="paper-title">Measuring and Understanding LLM Identity Confusion</div>
+            <div class="paper-meta">Xu et al. · arXiv:2411.10683 · Nov 2024</div>
+          </div>
+        </div>
+        <div class="paper-finding">
+          研究 27 个 LLM，<strong>25.93% 存在身份混淆</strong>——被问"你是谁"时，错误声称自己是另一个模型（如声称自己是 GPT-4）。信任度影响甚至超过逻辑错误。
+        </div>
+      </div>
+
+      <div class="event-card" id="p3">
+        <div class="event-title">真实曝光事件 <span class="ebadge">有据可查</span></div>
+        <div class="event-item"><div class="event-dot"></div><div>Anthropic 声明：发现 DeepSeek/Moonshot/MiniMax 对 Claude 进行<strong>"工业级规模蒸馏"</strong>（2025）</div></div>
+        <div class="event-item"><div class="event-dot"></div><div>OpenAI 指控 DeepSeek 通过蒸馏 GPT 系列获得能力优势（Reuters 2026.2）</div></div>
+        <div class="cite">来源：Anthropic Blog · Reuters · Berkeley Law Review</div>
+      </div>
+    </div>
+
+    <!-- 右侧：三个可观察的具体症状 -->
+    <div class="panel">
+      <div class="tag">你能直接观察到的同质化症状</div>
+
+      <div class="symptom-card" id="s1">
+        <div class="sym-header">
+          <div class="sym-num">1</div>
+          <div>
+            <div class="sym-title">口癖 / 语气继承</div>
+            <div class="sym-src">Washington Post 分析 33 万条 ChatGPT 消息 · Wikipedia: Signs of AI writing</div>
+          </div>
+        </div>
+        <div class="sym-body">GPT-4o 的招牌口癖被大量蒸馏模型继承，<strong>成为识别 AI 的指纹</strong>：</div>
+        <div class="sym-example">
+          "<span class="highlight">不是……而是</span>，这才是问题的本质"<br>
+          "这<span class="highlight">——</span>恰恰说明了一点"（em dash 过度使用）<br>
+          "让我们<span class="highlight">深入探讨</span>（<span class="highlight">delve into</span>）这个话题"
+        </div>
+      </div>
+
+      <div class="symptom-card" id="s2">
+        <div class="sym-header">
+          <div class="sym-num">2</div>
+          <div>
+            <div class="sym-title">格式习惯继承</div>
+            <div class="sym-src">Google Gemini 社区报告 · Google AI Developer Forum</div>
+          </div>
+        </div>
+        <div class="sym-body">Gemini 有在中文输出中<strong>混插英文标注</strong>的习惯，蒸馏了 Gemini 的模型也继承了这个格式怪癖：</div>
+        <div class="sym-example">
+          "这个概念（<span class="highlight">Concept</span>）非常重要"<br>
+          "我们需要关注性能（<span class="highlight">Performance</span>）和安全性（<span class="highlight">Safety</span>）"
+        </div>
+      </div>
+
+      <div class="symptom-card" id="s3">
+        <div class="sym-header">
+          <div class="sym-num">3</div>
+          <div>
+            <div class="sym-title">身份混淆</div>
+            <div class="sym-src">arXiv:2411.10683 · 27个模型中 25.93% 存在此问题</div>
+          </div>
+        </div>
+        <div class="sym-body">问蒸馏模型"你是谁"，它可能回答的是教师模型的名字：</div>
+        <div class="sym-example">
+          用户：你是哪个模型？<br>
+          某蒸馏模型：<span class="highlight">我是 ChatGPT，由 OpenAI 开发……</span><br>
+          <span style="color:var(--danger);font-size:12px">实际上它是另一家公司的产品</span>
+        </div>
+      </div>
+
+      <div class="callout" id="callout">
+        <strong>核心问题：</strong>这些"遗传"不是 bug，是蒸馏的本质——学生学的就是老师的<strong>一切</strong>，包括怪癖、偏见、身份认知。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+let step = 0;
+const ids = ['p1','p2','p3','s1','s2','s3','callout'];
+function nextStep() {
+  if (step < ids.length) {
+    document.getElementById(ids[step]).classList.add('show');
+    step++;
+  }
+  if (step >= ids.length) document.getElementById('btnNext').disabled = true;
+}
+</script>
+</body>
+</html>

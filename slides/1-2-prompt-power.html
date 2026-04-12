@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>提示词为什么够用？上下文窗口是关键</title>
+<script src="../global-attn.js"></script>
+<style>
+:root {
+  --bg-color: #f7f5f0;
+  --text-main: #1c1c1e;
+  --text-sub: #8e8e93;
+  --accent: #0066ff;
+  --amber: #d97706;
+  --success: #16a34a;
+  --danger: #e53e3e;
+  --purple: #7c3aed;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide-container {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.header {
+  padding: 18px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.title-area h2 { font-size: 20px; font-weight: 700; color: var(--text-main); }
+.title-area p  { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 9px 22px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; filter: none; }
+.btn-replay {
+  background: white; color: var(--text-main); border: 1px solid rgba(0,0,0,0.12);
+  padding: 9px 18px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+
+/* ── 整体纵向布局 ── */
+.body {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  padding: 16px 32px; gap: 12px; overflow: hidden;
+}
+
+/* ── 顶部推理链（横向一行） ── */
+.logic-chain {
+  display: flex; align-items: center; gap: 0;
+  flex-shrink: 0;
+}
+.lc-step {
+  display: flex; align-items: center; gap: 8px;
+  background: white; border-radius: 12px; padding: 10px 16px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  opacity: 0; transform: translateX(-12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  flex: 1;
+}
+.lc-step.show { opacity: 1; transform: translateX(0); }
+.lc-dot {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.lc-text { font-size: 13px; font-weight: 600; color: var(--text-main); line-height: 1.4; }
+.lc-text b { display: block; font-size: 12px; font-weight: 700; }
+.lc-arrow {
+  font-size: 20px; color: #ccc; flex-shrink: 0; padding: 0 6px;
+  opacity: 0; transition: opacity 0.3s 0.2s;
+}
+.lc-arrow.show { opacity: 1; }
+
+/* ── 顶部结论条（最终步骤显示） ── */
+.conclusion-bar {
+  background: rgba(0,102,255,0.06); border: 1.5px solid rgba(0,102,255,0.18);
+  border-radius: 12px; padding: 10px 20px;
+  display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.conclusion-bar.show { opacity: 1; transform: translateY(0); }
+.cb-q { font-size: 13px; font-weight: 700; color: var(--text-sub); white-space: nowrap; }
+.cb-a { font-size: 14px; font-weight: 700; color: var(--accent); line-height: 1.5; }
+
+/* ── 交互演示区（下方大块） ── */
+.demo-area {
+  flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0;
+}
+
+/* 滑块 */
+.slider-row {
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+  background: white; border-radius: 12px; padding: 10px 20px;
+  border: 1px solid rgba(0,0,0,0.07);
+}
+.sl-label { font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; }
+input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.sl-val { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; min-width: 170px; text-align: right; }
+
+/* Token 可视化 */
+.token-vis {
+  background: white; border-radius: 12px; padding: 12px 18px;
+  border: 1px solid rgba(0,0,0,0.07); flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.tv-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.3px;
+}
+.tv-tokens {
+  display: flex; gap: 4px; align-items: center;
+  flex-wrap: wrap; /* 允许换行，不溢出 */
+}
+.tv-tk {
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  transition: all 0.4s ease;
+}
+.tv-tk-sys  { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+.tv-tk-user { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.tv-tk-ex   { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+.tv-tk-cut  { background: rgba(0,0,0,0.04); color: #d1d5db; border: 1px solid rgba(0,0,0,0.06); text-decoration: line-through; opacity: 0.45; }
+.tv-sep { font-size: 13px; color: #ccc; padding: 0 2px; }
+.tv-cut-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 800;
+  background: rgba(229,62,62,0.1); color: var(--danger);
+  border: 1px solid rgba(229,62,62,0.25); white-space: nowrap;
+}
+
+/* 对比两栏 */
+.compare-row {
+  display: flex; gap: 12px; flex: 1; min-height: 0;
+}
+.cmp-col {
+  flex: 1; border-radius: 12px; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 7px;
+  border: 1.5px solid; overflow-y: auto;
+  transition: border-color 0.3s, background 0.3s;
+}
+.cmp-col.bad  { background: rgba(229,62,62,0.04); border-color: rgba(229,62,62,0.22); }
+.cmp-col.ok   { background: rgba(22,163,74,0.04);  border-color: rgba(22,163,74,0.2);  }
+.cmp-label { font-size: 11px; font-weight: 800; letter-spacing: 0.4px; flex-shrink: 0; margin-bottom: 2px; }
+.cmp-col.bad .cmp-label { color: var(--danger); }
+.cmp-col.ok  .cmp-label { color: var(--success); }
+
+.msg { border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.6; flex-shrink: 0; }
+.msg-sys  { background: #fef9c3; color: #854d0e; }
+.msg-user { background: #eff6ff; color: #1d4ed8; }
+.msg-cut  { background: rgba(0,0,0,0.04); color: #9ca3af; font-style: italic; }
+.msg-ai-bad  { background: rgba(229,62,62,0.08); color: #991b1b; font-weight: 600; min-height: 24px; }
+.msg-ai-good { background: #dcfce7; color: #14532d; font-weight: 600; min-height: 24px; }
+.msg-lbl { font-size: 10px; font-weight: 800; opacity: 0.65; margin-bottom: 2px; letter-spacing: 0.3px; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.cur { display: inline-block; width: 2px; height: 1em; vertical-align: text-bottom; animation: blink 0.85s step-start infinite; }
+.cur-r { background: #991b1b; }
+.cur-g { background: #15803d; }
+
+/* 截断文字样式 */
+#sysCut {
+  background: rgba(229,62,62,0.08);
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: all 0.3s;
+}
+</style>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<body>
+<div class="slide-container">
+
+  <div class="header">
+    <div class="title-area">
+      <h2>为什么用提示词就够了？答案在上下文窗口</h2>
+      <p>PreTraining 之后：不用重新训练，把任务描述喂进去就行——但为什么？</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-replay" id="replayBtn" onclick="replayAll()" style="display:none;">↺ 重播</button>
+      <button class="btn-primary" id="nextBtn" onclick="nextStep()">下一步 →</button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- 推理链（横向一行，逐步揭示） -->
+    <div class="logic-chain">
+      <div class="lc-step" id="s0">
+        <div class="lc-dot" style="background:rgba(229,62,62,0.1);color:var(--danger);">旧</div>
+        <div class="lc-text">换任务<b style="color:var(--danger);">= 重新训练</b></div>
+      </div>
+      <div class="lc-arrow" id="a0">→</div>
+      <div class="lc-step" id="s1">
+        <div class="lc-dot" style="background:rgba(22,163,74,0.1);color:var(--success);">新</div>
+        <div class="lc-text">PreTraining 后<b style="color:var(--success);">提示词就够了！</b></div>
+      </div>
+      <div class="lc-arrow" id="a1">→</div>
+      <div class="lc-step" id="s2">
+        <div class="lc-dot" style="background:rgba(217,119,6,0.1);color:var(--amber);">?</div>
+        <div class="lc-text">为什么？<b style="color:var(--amber);">Token 推 Token</b></div>
+      </div>
+      <div class="lc-arrow" id="a2">→</div>
+      <div class="lc-step" id="s3">
+        <div class="lc-dot" style="background:rgba(124,58,237,0.1);color:var(--purple);">本</div>
+        <div class="lc-text">提示词 = 高质量前文<b style="color:var(--purple);">前文好 → 后文好</b></div>
+      </div>
+      <div class="lc-arrow" id="a3">→</div>
+      <div class="lc-step" id="s4">
+        <div class="lc-dot" style="background:rgba(0,102,255,0.1);color:var(--accent);">关</div>
+        <div class="lc-text">窗口越大<b style="color:var(--accent);">能放的指令越多</b></div>
+      </div>
+    </div>
+
+    <!-- 结论条（最后一步出现） -->
+    <div class="conclusion-bar" id="conclusionBar">
+      <span class="cb-q">核心结论：</span>
+      <span class="cb-a">提示词够用，因为大模型支持<span style="color:var(--success);">超大上下文窗口</span>——把任务说明、规则、样例全塞进前文，模型按前文推，<span style="color:var(--amber);">效果等同于专门训练</span>。</span>
+    </div>
+
+    <!-- 交互演示 -->
+    <div class="demo-area">
+
+      <!-- 滑块 -->
+      <div class="slider-row">
+        <span class="sl-label">拖动调整窗口大小，看 Token 怎么被截断</span>
+        <input type="range" id="winSlider" min="0" max="4" value="1" step="1" oninput="render(+this.value)">
+        <span class="sl-val" id="slVal"></span>
+      </div>
+
+      <!-- Token 可视化 -->
+      <div class="token-vis">
+        <div class="tv-header">
+          <span>提示词 Token 全貌（黄=System / 蓝=User / 绿=示例）</span>
+          <span id="tvCount"></span>
+        </div>
+        <div class="tv-tokens" id="tvTokens"></div>
+      </div>
+
+      <!-- 对比两栏 -->
+      <div class="compare-row">
+        <div class="cmp-col bad" id="colBad">
+          <div class="cmp-label" id="badLabel">❌ 窗口过小：系统指令被截断</div>
+
+          <!-- SYSTEM 框：完整内容 + 截断遮罩 -->
+          <div class="msg msg-sys" style="position:relative;overflow:hidden;">
+            <div class="msg-lbl">SYSTEM（完整原文）</div>
+            <!-- 可见部分（始终显示） -->
+            <span id="sysVisible"></span><!-- 截断部分（灰色删除线） -->
+            <span id="sysCut" style="color:#d1d5db;text-decoration:line-through;"></span>
+            <!-- 红色遮罩，覆盖截断区域 -->
+            <div id="cutMask" style="display:none;margin-top:4px;background:rgba(229,62,62,0.08);border:1px dashed rgba(229,62,62,0.4);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;color:#dc2626;">
+              ✂ 以上内容超出窗口，模型完全看不到
+            </div>
+          </div>
+
+          <div class="msg msg-user">
+            <div class="msg-lbl">USER</div>
+            请翻译：「大模型的上下文窗口是关键。」
+          </div>
+          <div class="msg msg-ai-bad" id="badAi">
+            <div class="msg-lbl">AI 输出</div>
+            <span id="badAiT"></span><span class="cur cur-r" id="badCur" style="display:none;"></span>
+          </div>
+        </div>
+
+        <div class="cmp-col ok" id="colGood">
+          <div class="cmp-label" id="goodLabel">✅ 窗口充足：完整读取所有指令</div>
+          <div class="msg msg-sys">
+            <div class="msg-lbl">SYSTEM（完整）</div>
+            你是专业翻译。将中文译为正式英文，保持语气，注意专业术语。
+          </div>
+          <div class="msg msg-user" id="goodEx" style="display:none;">
+            <div class="msg-lbl">FEW-SHOT 示例（大窗口才放得下）</div>
+            「人工智能」→「Artificial Intelligence」
+          </div>
+          <div class="msg msg-user">
+            <div class="msg-lbl">USER</div>
+            请翻译：「大模型的上下文窗口是关键。」
+          </div>
+          <div class="msg msg-ai-good" id="goodAi">
+            <div class="msg-lbl">AI 输出</div>
+            <span id="goodAiT"></span><span class="cur cur-g" id="goodCur" style="display:none;"></span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /demo-area -->
+  </div><!-- /body -->
+</div>
+
+<script>
+// ── Token 数据 ──
+const TOKENS = [
+  { t:'你是', c:'sys'  }, { t:'专业', c:'sys'  }, { t:'翻译', c:'sys'  },
+  { t:'将中文', c:'sys' }, { t:'译为', c:'sys'  }, { t:'正式英文', c:'sys' },
+  { t:'保持', c:'sys'  }, { t:'语气', c:'sys'  }, { t:'注意', c:'sys'  }, { t:'专业术语', c:'sys' },
+  { t:'SEP', sep:true },
+  { t:'示例:', c:'ex'  }, { t:'人工智能', c:'ex' }, { t:'→AI', c:'ex'  },
+  { t:'SEP', sep:true },
+  { t:'请翻译', c:'user' }, { t:'大模型', c:'user' }, { t:'上下文', c:'user' },
+  { t:'窗口', c:'user' }, { t:'是关键', c:'user' },
+];
+const TOTAL = TOKENS.filter(t => !t.sep).length; // 17
+
+const CLS = { sys:'tv-tk-sys', user:'tv-tk-user', ex:'tv-tk-ex' };
+
+const LEVELS = [
+  { lbl:'极小（仅 4 Token）',    keep:4  },
+  { lbl:'偏小（仅 9 Token）',    keep:9  },
+  { lbl:'中等（14 Token）',       keep:14 },
+  { lbl:'充足（全部 17 Token）',  keep:TOTAL },
+  { lbl:'超大（128K Token）',     keep:TOTAL },
+];
+
+// SYSTEM prompt 各段，每段对应一组 sys token
+// sys tokens 共 10 个：你是 专业 翻译 将中文 译为 正式英文 保持 语气 注意 专业术语
+const SYS_SEGMENTS = [
+  { text: '你是专业翻译，' },
+  { text: '将中文译为正式英文，' },
+  { text: '保持语气，' },
+  { text: '注意专业术语。' },
+];
+// 每个 segment 对应的 sys token 数量（前置累积）
+const SYS_SEG_TOKENS = [3, 5, 7, 10]; // 到第 i 段末尾共用了多少 sys token
+
+const BAD_AI_OUT = [
+  'The context of... ⚠ 指令丢失，输出不可信',
+  '大语言模型的窗口是… (不稳定，指令不完整)',
+  'The context window of large language models is key.',
+  'The context window is a critical capability of large language models.',
+  'The context window is a critical capability of large language models.',
+];
+const GOOD_AI_OUT = 'The context window is a critical capability of large language models.';
+
+let typingTimer = null;
+
+function render(lv) {
+  const lvl = LEVELS[lv];
+  document.getElementById('slVal').textContent = lvl.lbl;
+  const keep = lvl.keep;
+  const nonSepTokens = TOKENS.filter(t => !t.sep);
+  const cutCount = nonSepTokens.length - keep;
+
+  // ── Token 可视化 ──
+  const tv = document.getElementById('tvTokens');
+  tv.innerHTML = '';
+  let nonSepIdx = 0;
+  TOKENS.forEach(tk => {
+    if (tk.sep) {
+      const s = document.createElement('span');
+      s.className = 'tv-sep'; s.textContent = '│';
+      tv.appendChild(s);
+      return;
+    }
+    const isCut = nonSepIdx < cutCount;
+    const el = document.createElement('span');
+    el.className = 'tv-tk ' + (isCut ? 'tv-tk-cut' : CLS[tk.c]);
+    el.textContent = tk.t;
+    tv.appendChild(el);
+    nonSepIdx++;
+  });
+
+  // 截断标记
+  const countEl = document.getElementById('tvCount');
+  if (cutCount > 0) {
+    countEl.innerHTML = `<span class="tv-cut-badge">⚠ 截掉 ${cutCount} 个 Token，剩余 ${keep} 个</span>`;
+  } else {
+    countEl.innerHTML = `<span style="color:var(--success);font-weight:800;">✓ 全部 ${TOTAL} 个 Token 均在窗口内</span>`;
+  }
+
+  // ── 左栏 SYSTEM 截断可视化 ──
+  // sys token 总数 = 10，cutCount 中截掉的 sys token 数 = max(0, cutCount 中属于 sys 的部分)
+  // 非 sep tokens 顺序：10 sys + 3 ex + 4 user = 17
+  // 截掉的是最前面 cutCount 个 nonSep token，全都是 sys token（排列靠前）
+  const sysCutCount = Math.min(cutCount, 10); // 最多截 10 个 sys token
+  const sysKeepCount = 10 - sysCutCount;      // 模型能看到的 sys token 数
+
+  // 根据 sysKeepCount 计算可见 / 截断 segment
+  let visibleText = '';
+  let cutText = '';
+  SYS_SEGMENTS.forEach((seg, si) => {
+    const prevTokens = si === 0 ? 0 : SYS_SEG_TOKENS[si - 1];
+    const segEndTokens = SYS_SEG_TOKENS[si];
+    if (sysKeepCount >= segEndTokens) {
+      // 整段可见
+      visibleText += seg.text;
+    } else if (sysKeepCount <= prevTokens) {
+      // 整段截断
+      cutText += seg.text;
+    } else {
+      // 部分可见（按字符粗略截取一半）
+      const half = Math.floor(seg.text.length / 2);
+      visibleText += seg.text.slice(0, half) + '…';
+      cutText += '…' + seg.text.slice(half);
+    }
+  });
+
+  document.getElementById('sysVisible').textContent = visibleText;
+  const sysCutEl = document.getElementById('sysCut');
+  const cutMask  = document.getElementById('cutMask');
+  if (cutText) {
+    sysCutEl.textContent = cutText;
+    cutMask.style.display = 'block';
+  } else {
+    sysCutEl.textContent = '';
+    cutMask.style.display = 'none';
+  }
+
+  // ── 左栏标签 ──
+  const hasCut = lv <= 1;
+  document.getElementById('colBad').className = 'cmp-col ' + (lv >= 3 ? 'ok' : 'bad');
+  document.getElementById('badLabel').textContent =
+    lv >= 3 ? '✅ 窗口充足：系统指令完整读取' :
+    hasCut   ? `❌ 窗口仅 ${keep} Token：系统指令严重截断` :
+               `⚠ 窗口偏小：指令部分截断`;
+
+  // ── 右栏 ──
+  document.getElementById('goodEx').style.display = lv >= 3 ? 'block' : 'none';
+  document.getElementById('goodLabel').textContent = lv >= 3
+    ? '✅ 大窗口：指令 + Few-Shot 示例全放得下'
+    : '✅ 窗口充足：完整读取所有指令';
+
+  // ── 打字动画 ──
+  if (typingTimer) clearInterval(typingTimer);
+  const badAiEl  = document.getElementById('badAiT');
+  const goodAiEl = document.getElementById('goodAiT');
+  const badCur   = document.getElementById('badCur');
+  const goodCur  = document.getElementById('goodCur');
+  badAiEl.textContent = ''; goodAiEl.textContent = '';
+  badCur.style.display = 'inline-block';
+  goodCur.style.display = 'inline-block';
+
+  const badOut  = BAD_AI_OUT[lv];
+  badAiEl.style.color = lv <= 1 ? '#991b1b' : lv === 2 ? '#b45309' : '#14532d';
+  document.getElementById('badAi').className = 'msg ' + (lv <= 2 ? 'msg-ai-bad' : 'msg-ai-good');
+
+  let bi = 0, gi = 0;
+  typingTimer = setInterval(() => {
+    let done = true;
+    if (bi < badOut.length)      { badAiEl.textContent  += badOut[bi++];       done = false; }
+    if (gi < GOOD_AI_OUT.length) { goodAiEl.textContent += GOOD_AI_OUT[gi++];  done = false; }
+    if (done) {
+      clearInterval(typingTimer);
+      badCur.style.display = 'none'; goodCur.style.display = 'none';
+    }
+  }, 28);
+}
+
+// ── 推理链步骤 ──
+let step = 0;
+const STEPS = ['s0','s1','s2','s3','s4'];
+const ARROWS = ['a0','a1','a2','a3'];
+
+// 初始：第一个步骤始终可见
+document.getElementById('s0').classList.add('show');
+
+function nextStep() {
+  step++;
+  const btn = document.getElementById('nextBtn');
+  if (step < STEPS.length) {
+    document.getElementById(STEPS[step]).classList.add('show');
+    if (step > 0) document.getElementById(ARROWS[step - 1]).classList.add('show');
+  }
+  if (step >= STEPS.length - 1) {
+    document.getElementById('conclusionBar').classList.add('show');
+    btn.textContent = '完成';
+    btn.onclick = null;
+    document.getElementById('replayBtn').style.display = 'inline-block';
+  }
+}
+
+function replayAll() {
+  step = 0;
+  const btn = document.getElementById('nextBtn');
+  btn.textContent = '下一步 →'; btn.onclick = nextStep;
+  document.getElementById('replayBtn').style.display = 'none';
+  document.getElementById('conclusionBar').classList.remove('show');
+  STEPS.forEach((id, i) => { if (i > 0) document.getElementById(id).classList.remove('show'); });
+  ARROWS.forEach(id => document.getElementById(id).classList.remove('show'));
+}
+
+// 初始渲染
+render(1);
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

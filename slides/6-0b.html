@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Markdown 语法与工程化渲染</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--amber:#d97706;--cyan:#0891b2;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--purple);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* ── 左栏：交互式语法演示 ── */
+.left{padding:18px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.section-label{font-size:14px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+
+.syntax-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.syn-btn{padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;font-family:inherit;transition:all .2s}
+.syn-btn:hover{border-color:rgba(147,51,234,.3)}
+.syn-btn.active{border-color:var(--purple);background:rgba(147,51,234,.06)}
+.syn-btn .syn-icon{font-size:20px;font-weight:800;color:var(--purple);font-family:'Cascadia Code','Fira Code',monospace;line-height:1.1}
+.syn-btn .syn-name{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+
+/* 大号对比面板 */
+.compare-panel{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.cp-col{border-radius:10px;display:flex;flex-direction:column;overflow:hidden;border:1.5px solid var(--border)}
+.cp-header{padding:7px 12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--muted)}
+.cp-body{flex:1;overflow:auto;padding:14px 16px}
+
+/* 源码面板 */
+.src-view{font-family:'Cascadia Code','Fira Code',monospace;font-size:15px;line-height:1.8;color:#cdd6f4;background:#1e1b2e;height:100%;border-radius:0;white-space:pre-wrap}
+.src-view .m{color:#cba6f7;font-weight:700}
+
+/* 渲染面板 */
+.ren-view{font-size:16px;line-height:1.75;color:var(--text);background:var(--surface)}
+.ren-view h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.ren-view h2{font-size:19px;font-weight:700;margin-bottom:5px}
+.ren-view h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.ren-view p{margin-bottom:8px}
+.ren-view ul,.ren-view ol{padding-left:22px;margin-bottom:8px}
+.ren-view li{margin-bottom:3px}
+.ren-view strong{color:var(--purple);font-weight:700}
+.ren-view em{font-style:italic;color:var(--amber)}
+.ren-view code{background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:14px;font-family:monospace;color:var(--red)}
+.ren-view blockquote{border-left:3px solid var(--purple);padding:6px 0 6px 14px;color:var(--sub);margin-bottom:8px;background:rgba(147,51,234,.03);border-radius:0 6px 6px 0}
+.ren-view pre{background:#1e1b2e;color:#cdd6f4;padding:12px;border-radius:8px;font-size:13px;font-family:monospace;overflow-x:auto;margin-bottom:8px;line-height:1.6}
+.ren-view hr{border:none;border-top:1.5px solid var(--border);margin:10px 0}
+.ren-view a{color:var(--purple);text-decoration:underline}
+.ren-view table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:14px}
+.ren-view th,.ren-view td{border:1px solid var(--border);padding:6px 10px;text-align:left}
+.ren-view th{background:var(--surface2);font-weight:700}
+
+/* ── 右栏：工程渲染方案 ── */
+.right{padding:18px 24px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.desc{font-size:16px;color:var(--sub);line-height:1.65}
+
+.lib-tabs{display:flex;gap:5px;flex-wrap:wrap}
+.lib-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--text);transition:all .2s;display:flex;align-items:center;gap:6px}
+.lib-btn:hover{border-color:rgba(147,51,234,.3)}
+.lib-btn.active{border-color:var(--purple);background:rgba(147,51,234,.06);color:var(--purple)}
+.lib-badge{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px}
+
+/* 方案详情 */
+.lib-detail{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.lib-detail-header{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.lib-detail-header h3{font-size:18px;font-weight:800;color:var(--text)}
+.lib-detail-header .size-tag{font-size:12px;color:var(--green);font-weight:700;background:rgba(22,163,74,.08);padding:2px 8px;border-radius:4px}
+.lib-detail-body{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+
+.detail-section{display:flex;flex-direction:column;gap:6px}
+.detail-label{font-size:12px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.3px}
+.detail-text{font-size:15px;color:var(--text);line-height:1.65}
+.code-block{background:#1e1b2e;color:#cdd6f4;padding:12px 14px;border-radius:8px;font-family:'Cascadia Code','Fira Code',monospace;font-size:13px;line-height:1.65;overflow-x:auto;white-space:pre-wrap}
+.code-block .k{color:#cba6f7}
+.code-block .s{color:#a6e3a1}
+.code-block .c{color:#6c7086}
+.code-block .f{color:#89b4fa}
+
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pc-item{padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.pc-item.pro{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.18);color:var(--text)}
+.pc-item.con{background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.15);color:var(--text)}
+.pc-item .pc-label{font-size:11px;font-weight:800;margin-bottom:3px}
+.pc-item.pro .pc-label{color:var(--green)}
+.pc-item.con .pc-label{color:var(--red)}
+
+.insight-box{background:rgba(147,51,234,.06);border:1px solid rgba(147,51,234,.18);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);line-height:1.6;flex-shrink:0}
+.insight-box b{color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块六 · Prompt Engineering · 前置</div>
+      <div class="title">Markdown <em>语法与工程化渲染</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">左侧点击语法 → 看源码/渲染对比 ｜ 右侧选方案</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <div class="section-label">点击语法元素，查看写法与渲染对比</div>
+      <div class="syntax-grid">
+        <button class="syn-btn active" onclick="showSyn(this,0)"><div class="syn-icon">#</div><div class="syn-name">标题</div></button>
+        <button class="syn-btn" onclick="showSyn(this,1)"><div class="syn-icon">**</div><div class="syn-name">加粗/斜体</div></button>
+        <button class="syn-btn" onclick="showSyn(this,2)"><div class="syn-icon">-</div><div class="syn-name">列表</div></button>
+        <button class="syn-btn" onclick="showSyn(this,3)"><div class="syn-icon">`</div><div class="syn-name">代码</div></button>
+        <button class="syn-btn" onclick="showSyn(this,4)"><div class="syn-icon">></div><div class="syn-name">引用/表格</div></button>
+      </div>
+
+      <div class="compare-panel">
+        <div class="cp-col">
+          <div class="cp-header">Markdown 源码</div>
+          <div class="cp-body"><div class="src-view" id="srcView"></div></div>
+        </div>
+        <div class="cp-col">
+          <div class="cp-header">渲染效果</div>
+          <div class="cp-body"><div class="ren-view" id="renView"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="section-label">工程化：前端如何渲染 Markdown？</div>
+      <p class="desc">大模型输出 Markdown 文本后，前端需要将其渲染成富文本。选择合适的库是关键。</p>
+
+      <div class="lib-tabs">
+        <button class="lib-btn active" onclick="showLib(this,0)"><span class="lib-badge" style="background:#dbeafe;color:#1e40af">6KB</span> marked.js</button>
+        <button class="lib-btn" onclick="showLib(this,1)"><span class="lib-badge" style="background:#d1fae5;color:#065f46">React</span> react-markdown</button>
+        <button class="lib-btn" onclick="showLib(this,2)"><span class="lib-badge" style="background:#fef3c7;color:#92400e">插件</span> markdown-it</button>
+        <button class="lib-btn" onclick="showLib(this,3)"><span class="lib-badge" style="background:#ede9fe;color:#6d28d9">SSE</span> 流式渲染</button>
+      </div>
+
+      <div class="lib-detail">
+        <div class="lib-detail-header" id="libHeader">
+          <h3 id="libTitle">marked.js</h3>
+          <span class="size-tag" id="libSize">6KB gzip</span>
+        </div>
+        <div class="lib-detail-body" id="libBody"></div>
+      </div>
+
+      <div class="insight-box">
+        <b>选型结论：</b>轻量项目用 <b>marked.js</b>，React 项目用 <b>react-markdown</b>，需要公式/图表用 <b>markdown-it</b>。流式核心：<b>throttle + 未闭合标记补全</b>。
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// ── 语法演示数据 ──
+const SYNS = [
+  {
+    src: `<span class="m">#</span> 一级标题\n<span class="m">##</span> 二级标题\n<span class="m">###</span> 三级标题\n\n标题用 # 号开头\n# 号越多，层级越深`,
+    ren: `<h1>一级标题</h1><h2>二级标题</h2><h3>三级标题</h3><p>标题用 # 号开头<br># 号越多，层级越深</p>`
+  },
+  {
+    src: `这是普通文本\n\n<span class="m">**加粗文本**</span>\n\n<span class="m">*斜体文本*</span>\n\n<span class="m">***加粗+斜体***</span>\n\n<span class="m">~~删除线~~</span>`,
+    ren: `<p>这是普通文本</p><p><strong>加粗文本</strong></p><p><em>斜体文本</em></p><p><strong><em>加粗+斜体</em></strong></p><p><s>删除线</s></p>`
+  },
+  {
+    src: `无序列表：\n<span class="m">-</span> Notion AI\n<span class="m">-</span> Midjourney\n<span class="m">-</span> GitHub Copilot\n\n有序列表：\n<span class="m">1.</span> 先注册账号\n<span class="m">2.</span> 选择套餐\n<span class="m">3.</span> 开始使用`,
+    ren: `<p>无序列表：</p><ul><li>Notion AI</li><li>Midjourney</li><li>GitHub Copilot</li></ul><p>有序列表：</p><ol><li>先注册账号</li><li>选择套餐</li><li>开始使用</li></ol>`
+  },
+  {
+    src: `行内代码：<span class="m">\`JSON.parse()\`</span>\n\n代码块：\n<span class="m">\`\`\`python</span>\ndef hello():\n    print("Hello AI")\n    return True\n<span class="m">\`\`\`</span>`,
+    ren: `<p>行内代码：<code>JSON.parse()</code></p><p>代码块：</p><pre>def hello():\n    print("Hello AI")\n    return True</pre>`
+  },
+  {
+    src: `引用：\n<span class="m">></span> 纯文本就能表达排版\n<span class="m">></span> 这是 Markdown 的精髓\n\n分隔线：\n<span class="m">---</span>\n\n表格：\n<span class="m">| 格式 | Token | 解析 |</span>\n<span class="m">|------|-------|------|</span>\n<span class="m">| JSON | 中    | 好   |</span>\n<span class="m">| YAML | 少    | 好   |</span>\n<span class="m">| MD   | 中    | 难   |</span>`,
+    ren: `<p>引用：</p><blockquote>纯文本就能表达排版<br>这是 Markdown 的精髓</blockquote><p>分隔线：</p><hr><p>表格：</p><table><thead><tr><th>格式</th><th>Token</th><th>解析</th></tr></thead><tbody><tr><td>JSON</td><td>中</td><td>好</td></tr><tr><td>YAML</td><td>少</td><td>好</td></tr><tr><td>MD</td><td>中</td><td>难</td></tr></tbody></table>`
+  }
+];
+
+function showSyn(btn, i) {
+  document.querySelectorAll('.syn-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  document.getElementById('srcView').innerHTML = SYNS[i].src;
+  document.getElementById('renView').innerHTML = SYNS[i].ren;
+}
+
+// ── 工程方案数据 ──
+const LIBS = [
+  {
+    title: 'marked.js',
+    size: '6KB gzip · 零依赖',
+    body: `
+      <div class="detail-section">
+        <div class="detail-label">一句话</div>
+        <div class="detail-text">最轻量的 Markdown 解析库，纯前端，零依赖，引入即用。</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">用法</div>
+        <div class="code-block"><span class="k">import</span> { marked } <span class="k">from</span> <span class="s">'marked'</span>;\n\n<span class="c">// 一行搞定</span>\nel.innerHTML = <span class="f">marked.parse</span>(mdText);</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pc-item pro"><div class="pc-label">适合</div>快速集成、轻量项目、不需要复杂扩展的场景</div>
+        <div class="pc-item con"><div class="pc-label">不足</div>插件生态一般，复杂扩展（公式、流程图）需自行处理</div>
+      </div>
+    `
+  },
+  {
+    title: 'react-markdown',
+    size: 'React 组件化',
+    body: `
+      <div class="detail-section">
+        <div class="detail-label">一句话</div>
+        <div class="detail-text">React 生态的 Markdown 渲染组件，支持自定义组件映射。</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">用法</div>
+        <div class="code-block"><span class="k">import</span> ReactMarkdown <span class="k">from</span> <span class="s">'react-markdown'</span>;\n<span class="k">import</span> remarkGfm <span class="k">from</span> <span class="s">'remark-gfm'</span>;\n\n<span class="c">// 流式：state 绑定累积文本，自动 re-render</span>\n&lt;<span class="f">ReactMarkdown</span> remarkPlugins={[remarkGfm]}&gt;\n  {streamText}\n&lt;/<span class="f">ReactMarkdown</span>&gt;</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pc-item pro"><div class="pc-label">适合</div>React 项目、需要自定义渲染组件、GFM 表格/删除线</div>
+        <div class="pc-item con"><div class="pc-label">不足</div>仅限 React 生态，频繁 re-render 需注意性能</div>
+      </div>
+    `
+  },
+  {
+    title: 'markdown-it',
+    size: '插件生态丰富',
+    body: `
+      <div class="detail-section">
+        <div class="detail-label">一句话</div>
+        <div class="detail-text">丰富的插件生态，支持 KaTeX 公式、Mermaid 流程图、脚注等扩展。</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">用法</div>
+        <div class="code-block"><span class="k">import</span> markdownit <span class="k">from</span> <span class="s">'markdown-it'</span>;\n<span class="k">import</span> katex <span class="k">from</span> <span class="s">'markdown-it-katex'</span>;\n\n<span class="k">const</span> md = <span class="f">markdownit</span>().<span class="f">use</span>(katex);\nel.innerHTML = md.<span class="f">render</span>(text);</div>
+      </div>
+      <div class="pros-cons">
+        <div class="pc-item pro"><div class="pc-label">适合</div>需要渲染公式、图表、脚注等复杂内容的文档场景</div>
+        <div class="pc-item con"><div class="pc-label">不足</div>体积较大，插件质量参差不齐</div>
+      </div>
+    `
+  },
+  {
+    title: '流式渲染实战',
+    size: 'SSE + throttle',
+    body: `
+      <div class="detail-section">
+        <div class="detail-label">核心逻辑</div>
+        <div class="detail-text">每收到 SSE chunk，拼接到缓冲区，throttle 50ms 后调用 parse 渲染。</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">代码</div>
+        <div class="code-block"><span class="k">const</span> reader = response.body.<span class="f">getReader</span>();\n<span class="k">let</span> buffer = <span class="s">''</span>;\n\n<span class="k">while</span> (<span class="k">true</span>) {\n  <span class="k">const</span> { done, value } = <span class="k">await</span> reader.<span class="f">read</span>();\n  <span class="k">if</span> (done) <span class="k">break</span>;\n  buffer += decoder.<span class="f">decode</span>(value);\n  <span class="f">throttledRender</span>(buffer); <span class="c">// 50ms 防抖</span>\n}</div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">关键注意</div>
+        <div class="detail-text" style="color:var(--red);font-weight:600">代码块未闭合时会导致 parse 异常。需检测未闭合的 \`\`\` 并临时补全后再渲染。代码高亮（highlight.js）需在每次 re-render 后重新调用。</div>
+      </div>
+    `
+  }
+];
+
+function showLib(btn, i) {
+  document.querySelectorAll('.lib-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  const lib = LIBS[i];
+  document.getElementById('libTitle').textContent = lib.title;
+  document.getElementById('libSize').textContent = lib.size;
+  document.getElementById('libBody').innerHTML = lib.body;
+}
+
+// init
+showSyn(document.querySelector('.syn-btn.active'), 0);
+showLib(document.querySelector('.lib-btn.active'), 0);
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>为什么大模型选择 Markdown</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--amber:#d97706;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--purple);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+.left{padding:22px 28px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:14px;overflow:auto}
+.right{padding:22px 28px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+
+.desc{font-size:17px;color:var(--sub);line-height:1.7}
+
+/* 问题卡 */
+.problem-box{background:rgba(220,38,38,.05);border:1.5px solid rgba(220,38,38,.18);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.problem-box .label{font-size:14px;font-weight:800;color:var(--red)}
+.problem-item{display:flex;gap:10px;align-items:flex-start}
+.problem-icon{width:36px;height:36px;border-radius:8px;background:rgba(220,38,38,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.problem-text h4{font-size:16px;font-weight:700;color:var(--text)}
+.problem-text p{font-size:14px;color:var(--sub);line-height:1.5;margin-top:2px}
+
+/* 方案推导 */
+.solution-chain{display:flex;flex-direction:column;gap:8px}
+.chain-step{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);opacity:0.3;transform:translateX(-8px);transition:all .4s ease}
+.chain-step.active{opacity:1;transform:translateX(0)}
+.chain-num{width:28px;height:28px;border-radius:8px;background:var(--surface2);font-size:15px;font-weight:800;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chain-step.active .chain-num{background:var(--purple);color:white}
+.chain-text{font-size:16px;font-weight:600;color:var(--text)}
+.chain-text span{color:var(--purple);font-weight:800}
+.chain-arrow{text-align:center;font-size:18px;color:var(--muted)}
+
+/* 对比演示 */
+.compare-wrap{display:flex;flex-direction:column;gap:10px;flex:1}
+.compare-label{font-size:14px;font-weight:700;color:var(--muted)}
+.code-box{background:#1e1b2e;border-radius:10px;padding:14px 16px;font-family:'Cascadia Code','Fira Code',monospace;font-size:14px;line-height:1.7;color:#cdd6f4;flex:1;overflow:auto;white-space:pre;tab-size:2}
+.code-box .c{color:#6c7086}
+.code-box .k{color:#cba6f7}
+.code-box .s{color:#a6e3a1}
+.code-box .tag{color:#f38ba8}
+
+.render-box{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;flex:1;overflow:auto;font-size:15px;line-height:1.7;color:var(--text)}
+.render-box h2{font-size:18px;font-weight:800;margin-bottom:6px;color:var(--text)}
+.render-box ul{padding-left:20px;margin:6px 0}
+.render-box li{margin-bottom:3px}
+.render-box strong{color:var(--purple)}
+.render-box code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:13px;font-family:monospace}
+
+.insight-box{background:rgba(147,51,234,.06);border:1px solid rgba(147,51,234,.18);border-radius:10px;padding:12px 16px;font-size:16px;color:var(--text);line-height:1.65;flex-shrink:0}
+.insight-box b{color:var(--purple)}
+
+/* 按钮 */
+.ctrl-btn{padding:10px 18px;background:var(--purple);color:white;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;transition:opacity .2s}
+.ctrl-btn:hover{opacity:.85}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块六 · Prompt Engineering · 前置</div>
+      <div class="title">为什么大模型选择 <em>Markdown</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">点击"下一步"逐步推演 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：问题与推导 -->
+    <div class="left">
+      <div class="problem-box">
+        <div class="label">核心矛盾</div>
+        <div class="problem-item">
+          <div class="problem-icon">📝</div>
+          <div class="problem-text">
+            <h4>大模型是纯文本模型</h4>
+            <p>LLM 逐 Token 输出，每个 Token 就是一段文字。它不懂颜色、不懂字号、不懂对齐。</p>
+          </div>
+        </div>
+        <div class="problem-item">
+          <div class="problem-icon">🎨</div>
+          <div class="problem-text">
+            <h4>但用户期望有排版</h4>
+            <p>标题、加粗、列表、代码块、链接……没有排版的纯文本，阅读体验极差。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="solution-chain" id="chain">
+        <div class="chain-step" data-step="0">
+          <div class="chain-num">1</div>
+          <div class="chain-text">用 HTML？标签太重，<span>浪费 Token</span></div>
+        </div>
+        <div class="chain-arrow" data-step="0">↓ 不行</div>
+
+        <div class="chain-step" data-step="1">
+          <div class="chain-num">2</div>
+          <div class="chain-text">用 Word/PDF？二进制格式，<span>无法逐字输出</span></div>
+        </div>
+        <div class="chain-arrow" data-step="1">↓ 更不行</div>
+
+        <div class="chain-step" data-step="2">
+          <div class="chain-num">3</div>
+          <div class="chain-text">用 LaTeX？语法复杂，<span>模型容易出错</span></div>
+        </div>
+        <div class="chain-arrow" data-step="2">↓ 也不行</div>
+
+        <div class="chain-step" data-step="3">
+          <div class="chain-num">✓</div>
+          <div class="chain-text"><span>Markdown：</span>文本自带排版标记，轻量优雅</div>
+        </div>
+      </div>
+
+      <button class="ctrl-btn" id="nextBtn" onclick="nextStep()">下一步</button>
+    </div>
+
+    <!-- 右栏：对比展示 -->
+    <div class="right">
+      <div class="compare-wrap" id="compareWrap" style="display:none">
+        <div class="compare-label" id="compareLabel">同一段内容，不同格式的开销对比</div>
+        <div class="code-box" id="codeBox"></div>
+        <div class="render-box" id="renderBox" style="display:none"></div>
+      </div>
+
+      <div id="finalInsight" style="display:none">
+        <div class="insight-box" style="margin-bottom:12px">
+          <b>Markdown 三大优势：</b><br><br>
+          <b>1. 纯文本兼容</b> — 模型逐 Token 输出即可，无需特殊编码<br>
+          <b>2. 排版标记极轻</b> — <code style="background:var(--surface2);padding:1px 5px;border-radius:3px"># ## **</code> 只占几个 Token<br>
+          <b>3. 前端渲染成熟</b> — marked.js / react-markdown 等库一行代码搞定
+        </div>
+        <div class="insight-box">
+          <b>结论：</b>所有主流 AI 产品（ChatGPT、Claude、通义千问）默认输出都是 Markdown。<br>
+          这不是"碰巧"，而是<b>纯文本模型 + 排版需求</b>的最优解。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+let step = -1;
+const maxStep = 5;
+
+const HTML_CODE = `<span class="c">&lt;!-- HTML 方式：标签沉重 --&gt;</span>\n<span class="tag">&lt;h2&gt;</span>AI 工具推荐<span class="tag">&lt;/h2&gt;</span>\n<span class="tag">&lt;ul&gt;</span>\n  <span class="tag">&lt;li&gt;</span><span class="tag">&lt;strong&gt;</span>Notion AI<span class="tag">&lt;/strong&gt;</span>：写作辅助<span class="tag">&lt;/li&gt;</span>\n  <span class="tag">&lt;li&gt;</span><span class="tag">&lt;strong&gt;</span>Midjourney<span class="tag">&lt;/strong&gt;</span>：图像生成<span class="tag">&lt;/li&gt;</span>\n<span class="tag">&lt;/ul&gt;</span>\n\n<span class="c">Token 消耗：约 45 Token（标签本身占一半）</span>`;
+
+const MD_CODE = `<span class="c">## AI 工具推荐</span>\n\n- <span class="s">**Notion AI**</span>：写作辅助\n- <span class="s">**Midjourney**</span>：图像生成\n\n<span class="c">Token 消耗：约 20 Token（标记本身只占 3 个）</span>`;
+
+const MD_RENDER = `<h2>AI 工具推荐</h2>
+<ul>
+<li><strong>Notion AI</strong>：写作辅助</li>
+<li><strong>Midjourney</strong>：图像生成</li>
+</ul>
+<p style="font-size:14px;color:var(--muted);margin-top:12px">↑ 同样的渲染效果，Markdown 省了 <b style="color:var(--green)">55%</b> 的 Token</p>`;
+
+function nextStep() {
+  step++;
+  if (step > maxStep) return;
+  // steps 0-3: reveal chain
+  if (step <= 3) {
+    document.querySelectorAll(`.chain-step[data-step="${step}"]`).forEach(el => el.classList.add('active'));
+    document.querySelectorAll(`.chain-arrow[data-step="${step}"]`).forEach(el => { el.style.opacity = 1; });
+    if (step === 0) {
+      // also show HTML compare
+      document.getElementById('compareWrap').style.display = 'flex';
+      document.getElementById('compareLabel').textContent = '方案 1：HTML — 标签太重';
+      document.getElementById('codeBox').innerHTML = HTML_CODE;
+    }
+    if (step === 3) {
+      document.getElementById('compareLabel').textContent = '方案 4：Markdown — 轻量标记';
+      document.getElementById('codeBox').innerHTML = MD_CODE;
+    }
+  }
+  if (step === 4) {
+    // show rendered result
+    document.getElementById('renderBox').style.display = 'block';
+    document.getElementById('renderBox').innerHTML = MD_RENDER;
+    document.getElementById('compareLabel').textContent = 'Markdown 原文 → 渲染效果';
+    document.getElementById('nextBtn').textContent = '看结论';
+  }
+  if (step === 5) {
+    document.getElementById('compareWrap').style.display = 'none';
+    document.getElementById('finalInsight').style.display = 'block';
+    document.getElementById('nextBtn').style.display = 'none';
+  }
+}
+
+// init: chain arrows hidden
+document.querySelectorAll('.chain-arrow').forEach(el => el.style.opacity = 0);
+// auto-trigger first step
+nextStep();
+</script>
+</body>
+</html>

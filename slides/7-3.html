@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ReAct 实战：当 Agent 卡住了</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--muted:#8e8e93;--cyan:#0891b2;--purple:#7c3aed;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:300px 1fr;min-height:0;overflow:hidden}
+
+/* 左栏 */
+.left{padding:14px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.l-desc{font-size:15px;color:var(--sub);line-height:1.65}
+.l-desc strong{color:var(--text)}
+
+/* 循环计数器 */
+.loop-counter{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.lc-row{display:flex;justify-content:space-between;align-items:center}
+.lc-label{font-size:13px;color:var(--muted);font-weight:600}
+.lc-val{font-size:22px;font-weight:900;color:var(--text);transition:color .3s}
+.lc-val.warn{color:var(--amber)}
+.lc-val.danger{color:var(--red)}
+.lc-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.lc-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s ease,background .4s}
+.lc-fill.warn{background:var(--amber)}
+.lc-fill.danger{background:var(--red)}
+
+.status-badge{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:700;text-align:center;flex-shrink:0;transition:all .3s}
+
+/* 进度控制 */
+.ctrl-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.btn-next{padding:7px 18px;border-radius:8px;background:var(--orange);color:white;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+.btn-reset{padding:7px 12px;border-radius:8px;background:var(--surface2);color:var(--sub);font-size:14px;border:1px solid var(--border);cursor:pointer;font-family:inherit}
+.prog-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .35s}
+
+.insight{background:rgba(220,38,38,.05);border:1.5px solid rgba(220,38,38,.18);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;flex-shrink:0}
+.insight b{color:var(--red)}
+.insight.ok{background:rgba(22,163,74,.05);border-color:rgba(22,163,74,.2)}
+.insight.ok b{color:var(--green)}
+
+/* 右栏 */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-hd{padding:8px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.r-hd-label{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+.r-hd-task{font-size:14px;font-weight:700;color:var(--text)}
+
+/* 消息流 */
+.msg-area{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:6px}
+
+.msg{display:flex;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .3s ease,transform .3s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+.msg-body{flex:1;min-width:0}
+.msg-role{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px}
+.msg-bubble{border-radius:9px;padding:8px 12px;font-size:13.5px;line-height:1.65}
+
+/* 错误shake */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.shake{animation:shake .4s ease}
+
+.code{font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.k{color:#7c3aed}.s{color:#16a34a}.c{color:#9ca3af;font-style:italic}.fn{color:#0891b2}.err{color:#dc2626;font-weight:700}
+
+/* 底栏 */
+.r-ft{padding:8px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.ft-msg{font-size:13px;color:var(--muted);font-weight:600;transition:color .3s}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · Agent 工程 · 第 3 页</div>
+      <div class="hd-title">ReAct 实战：<em>当 Agent 卡住了</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击「下一步」追踪真实失败过程 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="l-desc">ReAct 循环：<strong>思考 → 行动 → 观察</strong>，循环往复。<br>但如果模型对参数格式不了解，它会反复猜测，<strong>卡在同一个地方打转。</strong></p>
+
+      <div class="loop-counter">
+        <div class="lc-row">
+          <span class="lc-label">ReAct 循环次数</span>
+          <span class="lc-val" id="loopCount">0</span>
+        </div>
+        <div class="lc-bar"><div class="lc-fill" id="loopFill" style="width:0%"></div></div>
+        <div class="lc-row">
+          <span class="lc-label">工具调用</span>
+          <span class="lc-val" id="callCount" style="font-size:16px">0 次</span>
+        </div>
+        <div class="lc-row">
+          <span class="lc-label">失败次数</span>
+          <span class="lc-val" id="failCount" style="font-size:16px;color:var(--red)">0 次</span>
+        </div>
+        <div class="status-badge" id="statusBadge" style="background:var(--surface2);color:var(--muted)">等待开始</div>
+      </div>
+
+      <div class="ctrl-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--muted);font-weight:600" id="stepText">共 10 步</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text)" id="stepNum">0 / 10</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-next" id="btnNext" onclick="nextStep()">▶ 下一步</button>
+          <button class="btn-reset" onclick="resetAll()">重置</button>
+        </div>
+      </div>
+
+      <div class="insight" id="insightBox">
+        <b>问题根源：</b>模型不知道 API 要求的具体格式，只能靠猜测——每次失败就换一种写法重试。没有脚手架的 Agent，这个循环可能永远不会停。
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="r-hd">
+        <span class="r-hd-label">ReAct 执行日志</span>
+        <span class="r-hd-task">任务：帮我预订上海外滩附近的酒店，明天入住，住两晚</span>
+      </div>
+      <div class="msg-area" id="msgArea"></div>
+      <div class="r-ft"><span class="ft-msg" id="ftMsg">点击「下一步」开始演示</span></div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+// 每步数据
+const STEPS = [
+  {
+    loop:1, calls:0, fails:0,
+    status:'运行中', statusBg:'rgba(8,145,178,.08)', statusColor:'#0891b2',
+    ft:'第 1 轮：Agent 开始思考任务…',
+    msgs:[{
+      icon:'🤔', iconBg:'#7c3aed', role:'THOUGHT', roleColor:'#7c3aed',
+      bg:'rgba(124,58,237,.05)', border:'rgba(124,58,237,.2)',
+      html:'任务是预订上海外滩附近的酒店，明天入住，住两晚。我需要调用 book_hotel 工具。明天是 2026-04-11，退房是 4-13。'
+    }]
+  },
+  {
+    loop:1, calls:1, fails:0,
+    status:'调用中', statusBg:'rgba(8,145,178,.08)', statusColor:'#0891b2',
+    ft:'第 1 次工具调用，用了中文日期格式…',
+    msgs:[{
+      icon:'⚡', iconBg:'#0891b2', role:'ACTION', roleColor:'#0891b2',
+      bg:'rgba(8,145,178,.04)', border:'rgba(8,145,178,.2)',
+      html:`<div class="code"><span class="fn">book_hotel</span>({
+  location:   <span class="s">"上海外滩"</span>,
+  checkin:    <span class="s">"明天"</span>,        <span class="c">← 用了自然语言</span>
+  checkout:   <span class="s">"后天"</span>,
+  guests:     <span class="k">1</span>
+})</div>`
+    }]
+  },
+  {
+    loop:1, calls:1, fails:1,
+    status:'出错 ×1', statusBg:'rgba(220,38,38,.08)', statusColor:'#dc2626',
+    ft:'API 报错：不接受自然语言日期',
+    msgs:[{
+      icon:'❌', iconBg:'#dc2626', role:'OBSERVATION · ERROR', roleColor:'#dc2626',
+      bg:'rgba(220,38,38,.04)', border:'rgba(220,38,38,.25)',
+      shake:true,
+      html:`<div class="code"><span class="err">Error 400: Invalid date format</span>
+checkin 字段不接受自然语言。
+<span class="c">请使用 YYYY-MM-DD 格式。</span></div>`
+    }]
+  },
+  {
+    loop:2, calls:2, fails:1,
+    status:'重试中', statusBg:'rgba(215,119,6,.08)', statusColor:'#d97706',
+    ft:'第 2 轮：模型改用数字日期，但格式还是错了…',
+    msgs:[{
+      icon:'🤔', iconBg:'#7c3aed', role:'THOUGHT', roleColor:'#7c3aed',
+      bg:'rgba(124,58,237,.05)', border:'rgba(124,58,237,.2)',
+      html:'好的，需要用日期格式。明天是 4 月 11 日，我用 04/11 试试。'
+    },{
+      icon:'⚡', iconBg:'#0891b2', role:'ACTION', roleColor:'#0891b2',
+      bg:'rgba(8,145,178,.04)', border:'rgba(8,145,178,.2)',
+      html:`<div class="code"><span class="fn">book_hotel</span>({
+  location:   <span class="s">"上海外滩"</span>,
+  checkin:    <span class="s">"04/11"</span>,     <span class="c">← 换成斜杠格式</span>
+  checkout:   <span class="s">"04/13"</span>,
+  guests:     <span class="k">1</span>
+})</div>`
+    }]
+  },
+  {
+    loop:2, calls:2, fails:2,
+    status:'出错 ×2', statusBg:'rgba(220,38,38,.08)', statusColor:'#dc2626',
+    ft:'还是错——API 只接受 YYYY-MM-DD，不接受 MM/DD',
+    msgs:[{
+      icon:'❌', iconBg:'#dc2626', role:'OBSERVATION · ERROR', roleColor:'#dc2626',
+      bg:'rgba(220,38,38,.04)', border:'rgba(220,38,38,.25)',
+      shake:true,
+      html:`<div class="code"><span class="err">Error 400: Date parse failed</span>
+"04/11" 无法识别，必须包含年份。
+<span class="c">正确格式：YYYY-MM-DD（如 2026-04-11）</span></div>`
+    }]
+  },
+  {
+    loop:3, calls:3, fails:2,
+    status:'重试中', statusBg:'rgba(215,119,6,.08)', statusColor:'#d97706',
+    ft:'第 3 轮：终于猜到要带年份，但 checkout 算错了…',
+    msgs:[{
+      icon:'🤔', iconBg:'#7c3aed', role:'THOUGHT', roleColor:'#7c3aed',
+      bg:'rgba(124,58,237,.05)', border:'rgba(124,58,237,.2)',
+      html:'需要带年份，格式是 YYYY-MM-DD。2026-04-11 入住，住两晚，退房是 2026-04-12。'
+    },{
+      icon:'⚡', iconBg:'#0891b2', role:'ACTION', roleColor:'#0891b2',
+      bg:'rgba(8,145,178,.04)', border:'rgba(8,145,178,.2)',
+      html:`<div class="code"><span class="fn">book_hotel</span>({
+  location:   <span class="s">"上海外滩"</span>,
+  checkin:    <span class="s">"2026-04-11"</span>,
+  checkout:   <span class="s">"2026-04-12"</span>,  <span class="c">← 住两晚但只算了一晚</span>
+  guests:     <span class="k">1</span>
+})</div>`
+    }]
+  },
+  {
+    loop:3, calls:3, fails:3,
+    status:'出错 ×3', statusBg:'rgba(220,38,38,.1)', statusColor:'#dc2626',
+    ft:'日期格式对了，但天数算错了',
+    msgs:[{
+      icon:'❌', iconBg:'#dc2626', role:'OBSERVATION · ERROR', roleColor:'#dc2626',
+      bg:'rgba(220,38,38,.04)', border:'rgba(220,38,38,.3)',
+      shake:true,
+      html:`<div class="code"><span class="err">Error 422: Invalid stay duration</span>
+checkout 必须晚于 checkin 至少 1 晚。
+checkin=2026-04-11, checkout=2026-04-12 → 仅 1 晚。
+<span class="c">用户要求住两晚，checkout 应为 2026-04-13。</span></div>`
+    }]
+  },
+  {
+    loop:4, calls:4, fails:3,
+    status:'重试中', statusBg:'rgba(215,119,6,.08)', statusColor:'#d97706',
+    ft:'第 4 轮：终于参数全对，发起第 4 次调用…',
+    msgs:[{
+      icon:'🤔', iconBg:'#7c3aed', role:'THOUGHT', roleColor:'#7c3aed',
+      bg:'rgba(124,58,237,.05)', border:'rgba(124,58,237,.2)',
+      html:'住两晚，所以退房是 4-13，不是 4-12。格式已经是 YYYY-MM-DD 了，这次应该对了。'
+    },{
+      icon:'⚡', iconBg:'#0891b2', role:'ACTION', roleColor:'#0891b2',
+      bg:'rgba(8,145,178,.04)', border:'rgba(8,145,178,.2)',
+      html:`<div class="code"><span class="fn">book_hotel</span>({
+  location:   <span class="s">"上海外滩"</span>,
+  checkin:    <span class="s">"2026-04-11"</span>,
+  checkout:   <span class="s">"2026-04-13"</span>,  <span class="c">← 修正为两晚</span>
+  guests:     <span class="k">1</span>
+})</div>`
+    }]
+  },
+  {
+    loop:4, calls:4, fails:3,
+    status:'成功！', statusBg:'rgba(22,163,74,.08)', statusColor:'#16a34a',
+    ft:'第 4 次才成功——已经打转了 3 次',
+    msgs:[{
+      icon:'✅', iconBg:'#16a34a', role:'OBSERVATION · SUCCESS', roleColor:'#16a34a',
+      bg:'rgba(22,163,74,.04)', border:'rgba(22,163,74,.25)',
+      html:`<div class="code">booking_id:  <span class="s">"BK-20260411-0872"</span>
+hotel:       <span class="s">"上海外滩茂悦大酒店"</span>
+checkin:     <span class="s">"2026-04-11"</span>
+checkout:    <span class="s">"2026-04-13"</span>
+price:       <span class="k">¥1,280 / 晚</span>  × 2 晚 = ¥2,560
+status:      <span class="fn">CONFIRMED</span></div>`
+    }]
+  },
+  {
+    loop:4, calls:4, fails:3,
+    status:'已完成', statusBg:'rgba(22,163,74,.08)', statusColor:'#16a34a',
+    ft:'总共循环 4 次、失败 3 次，才完成一个简单任务',
+    msgs:[{
+      icon:'🤖', iconBg:'#16a34a', role:'FINAL ANSWER', roleColor:'#16a34a',
+      bg:'rgba(22,163,74,.05)', border:'rgba(22,163,74,.25)',
+      html:'已为您预订上海外滩茂悦大酒店，4月11日入住、4月13日退房，共 2 晚，合计 ¥2,560。订单号：BK-20260411-0872。'
+    }]
+  }
+];
+
+let cur = 0;
+
+function nextStep() {
+  if (cur >= STEPS.length) return;
+  const s = STEPS[cur];
+
+  // 更新左栏计数
+  const lc = document.getElementById('loopCount');
+  lc.textContent = s.loop;
+  lc.className = 'lc-val' + (s.fails >= 3 ? ' danger' : s.fails >= 1 ? ' warn' : '');
+  const fill = document.getElementById('loopFill');
+  fill.style.width = (s.loop / 4 * 100) + '%';
+  fill.className = 'lc-fill' + (s.fails >= 3 ? ' danger' : s.fails >= 1 ? ' warn' : '');
+  document.getElementById('callCount').textContent = s.calls + ' 次';
+  document.getElementById('failCount').textContent = s.fails + ' 次';
+
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = s.status;
+  badge.style.background = s.statusBg;
+  badge.style.color = s.statusColor;
+
+  // 进度条
+  document.getElementById('progFill').style.width = ((cur+1)/STEPS.length*100)+'%';
+  document.getElementById('stepNum').textContent = `${cur+1} / ${STEPS.length}`;
+  document.getElementById('ftMsg').textContent = s.ft;
+
+  // 渲染消息
+  const area = document.getElementById('msgArea');
+  s.msgs.forEach((m, mi) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'msg';
+      el.innerHTML = `
+        <div class="msg-icon" style="background:${m.iconBg}">${m.icon}</div>
+        <div class="msg-body">
+          <div class="msg-role" style="color:${m.roleColor}">${m.role}</div>
+          <div class="msg-bubble" style="background:${m.bg};border:1.5px solid ${m.border}">${m.html}</div>
+        </div>`;
+      area.appendChild(el);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.classList.add('show');
+        if (m.shake) setTimeout(() => el.querySelector('.msg-bubble').classList.add('shake'), 350);
+        area.scrollTop = area.scrollHeight;
+      }));
+    }, mi * 180);
+  });
+
+  cur++;
+
+  // 最后一步
+  if (cur >= STEPS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 完成';
+    document.getElementById('stepText').textContent = '演示结束';
+    const ib = document.getElementById('insightBox');
+    ib.className = 'insight ok';
+    ib.innerHTML = '<b>这正是脚手架的价值：</b>加入参数验证、格式说明、最大重试次数限制，Agent 就不会无限打转。下一页介绍如何用脚手架解决这个问题。';
+  }
+}
+
+function resetAll() {
+  cur = 0;
+  document.getElementById('msgArea').innerHTML = '';
+  document.getElementById('loopCount').textContent = '0';
+  document.getElementById('loopCount').className = 'lc-val';
+  document.getElementById('loopFill').style.width = '0%';
+  document.getElementById('loopFill').className = 'lc-fill';
+  document.getElementById('callCount').textContent = '0 次';
+  document.getElementById('failCount').textContent = '0 次';
+  document.getElementById('statusBadge').textContent = '等待开始';
+  document.getElementById('statusBadge').style.background = 'var(--surface2)';
+  document.getElementById('statusBadge').style.color = 'var(--muted)';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('stepNum').textContent = '0 / 10';
+  document.getElementById('stepText').textContent = '共 10 步';
+  document.getElementById('ftMsg').textContent = '点击「下一步」开始演示';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  const ib = document.getElementById('insightBox');
+  ib.className = 'insight';
+  ib.innerHTML = '<b>问题根源：</b>模型不知道 API 要求的具体格式，只能靠猜测——每次失败就换一种写法重试。没有脚手架的 Agent，这个循环可能永远不会停。';
+}
+</script>
+</body>
+</html>

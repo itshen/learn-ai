@@ -1,0 +1,24 @@
+/* slide-base.css  ——  每个 slide 页面引入 */
+@import url('../style.css');
+
+html, body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+.slide-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 72px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 让 slide 内内容垂直居中（内容少时），内容多时自然撑开 */
+@media (min-height: 600px) {
+  .slide-page { min-height: calc(100vh - 8px); }
+}

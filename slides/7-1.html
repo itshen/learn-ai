@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Agent：能干活的 AI</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#5b4fcf;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:14px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:360px 1fr;min-height:0}
+
+/* 左栏 */
+.left{padding:16px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.desc{font-size:16px;color:var(--sub);line-height:1.6;flex-shrink:0}
+
+.ab-list{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.ab-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;text-align:left;width:100%}
+.ab-btn:hover{border-color:rgba(0,0,0,.15)}
+.ab-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;transition:transform .2s}
+.ab-btn:hover .ab-icon{transform:scale(1.05)}
+.abt h4{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px;transition:color .2s}
+.abt p{font-size:13px;color:var(--muted)}
+
+/* active 按能力着色 */
+.ab-btn[data-ab=plan].active{border-color:var(--orange);background:rgba(234,88,12,.05)}
+.ab-btn[data-ab=plan].active .abt h4{color:var(--orange)}
+.ab-btn[data-ab=tool].active{border-color:var(--cyan);background:rgba(8,145,178,.05)}
+.ab-btn[data-ab=tool].active .abt h4{color:var(--cyan)}
+.ab-btn[data-ab=mem].active{border-color:var(--green);background:rgba(22,163,74,.05)}
+.ab-btn[data-ab=mem].active .abt h4{color:var(--green)}
+.ab-btn[data-ab=act].active{border-color:var(--purple);background:rgba(91,79,207,.05)}
+.ab-btn[data-ab=act].active .abt h4{color:var(--purple)}
+
+/* vs 对比 */
+.vs-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
+.vs-box{border-radius:10px;overflow:hidden;border:1.5px solid var(--border)}
+.vs-hd{padding:7px 12px;font-size:14px;font-weight:700;border-bottom:1px solid var(--border)}
+.vs-body{padding:8px 12px;font-size:14px;color:var(--sub);line-height:1.6}
+.vs-box.llm .vs-hd{background:rgba(8,145,178,.07);color:var(--cyan)}
+.vs-box.agent .vs-hd{background:rgba(234,88,12,.07);color:var(--orange)}
+
+.takeaway{background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.2);border-radius:10px;padding:9px 13px;font-size:14px;color:var(--text);line-height:1.6;flex-shrink:0}
+.takeaway b{color:var(--orange)}
+
+/* 右栏 */
+.right{padding:16px 20px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.demo-hd{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;flex-shrink:0}
+
+/* 时间轴演示 */
+.timeline-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.tl-bar{padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.tl-title{font-size:14px;font-weight:700;color:var(--muted)}
+.tl-step-badge{font-size:13px;color:var(--muted)}
+
+.tl-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+
+/* 时间轴步骤 */
+.tl-item{display:flex;gap:12px;opacity:0;transform:translateX(-8px);transition:all .35s ease;flex-shrink:0}
+.tl-item.show{opacity:1;transform:translateX(0)}
+.tl-dot-col{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.tl-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
+.tl-line{width:2px;flex:1;margin:4px 0;background:var(--border);min-height:10px}
+.tl-content{flex:1;padding-bottom:4px}
+.tl-label{font-size:12px;font-weight:800;letter-spacing:.4px;margin-bottom:3px}
+.tl-text{font-size:15px;line-height:1.6;color:var(--text)}
+.tl-code{display:inline-block;background:var(--surface2);padding:1px 7px;border-radius:5px;font-family:monospace;font-size:13px;color:var(--sub)}
+
+.ctrl-row{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.btn{padding:8px 20px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.hint{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · Agent 工程 · 第 1 页</div>
+      <div class="hd-title">Agent：<em>能干活的 AI</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">选能力 → 右侧逐步演示真实执行过程</div>
+  </div>
+  <div class="body">
+    <!-- 左栏 -->
+    <div class="left">
+      <p class="desc">普通 LLM 只能"说"，Agent 能"做"。区别在于 Agent 有四个额外能力，让它可以在真实世界中执行任务。</p>
+
+      <div class="ab-list">
+        <button class="ab-btn active" data-ab="plan" onclick="pickAb(this,'plan',0)">
+          <div class="ab-icon" style="background:rgba(234,88,12,.1)">🧭</div>
+          <div class="abt"><h4>Plan（规划）</h4><p>把复杂任务拆解为可执行步骤</p></div>
+        </button>
+        <button class="ab-btn" data-ab="tool" onclick="pickAb(this,'tool',1)">
+          <div class="ab-icon" style="background:rgba(8,145,178,.1)">🔧</div>
+          <div class="abt"><h4>Tool Use（使用工具）</h4><p>调用搜索、代码执行、数据库、API</p></div>
+        </button>
+        <button class="ab-btn" data-ab="mem" onclick="pickAb(this,'mem',2)">
+          <div class="ab-icon" style="background:rgba(22,163,74,.1)">🗃️</div>
+          <div class="abt"><h4>Memory（记忆）</h4><p>短期上下文 + 长期向量数据库</p></div>
+        </button>
+        <button class="ab-btn" data-ab="act" onclick="pickAb(this,'act',3)">
+          <div class="ab-icon" style="background:rgba(91,79,207,.1)">🔄</div>
+          <div class="abt"><h4>Act / Reflect（行动+反思）</h4><p>执行后观察，失败则自我纠错</p></div>
+        </button>
+      </div>
+
+      <div class="vs-row">
+        <div class="vs-box llm">
+          <div class="vs-hd">普通 LLM</div>
+          <div class="vs-body">问题 → 生成回答 → 结束<br>只能"说"，不能"做"</div>
+        </div>
+        <div class="vs-box agent">
+          <div class="vs-hd">Agent</div>
+          <div class="vs-body">任务 → 规划 → 调工具 → 观察 → 纠错 → 完成</div>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <b>Agent = LLM + 工具 + 循环。</b> 核心是：思考 → 行动 → 观察 → 再思考。每个 AI 产品背后都是在设计这个循环。
+      </div>
+    </div>
+
+    <!-- 右栏 -->
+    <div class="right">
+      <div class="demo-hd" id="demoHd">演示：Plan 规划能力 — 竞品分析任务全流程</div>
+      <div class="timeline-wrap">
+        <div class="tl-bar">
+          <span class="tl-title" id="tlTitle">点击"下一步"开始演示</span>
+          <span class="tl-step-badge" id="tlBadge"></span>
+        </div>
+        <div class="tl-body" id="tlBody"></div>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-p" id="btnNext" onclick="nextStep()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="resetDemo()">重置</button>
+        <span class="hint" id="ctrlHint"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const COLOR = {plan:'var(--orange)', tool:'var(--cyan)', mem:'var(--green)', act:'var(--purple)'};
+
+const ABS = {
+  plan: {
+    demoHd: '演示：Plan 规划能力 — 竞品分析任务全流程',
+    steps: [
+      { dot:'💬', color:'var(--orange)', label:'用户下达任务', text:'「帮我做一份竞品分析报告，包含 A、B、C 三家。」' },
+      { dot:'🧭', color:'var(--orange)', label:'PLAN · 理解任务', text:'分析需求：竞品范围？分析维度？输出格式？目标受众？' },
+      { dot:'📋', color:'var(--orange)', label:'PLAN · 制定步骤', text:'搜索三家竞品官网 → 提取核心功能和定价 → 对比分析 → 撰写报告' },
+      { dot:'🔧', color:'var(--orange)', label:'ACT · 执行 Step 1', text:'调用 search_web("竞品A 功能 定价")，获取结果……' },
+      { dot:'👁️', color:'var(--orange)', label:'OBSERVE · 观察结果', text:'成功获取竞品 A 数据。继续执行 Step 2：搜索竞品 B……' },
+      { dot:'🔄', color:'var(--orange)', label:'ADJUST · 动态调整', text:'发现竞品 B 官网无公开定价，临时调整：改为搜索第三方测评文章。' },
+      { dot:'✅', color:'var(--orange)', label:'完成', text:'整合所有数据，输出三页竞品对比报告。全程无需用户介入每一步。' },
+    ]
+  },
+  tool: {
+    demoHd: '演示：Tool Use 工具调用 — 天气查询+发邮件',
+    steps: [
+      { dot:'💬', color:'var(--cyan)', label:'用户指令', text:'「查询北京明天天气，下雨的话发邮件提醒我带伞。」' },
+      { dot:'🤔', color:'var(--cyan)', label:'THINK · 分析需要哪些工具', text:'需要：① get_weather（查天气）② send_email（发邮件，条件执行）' },
+      { dot:'🔧', color:'var(--cyan)', label:'CALL · 调用工具 1', text:'输出结构化指令：get_weather(city="北京", date="明天") → 等待框架执行' },
+      { dot:'📦', color:'var(--cyan)', label:'RESULT · 工具返回', text:'weather="小雨", temp="12-18°C", wind="北风3级" → 注回上下文' },
+      { dot:'🧠', color:'var(--cyan)', label:'THINK · 条件判断', text:'有雨，条件成立 → 触发发邮件逻辑。' },
+      { dot:'🔧', color:'var(--cyan)', label:'CALL · 调用工具 2', text:'send_email(to="user@xx.com", subject="明天北京有雨，记得带伞")' },
+      { dot:'✅', color:'var(--cyan)', label:'完成', text:'邮件发送成功。回复用户："明天小雨，已发邮件提醒你带伞。"' },
+    ]
+  },
+  mem: {
+    demoHd: '演示：Memory 记忆能力 — 短期 + 长期协同',
+    steps: [
+      { dot:'💬', color:'var(--green)', label:'第 1 轮', text:'用户：「我叫小明，在上海，想学 Python 数据分析。」' },
+      { dot:'🧠', color:'var(--green)', label:'短期记忆', text:'写入当前 Context Window："用户=小明，上海，目标=Python 数据分析"' },
+      { dot:'💬', color:'var(--green)', label:'第 5 轮', text:'用户：「推荐一些适合我城市的线下课？」' },
+      { dot:'📎', color:'var(--green)', label:'短期记忆命中', text:'从 Context Window 读取"上海"，推荐上海本地课程。无需用户重复说。' },
+      { dot:'💾', color:'var(--green)', label:'持久化 → 长期记忆', text:'对话结束：向量化存储 → "小明 / 上海 / Python / 数据分析 / 偏好线下"' },
+      { dot:'🔍', color:'var(--green)', label:'下次对话 · 长期记忆检索', text:'新对话开始，RAG 检索：找到上次记录 → 注入 System Prompt' },
+      { dot:'✅', color:'var(--green)', label:'连续体验', text:'「上次你说想在上海学 Python，今天继续？」—— 跨会话记住用户。' },
+    ]
+  },
+  act: {
+    demoHd: '演示：Act / Reflect 自我纠错 — 修复 Python 代码',
+    steps: [
+      { dot:'💬', color:'var(--purple)', label:'用户任务', text:'「帮我修复这段 Python 代码。」（用户粘贴了一段报错代码）' },
+      { dot:'🔧', color:'var(--purple)', label:'ACT 1 · 执行代码', text:'调用代码执行工具 → 报错：TypeError: unsupported operand type(s)' },
+      { dot:'🪞', color:'var(--purple)', label:'REFLECT · 分析错误', text:'字符串和整数直接相加，需要 int() 类型转换。修改第 7 行。' },
+      { dot:'🔧', color:'var(--purple)', label:'ACT 2 · 再次执行', text:'修改后重新运行 → 新报错：IndexError: list index out of range' },
+      { dot:'🪞', color:'var(--purple)', label:'REFLECT · 再次分析', text:'数组下标越界，第 12 行循环边界错误。修正为 range(len(lst)-1)。' },
+      { dot:'🔧', color:'var(--purple)', label:'ACT 3 · 第三次执行', text:'运行成功 ✅ 输出符合预期。' },
+      { dot:'✅', color:'var(--purple)', label:'完成（自动完成，无需用户介入）', text:'「代码已修复，共修改 2 处：类型转换 + 循环边界。」' },
+    ]
+  }
+};
+
+let curAb = 'plan', curStep = 0;
+
+function pickAb(btn, ab, idx) {
+  document.querySelectorAll('.ab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  curAb = ab;
+  resetDemo();
+  document.getElementById('demoHd').textContent = ABS[ab].demoHd;
+}
+
+function nextStep() {
+  const steps = ABS[curAb].steps;
+  if (curStep >= steps.length) return;
+  const s = steps[curStep];
+  const body = document.getElementById('tlBody');
+
+  // 给前一个 item 移除 tl-line（最后一个不需要线）
+  const prev = body.querySelector('.tl-item:last-child .tl-line');
+
+  const item = document.createElement('div');
+  item.className = 'tl-item';
+  item.innerHTML = `
+    <div class="tl-dot-col">
+      <div class="tl-dot" style="background:rgba(0,0,0,.06);color:${s.color};font-size:18px">${s.dot}</div>
+      ${curStep < steps.length - 1 ? '<div class="tl-line"></div>' : ''}
+    </div>
+    <div class="tl-content">
+      <div class="tl-label" style="color:${s.color}">${s.label}</div>
+      <div class="tl-text">${s.text}</div>
+    </div>`;
+  body.appendChild(item);
+  requestAnimationFrame(() => requestAnimationFrame(() => item.classList.add('show')));
+  body.scrollTop = body.scrollHeight;
+
+  document.getElementById('tlTitle').textContent = s.label;
+  document.getElementById('tlBadge').textContent = `${curStep+1} / ${steps.length}`;
+  curStep++;
+
+  if (curStep >= steps.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 完成';
+    document.getElementById('ctrlHint').textContent = '全流程演示结束';
+  } else {
+    document.getElementById('ctrlHint').textContent = `第 ${curStep} 步`;
+  }
+}
+
+function resetDemo() {
+  curStep = 0;
+  document.getElementById('tlBody').innerHTML = '';
+  document.getElementById('tlTitle').textContent = '点击"下一步"开始演示';
+  document.getElementById('tlBadge').textContent = '';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  document.getElementById('ctrlHint').textContent = '';
+}
+</script>
+</body>
+</html>

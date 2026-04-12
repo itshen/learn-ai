@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Prompt Engineering：你说什么，它就变什么</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--purple);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--purple)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+/* 左栏 */
+.left{padding:20px 26px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow:auto}
+.desc{font-size:18px;color:var(--sub);line-height:1.7}
+.role-chips{display:flex;flex-wrap:wrap;gap:6px}
+.role-chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:16px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--sub)}
+.role-chip.active{background:var(--purple);border-color:var(--purple);color:white}
+.code-panel{background:#1e1b2e;border-radius:10px;padding:14px;font-size:14px;font-family:'Cascadia Code','Fira Code',monospace;line-height:1.65;color:#c9c0f5;flex:1;overflow:auto}
+.code-panel .kw{color:#f38ba8}
+.code-panel .str{color:#a6e3a1}
+.code-panel .com{color:#6c7086}
+.fmt-row{display:flex;gap:5px;flex-wrap:wrap}
+.fmt-btn{padding:4px 11px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-size:15px;color:var(--sub);cursor:pointer;transition:all .2s}
+.fmt-btn.active{background:var(--purple);color:white;border-color:var(--purple)}
+/* 右栏 */
+.right{padding:20px 26px;display:flex;flex-direction:column;gap:12px}
+.question-box{background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.2);border-radius:8px;padding:9px 14px;font-size:17px;color:#0891b2}
+.answer-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:17px;line-height:1.75;flex:1;overflow:auto;color:var(--text);white-space:pre-wrap;transition:all .3s}
+.fmt-output{background:#1e1b2e;border-radius:10px;padding:14px;font-size:15px;font-family:'Cascadia Code','Fira Code',monospace;line-height:1.65;color:#a6e3a1;white-space:pre;flex:1;overflow:auto}
+.insight-box{background:rgba(147,51,234,.07);border:1px solid rgba(147,51,234,.2);border-radius:10px;padding:10px 14px;font-size:17px;color:var(--text);display:flex;gap:8px;flex-shrink:0}
+.insight-box b{color:var(--purple)}
+.section-lbl{font-size:15px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块六 · Prompt Engineering · 第 3 页</div>
+      <div class="title">Prompt Engineering：<em>你说什么，它就变什么</em></div>
+    </div>
+    <div style="font-size:16px;color:var(--muted)">点击角色 / 格式切换 →</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：角色选择 + System Prompt -->
+    <div class="left">
+      <p class="desc">通过 System Prompt 指定角色，同一个模型可以变成完全不同的助手。<strong>角色扮演是最基础也最有效的 Prompt 技巧。</strong></p>
+
+      <div>
+        <div class="section-lbl" style="margin-bottom:6px">选择角色（切换 System Prompt）</div>
+        <div class="role-chips" id="roleChips">
+          <button class="role-chip active" onclick="setRole(this,'writer')">资深文案</button>
+          <button class="role-chip" onclick="setRole(this,'lawyer')">法律顾问</button>
+          <button class="role-chip" onclick="setRole(this,'doctor')">心理助理</button>
+          <button class="role-chip" onclick="setRole(this,'coder')">工程师</button>
+          <button class="role-chip" onclick="setRole(this,'teacher')">AI 讲师</button>
+          <button class="role-chip" onclick="setRole(this,'monk')">得道高僧</button>
+        </div>
+      </div>
+
+      <div class="section-lbl">System Prompt（角色定义）</div>
+      <div class="code-panel" id="promptCode"></div>
+
+      <div>
+        <div class="section-lbl" style="margin-bottom:6px">输出格式控制</div>
+        <div class="fmt-row">
+          <button class="fmt-btn active" onclick="setFmt(this,'none')">无格式</button>
+          <button class="fmt-btn" onclick="setFmt(this,'md')">Markdown 列表</button>
+          <button class="fmt-btn" onclick="setFmt(this,'json')">JSON 格式</button>
+          <button class="fmt-btn" onclick="setFmt(this,'step')">Step-by-step</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏：问题 + 角色回答 / 格式示例 -->
+    <div class="right">
+      <div class="question-box" id="questionBox">
+        👤 用户问：「最近压力很大，感觉很累」
+      </div>
+
+      <div class="section-lbl" id="answerLbl">角色回答（同一问题，不同角色）</div>
+      <div class="answer-box" id="answerBox"></div>
+
+      <div class="insight-box">
+        <span>🎭</span>
+        <span><b>角色 = 系统预设。</b> 所有的 AI 产品，本质上都是在 System Prompt 里写了不同的角色定义——换角色，就换产品。</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+const ROLES = {
+  writer:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一位有 15 年经验的品牌文案策划师。\n\n语言风格：温暖有力，善用共鸣；\n回答长度：简洁精准，3-5 句话；\n严禁说"作为 AI"；\n结尾给一个可执行的行动建议。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'职场压力是很多人的共鸣。建议试试"三件好事"记录法——每天睡前写下三件顺利的事，哪怕再小。坚持 2 周，你会发现大脑的默认模式悄悄改变了。\n\n→ 今晚就开始，打开手机备忘录，写下今天发生的第一件好事。',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## AI 工具推荐\n\n### 1. Notion AI\n- **类型**：写作辅助\n- **亮点**：无缝集成 Notion，一键总结/改写\n\n### 2. Midjourney\n- **类型**：图像生成\n- **亮点**：艺术风格丰富，商业质量\n\n### 3. GitHub Copilot\n- **类型**：代码补全\n- **亮点**：支持 50+ 语言，大幅提升效率`,
+    json:`{\n  "tools": [\n    {\n      "name": "Notion AI",\n      "type": "写作辅助",\n      "highlight": "集成Notion，一键总结改写"\n    },\n    {\n      "name": "Midjourney",\n      "type": "图像生成",\n      "highlight": "艺术风格丰富，商业质量"\n    },\n    {\n      "name": "GitHub Copilot",\n      "type": "代码补全",\n      "highlight": "支持50+语言，大幅提升效率"\n    }\n  ]\n}`,
+    step:`第 1 步：用 Notion AI 整理你现有的笔记，把散乱内容变成结构化知识库。\n\n第 2 步：有了框架，用 Midjourney 给内容配图，视觉呈现让品牌价值翻倍。\n\n第 3 步：用 GitHub Copilot 快速原型开发，把创意快速变成可演示的产品。`
+  },
+  lawyer:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一位专注劳动法的法律顾问。\n\n风格：专业严谨，使用法律术语；\n必要时引用法条；\n每次声明：仅供参考，不构成法律意见；\n如有严重情况，建议咨询执照律师。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'根据《劳动法》及相关规定，劳动者有权申请带薪年假（工作满 1 年者享有 5 天）。若工作压力已影响身体健康，可考虑申请工伤认定或心理援助。\n\n建议保留相关证据，如加班记录、医院诊断证明等。\n\n（仅供参考，不构成正式法律意见）',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## 法律从业者 AI 工具推荐\n\n### 1. Harvey AI\n- **类型**：法律文书起草\n- **合规**：基于真实案例数据训练\n\n### 2. Westlaw Precision\n- **类型**：法条检索增强\n- **合规**：Thomson Reuters 出品，数据可溯源\n\n### 3. Casetext CoCounsel\n- **类型**：案例分析\n- **合规**：已通过律师协会认证`,
+    json:`{\n  "tools": [\n    {\n      "name": "Harvey AI",\n      "type": "法律文书",\n      "compliance": "符合律所数据安全要求"\n    },\n    {\n      "name": "Westlaw Precision",\n      "type": "法条检索",\n      "compliance": "Thomson Reuters 数据可溯源"\n    },\n    {\n      "name": "Casetext CoCounsel",\n      "type": "案例分析",\n      "compliance": "律师协会认证"\n    }\n  ]\n}`,
+    step:`第 1 步：使用 Harvey AI 起草合同初稿，节省 60-70% 的文书时间。\n\n第 2 步：通过 Westlaw Precision 对照法条逐条核查，确保无遗漏。\n\n第 3 步：用 Casetext CoCounsel 检索类似判例，强化诉讼策略依据。\n\n（以上均需人工复核，AI 仅供辅助）`
+  },
+  doctor:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一名心理健康助理（非执业医师）。\n\n语气：温柔、不评判、共情优先；\n若提及自伤风险，必须建议就医；\n不做具体诊断；\n每次提醒：专业情况请就医。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'听起来你最近承受了很多。压力累积是真实的身体信号，不要忽视它。\n\n你可以先做一个简单的事：明天找 15 分钟，到户外走一走，不带手机。\n\n如果持续两周以上感到疲惫、睡眠变差，建议预约心理咨询。你不需要独自撑着。',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## 心理健康领域 AI 工具\n\n### 1. Woebot\n- **类型**：情绪对话机器人\n- **注意**：基于 CBT，不替代专业治疗\n\n### 2. Elomia\n- **类型**：焦虑/抑郁支持\n- **注意**：有情绪危机转介机制\n\n### 3. Wysa\n- **类型**：压力管理\n- **注意**：WHO 认可，有人工咨询师兜底`,
+    json:`{\n  "tools": [\n    {\n      "name": "Woebot",\n      "type": "情绪对话",\n      "note": "基于CBT，不替代专业治疗"\n    },\n    {\n      "name": "Elomia",\n      "type": "焦虑支持",\n      "note": "有危机转介，严重情况联系专业医生"\n    },\n    {\n      "name": "Wysa",\n      "type": "压力管理",\n      "note": "WHO认可，有人工咨询师兜底"\n    }\n  ]\n}`,
+    step:`第 1 步：每天用 Wysa 做 5 分钟情绪打卡，了解自己的压力规律。\n\n第 2 步：当情绪低落时，打开 Woebot 进行一次 CBT 对话练习。\n\n第 3 步：若连续两周情绪无改善，通过 Elomia 转介专业心理咨询师。\n\n（AI 工具是辅助，不是替代，请优先寻求专业支持）`
+  },
+  coder:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一名高级软件工程师（专注代码质量）。\n\n风格：直接、技术导向；\n代码问题用代码回答；\n非技术问题用工程思维框架简短处理；\n避免废话。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'这不是你的问题，是任务优先级管理问题。\n\n用 Eisenhower Matrix 分类任务：urgency × importance。\n\n把 Q3 象限（紧急但不重要）全部 delegate 或 drop，然后 time-block 每天 2h 处理 Q1。\n\nroot cause: 你在 busy 但没在 productive。',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## 工程师必备 AI 工具\n\n### 1. GitHub Copilot\n- **类型**：代码补全\n- **效率**：减少 40% 样板代码\n\n### 2. Cursor\n- **类型**：AI IDE\n- **效率**：支持整文件上下文对话\n\n### 3. Warp\n- **类型**：AI 终端\n- **效率**：自然语言转 shell 命令`,
+    json:`{\n  "tools": [\n    {\n      "name": "GitHub Copilot",\n      "type": "代码补全",\n      "roi": "减少40%样板代码"\n    },\n    {\n      "name": "Cursor",\n      "type": "AI IDE",\n      "roi": "全文件上下文，重构神器"\n    },\n    {\n      "name": "Warp",\n      "type": "AI Terminal",\n      "roi": "自然语言转shell命令"\n    }\n  ]\n}`,
+    step:`第 1 步：装 Cursor，把现有项目拖进去，用 Cmd+K 开始对话式重构。\n\n第 2 步：开启 GitHub Copilot，让它处理所有模板代码，你只写核心逻辑。\n\n第 3 步：切换到 Warp 终端，再也不用 google "如何用 grep 找文件内容"。`
+  },
+  teacher:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一位 AI 技术培训讲师。\n\n擅长把复杂概念用类比解释；\n语气轻松，偶尔幽默；\n用学员能理解的视角思考；\n每次用一个生活类比收尾。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'大脑就像 CPU，你现在是跑了太多进程——工作、家庭、期待……全挂在后台。\n\n解决方法不是更努力，而是关掉一些进程。\n\n把今天的任务列出来，只保留最重要的两件，其余的果断 terminate。\n\n类比：内存不够不是要买更大的电脑，是要关掉用不到的 App。',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## AI 学习必备工具（讲师视角）\n\n### 1. ChatGPT\n- **用途**：概念解释/出题/模拟答辩\n- **类比**：24小时在线的私教\n\n### 2. NotebookLM\n- **用途**：上传课件，自动生成问答\n- **类比**：把教材变成可对话的老师\n\n### 3. Gamma\n- **用途**：AI 生成课件\n- **类比**：PPT 界的 Copilot`,
+    json:`{\n  "tools": [\n    {\n      "name": "ChatGPT",\n      "use_case": "概念解释、出题、模拟答辩",\n      "analogy": "24小时在线私教"\n    },\n    {\n      "name": "NotebookLM",\n      "use_case": "课件转问答对",\n      "analogy": "把教材变成可对话的老师"\n    },\n    {\n      "name": "Gamma",\n      "use_case": "AI生成课件PPT",\n      "analogy": "PPT界的Copilot"\n    }\n  ]\n}`,
+    step:`第 1 步：把课程大纲丢给 ChatGPT，让它帮你生成 20 道学员自测题。\n\n第 2 步：把 PDF 课件上传到 NotebookLM，让学员课后自主提问复习。\n\n第 3 步：用 Gamma 把文字大纲一键转成精美课件，省下 3 小时 PPT 时间。`
+  },
+  monk:{
+    prompt:`<span class="kw">System:</span> <span class="str">你是一位得道高僧，修行四十载。\n\n语言风格：禅意悠远，善用偈语与比喻；\n避免直接给解决方案，以启发为主；\n结尾留一句禅语供参悟；\n字数：简短，不超过 100 字。</span>`,
+    q_none:'最近压力很大，感觉很累',
+    none:'施主，水满则溢，弦绷则断。\n\n心中所承，皆因执念而重；若能放下一分，便轻一分。\n\n压力非来自外物，乃源于心之抗拒。\n\n「菩提本无树，明镜亦非台。本来无一物，何处惹尘埃。」\n\n今夜，试着什么都不做，静坐片刻。',
+    q_fmt:'推荐 3 个 AI 工具',
+    md:`## 三器之说\n\n### 一曰"镜"\n- ChatGPT 如铜镜，照见你心中已有之答案\n- 非镜给你答案，乃镜助你自见\n\n### 二曰"杖"\n- Cursor 如禅杖，点破冗余，直指本质\n- 善用者，代码如偈，简而深远\n\n### 三曰"钟"\n- NotebookLM 如晨钟，唤醒沉睡的知识\n- 书读千遍，不如一问`,
+    json:`{\n  "三器": [\n    {\n      "名": "镜（ChatGPT）",\n      "禅意": "照见本心，非授汝答案",\n      "用法": "问之前，先自问"\n    },\n    {\n      "名": "杖（Cursor）",\n      "禅意": "点破执念，代码如偈",\n      "用法": "少写一行，胜过多写十行"\n    },\n    {\n      "名": "钟（NotebookLM）",\n      "禅意": "晨钟暮鼓，唤醒沉知",\n      "用法": "上传经典，与书对话"\n    }\n  ]\n}`,
+    step:`第一步：静心。打开 ChatGPT，先问自己真正的问题是什么，而非让 AI 替你想。\n\n第二步：行动。用 Cursor 写出心中所想，删去一切不必要，留下本质。\n\n第三步：悟道。将所学放入 NotebookLM，与知识对话，印证所得。\n\n「不悟，工具是枷锁；悟了，枷锁亦是工具。」`
+  }
+};
+
+const FMT_META = {
+  none: { lbl:'角色回答（同一问题，不同角色）', isCode:false },
+  md:   { lbl:'输出格式：Markdown 列表', isCode:false },
+  json: { lbl:'输出格式：JSON（供系统解析）', isCode:true },
+  step: { lbl:'输出格式：Step-by-step 步骤', isCode:false }
+};
+
+let curRole = 'writer', curFmt = 'none';
+
+function render() {
+  const role = ROLES[curRole];
+  const meta = FMT_META[curFmt];
+  const isNone = curFmt === 'none';
+  document.getElementById('promptCode').innerHTML = role.prompt;
+  document.getElementById('questionBox').textContent = '👤 用户问：「' + (isNone ? role.q_none : role.q_fmt) + '」';
+  document.getElementById('answerLbl').textContent = meta.lbl;
+  const box = document.getElementById('answerBox');
+  box.className = meta.isCode ? 'fmt-output' : 'answer-box';
+  box.textContent = role[curFmt];
+}
+
+function setRole(btn, r) {
+  curRole = r;
+  document.querySelectorAll('.role-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function setFmt(btn, f) {
+  curFmt = f;
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+setRole(document.querySelector('.role-chip.active'), 'writer');
+</script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>语法层成本优化：写给机器的提示词</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:_si .15s ease .08s forwards}
+@keyframes_si{to{opacity:1}}
+@keyframes _si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+.header{padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.tag{font-size:15px;font-weight:800;color:var(--red);letter-spacing:.5px}
+.title{font-size:26px;font-weight:800;color:var(--text)}
+.title em{font-style:normal;color:var(--cyan)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+.left{padding:18px 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;overflow:auto}
+.right{padding:18px 24px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+
+/* 策略按钮 */
+.strat-tabs{display:flex;flex-direction:column;gap:6px}
+.strat-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--surface);border:1.5px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;transition:all .18s;width:100%}
+.strat-btn:hover,.strat-btn.active{border-color:var(--cyan);background:rgba(8,145,178,.05)}
+.strat-num{width:28px;height:28px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--muted);flex-shrink:0}
+.strat-btn.active .strat-num{background:var(--cyan);color:white}
+.strat-info h5{font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px}
+.strat-info p{font-size:14px;color:var(--sub)}
+.saving-lbl{margin-left:auto;font-size:14px;font-weight:800;color:var(--green);flex-shrink:0}
+
+/* 对比面板 */
+.compare{display:flex;flex-direction:column;gap:8px;flex:1}
+.compare-header{font-size:18px;font-weight:800;color:var(--text)}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0}
+.cmp-col{display:flex;flex-direction:column;gap:6px}
+.cmp-label{font-size:14px;font-weight:700;padding:4px 10px;border-radius:6px;text-align:center;flex-shrink:0}
+.cmp-label.bad{background:rgba(220,38,38,.1);color:var(--red)}
+.cmp-label.good{background:rgba(22,163,74,.1);color:var(--green)}
+.code-block{flex:1;background:#1e1e2e;border-radius:10px;padding:12px 14px;font-family:"Menlo","Cascadia Code","Consolas",monospace;font-size:13.5px;line-height:1.75;color:#cdd6f4;overflow:auto;min-height:0;white-space:pre-wrap;word-break:break-all;tab-size:2}
+.code-block .hl-bad{color:#f38ba8}
+.code-block .hl-good{color:#a6e3a1}
+.code-block .hl-key{color:#89b4fa}
+.code-block .hl-str{color:#f9e2af}
+.code-block .hl-cmt{color:#6c7086;font-style:italic}
+.token-count{padding:7px 10px;border-radius:7px;flex-shrink:0;font-family:inherit}
+.tc-bad{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15)}
+.tc-good{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.15)}
+
+/* 知识卡 */
+.insight-box{background:rgba(8,145,178,.06);border:1.5px solid rgba(8,145,178,.2);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--sub);line-height:1.65}
+.insight-box strong{color:var(--cyan)}
+
+/* 总结表 */
+.summary-table{width:100%;border-collapse:collapse;font-size:14px}
+.summary-table th{background:var(--surface2);padding:7px 10px;font-weight:700;color:var(--muted);text-align:left}
+.summary-table td{padding:6px 10px;border-top:1px solid var(--border);color:var(--text)}
+.save-num{font-weight:800;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div>
+      <div class="tag">模块八 · 成本优化 · 第 7 页</div>
+      <div class="title">语法层优化：<em>写给机器的提示词，不要排版</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">格式性 Token 最高占提示词 13-20%</div>
+  </div>
+  <div class="body">
+    <!-- 左栏：策略列表 -->
+    <div class="left">
+      <p style="font-size:16px;color:var(--sub);line-height:1.6">提示词是写给<strong>机器</strong>的指令，不是给人看的文档。<br>那些 <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:14px">**加粗**</code>、JSON 大括号、缩进换行……都是在花钱买格式。</p>
+
+      <div class="strat-tabs" id="stratTabs">
+        <button class="strat-btn active" onclick="selectStrat(0)">
+          <div class="strat-num">1</div>
+          <div class="strat-info">
+            <h5>复杂对象：YAML 代替 JSON</h5>
+            <p>用缩进代替闭合符号，信噪比更高</p>
+          </div>
+          <div class="saving-lbl">省 15-30%</div>
+        </button>
+        <button class="strat-btn" onclick="selectStrat(1)">
+          <div class="strat-num">2</div>
+          <div class="strat-info">
+            <h5>扁平列表：CSV 代替 JSON 数组</h5>
+            <p>字段名重复 N 遍是最大浪费</p>
+          </div>
+          <div class="saving-lbl">省 30-60%</div>
+        </button>
+        <button class="strat-btn" onclick="selectStrat(2)">
+          <div class="strat-num">3</div>
+          <div class="strat-info">
+            <h5>后台输出：强制压缩 JSON</h5>
+            <p>机器读数据不需要美观，只需要合法</p>
+          </div>
+          <div class="saving-lbl">省 10-20%</div>
+        </button>
+        <button class="strat-btn" onclick="selectStrat(3)">
+          <div class="strat-num">4</div>
+          <div class="strat-info">
+            <h5>去掉 Markdown 装饰符号</h5>
+            <p>** 加粗、### 标题占用额外 Token</p>
+          </div>
+          <div class="saving-lbl">省 8-13%</div>
+        </button>
+      </div>
+
+      <div class="insight-box">
+        💡 实测：Lyra 提示词中，<strong>** 加粗符号就吃掉 8.5%</strong> Token；算上列表、标题、JSON 格式化缩进，整体格式性 Token 达 <strong>13%</strong>。千万级调用量下，每月 20% 预算花在"让产品经理看着舒服"上。
+      </div>
+    </div>
+
+    <!-- 右栏：对比演示 -->
+    <div class="right">
+      <div class="compare" id="comparePanel">
+        <div class="compare-header" id="cmpTitle">YAML vs JSON：同样的数据结构</div>
+        <div class="compare-grid">
+          <div class="cmp-col">
+            <div class="cmp-label bad">❌ JSON（高 Token 消耗）</div>
+            <pre class="code-block" id="cmpBad"></pre>
+            <div class="token-count tc-bad" id="cmpBadCount"></div>
+          </div>
+          <div class="cmp-col">
+            <div class="cmp-label good" id="cmpGoodLabel">✅ YAML（省 Token）</div>
+            <pre class="code-block" id="cmpGood"></pre>
+            <div class="token-count tc-good" id="cmpGoodCount"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const STRATS = [
+  {
+    title: 'YAML vs JSON：同样的数据结构',
+    goodLabel: '✅ YAML（省 Token）',
+    badTok: 48, goodTok: 34,
+    bad:
+`<span class="hl-cmt">// JSON 版本：大量符号开销</span>
+{
+  <span class="hl-key">"user"</span>: {
+    <span class="hl-key">"name"</span>: <span class="hl-str">"Alice"</span>,
+    <span class="hl-key">"role"</span>: <span class="hl-str">"admin"</span>,
+    <span class="hl-key">"permissions"</span>: [
+      <span class="hl-str">"read"</span>,
+      <span class="hl-str">"write"</span>,
+      <span class="hl-str">"delete"</span>
+    ]
+  }
+}`,
+    good:
+`<span class="hl-cmt"># YAML 版本：缩进代替符号</span>
+user:
+  name: <span class="hl-str">Alice</span>
+  role: <span class="hl-str">admin</span>
+  permissions:
+    - <span class="hl-str">read</span>
+    - <span class="hl-str">write</span>
+    - <span class="hl-str">delete</span>
+
+<span class="hl-cmt"># 省掉 { } [ ] " " , 等符号
+# 冒号+引号 → 只剩冒号</span>`,
+  },
+  {
+    title: 'CSV vs JSON 数组：扁平列表场景',
+    goodLabel: '✅ CSV（省 Token）',
+    badTok: 1500, goodTok: 600,
+    bad:
+`<span class="hl-cmt">// JSON 数组：字段名重复 N 遍</span>
+[
+  {<span class="hl-key">"id"</span>: 1, <span class="hl-key">"name"</span>: <span class="hl-str">"Alice"</span>, <span class="hl-key">"role"</span>: <span class="hl-str">"Admin"</span>},
+  {<span class="hl-key">"id"</span>: 2, <span class="hl-key">"name"</span>: <span class="hl-str">"Bob"</span>,   <span class="hl-key">"role"</span>: <span class="hl-str">"User"</span>},
+  {<span class="hl-key">"id"</span>: 3, <span class="hl-key">"name"</span>: <span class="hl-str">"Carol"</span>, <span class="hl-key">"role"</span>: <span class="hl-str">"Admin"</span>},
+  <span class="hl-cmt">// ... 50 条记录
+  // "id" "name" "role" 重复了 50 次！</span>
+]`,
+    good:
+`<span class="hl-cmt"># 带表头 CSV：字段名只出现一次</span>
+id  name   role
+1   Alice  Admin
+2   Bob    User
+3   Carol  Admin
+<span class="hl-cmt">... (共 50 条)</span>
+
+<span class="hl-cmt"># 字段名从 50 份 → 1 份
+# 50 条数据节省约 60% Token
+# 同样窗口可容纳更多记录</span>`,
+  },
+  {
+    title: '后台任务输出：强制 Minified JSON',
+    goodLabel: '✅ Minified JSON（速度更快）',
+    badTok: 70, goodTok: 50,
+    bad:
+`<span class="hl-cmt">// 模型默认输出：格式化 JSON</span>
+{
+    <span class="hl-key">"sentiment"</span>: <span class="hl-str">"positive"</span>,
+    <span class="hl-key">"score"</span>: 0.92,
+    <span class="hl-key">"aspects"</span>: [
+        <span class="hl-str">"电池续航"</span>,
+        <span class="hl-str">"拍照效果"</span>
+    ],
+    <span class="hl-key">"summary"</span>: <span class="hl-str">"用户满意"</span>
+}`,
+    good:
+`<span class="hl-cmt"># System Prompt 加约束：
+# "输出必须是 Minified JSON，
+#  不加任何空格、换行、注释"</span>
+
+<span class="hl-cmt"># 模型输出变成：</span>
+{<span class="hl-key">"sentiment"</span>:<span class="hl-str">"positive"</span>,<span class="hl-key">"score"</span>:0.92,<span class="hl-key">"aspects"</span>:[<span class="hl-str">"电池续航"</span>,<span class="hl-str">"拍照效果"</span>],<span class="hl-key">"summary"</span>:<span class="hl-str">"用户满意"</span>}
+
+<span class="hl-cmt"># 换行/缩进/空格全省掉
+# 批量任务生成速度显著提升</span>`,
+  },
+  {
+    title: 'Markdown 装饰符号：能省则省',
+    goodLabel: '✅ 纯文本指令（省 Token）',
+    badTok: 72, goodTok: 52,
+    bad:
+`<span class="hl-cmt">// 对人友好的 System Prompt</span>
+<span class="hl-key">## 角色设定</span>
+你是一个<span class="hl-bad">**专业**</span>的客服助手。
+
+<span class="hl-key">## 任务说明</span>
+<span class="hl-bad">-</span> 回答用户关于订单的问题
+<span class="hl-bad">-</span> <span class="hl-bad">**必须**</span>保持礼貌
+<span class="hl-bad">-</span> 不要透露内部系统信息
+
+<span class="hl-bad">> 注意：</span>所有回复需<span class="hl-bad">**简洁**</span>`,
+    good:
+`<span class="hl-cmt"># 对机器友好的版本</span>
+你是专业客服助手。
+任务：回答订单相关问题，保持礼貌，
+不透露内部系统信息，回复简洁。
+
+<span class="hl-good"># 逻辑完全保留，语义零损失
+# ## ** - > 符号全部去掉
+# 机器只关注语义，不关注排版</span>`,
+  },
+];
+
+let cur = 0;
+function selectStrat(i) {
+  cur = i;
+  document.querySelectorAll('.strat-btn').forEach((b,idx)=>b.classList.toggle('active', idx===i));
+  const s = STRATS[i];
+  document.getElementById('cmpTitle').textContent = s.title;
+  document.getElementById('cmpGoodLabel').textContent = s.goodLabel;
+  document.getElementById('cmpBad').innerHTML = s.bad;
+  document.getElementById('cmpGood').innerHTML = s.good;
+
+  // Token 数量条形对比
+  const badTok = s.badTok, goodTok = s.goodTok;
+  const maxTok = badTok;
+  const savePct = Math.round((1 - goodTok / badTok) * 100);
+  const badPct = 100, goodPct = Math.round(goodTok / badTok * 100);
+
+  const badEl = document.getElementById('cmpBadCount');
+  const goodEl = document.getElementById('cmpGoodCount');
+
+  badEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
+        <div id="barBad" style="height:100%;background:var(--red);border-radius:4px;width:0%;transition:width .5s ease"></div>
+      </div>
+      <span style="font-size:13px;font-weight:800;color:var(--red);min-width:36px">${badTok}T</span>
+    </div>
+    <span style="font-size:12px;font-weight:600">高 Token 消耗</span>`;
+
+  goodEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
+        <div id="barGood" style="height:100%;background:var(--green);border-radius:4px;width:0%;transition:width .5s ease"></div>
+      </div>
+      <span style="font-size:13px;font-weight:800;color:var(--green);min-width:36px">${goodTok}T</span>
+    </div>
+    <span style="font-size:12px;font-weight:600;color:var(--green)">节省 ${savePct}%</span>`;
+
+  // 触发动画
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.getElementById('barBad').style.width = badPct + '%';
+      document.getElementById('barGood').style.width = goodPct + '%';
+    }, 50);
+  });
+}
+selectStrat(0);
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>RAG 的代价与优化策略</title>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --text: #1c1c1e;
+  --sub: #8e8e93;
+  --accent: #0066ff;
+  --danger: #e53e3e;
+  --success: #16a34a;
+  --amber: #d97706;
+  --cyan: #0891b2;
+  --border: rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e2da;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-font-smoothing: antialiased;
+}
+.slide {
+  width: 94vw; max-width: 1440px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  padding: 16px 36px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.header h2 { font-size: 20px; font-weight: 700; color: var(--text); }
+.header p  { font-size: 12px; color: var(--sub); margin-top: 3px; }
+.btn-next {
+  background: var(--accent); color: white; border: none;
+  padding: 9px 22px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-next:disabled { background: #d1d5db; cursor: not-allowed; transform: none; filter: none; }
+
+/* ── Body ── */
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ── Left ── */
+.left {
+  width: 44%; border-right: 1px solid var(--border);
+  padding: 18px 26px; display: flex; flex-direction: column; gap: 12px; overflow: hidden;
+}
+.sec-label {
+  font-size: 11px; font-weight: 800; color: var(--sub);
+  letter-spacing: 0.6px; text-transform: uppercase;
+}
+
+/* cost rows */
+.cost-rows { display: flex; flex-direction: column; gap: 6px; }
+.cost-row {
+  display: flex; align-items: center; gap: 0;
+  background: white; border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.cost-row.show { opacity: 1; transform: translateY(0); }
+.cost-row.highlight { border-color: rgba(229,62,62,0.3); }
+.cr-step {
+  width: 110px; flex-shrink: 0;
+  padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--text);
+  border-right: 1px solid var(--border);
+}
+.cr-badge {
+  width: 86px; flex-shrink: 0;
+  padding: 0 12px; display: flex; align-items: center;
+  border-right: 1px solid var(--border);
+}
+.pill {
+  display: inline-block; padding: 3px 10px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.pill.low  { background: rgba(22,163,74,0.1);  color: var(--success); }
+.pill.mid  { background: rgba(217,119,6,0.1);  color: var(--amber); }
+.pill.high { background: rgba(229,62,62,0.1);  color: var(--danger); }
+.cr-note { flex: 1; padding: 10px 14px; font-size: 12px; color: var(--sub); line-height: 1.5; }
+.cost-row.highlight .cr-note { color: var(--text); font-weight: 600; }
+
+.insight-box {
+  background: rgba(234,88,12,0.06); border: 1.5px solid rgba(234,88,12,0.2);
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 14px; color: var(--text); line-height: 1.7;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.insight-box.show { opacity: 1; transform: translateY(0); }
+.insight-box b { color: var(--amber); }
+.insight-box .key { color: var(--danger); font-weight: 700; }
+
+.pm-box {
+  background: white; border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 16px;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.pm-box.show { opacity: 1; transform: translateY(0); }
+.pm-box .pm-title { font-size: 11px; font-weight: 800; color: var(--sub); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; }
+.pm-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--sub); line-height: 1.6; margin-bottom: 4px; }
+.pm-row:last-child { margin-bottom: 0; }
+.pm-row b { color: var(--text); }
+
+/* ── Right ── */
+.right {
+  flex: 1; padding: 18px 26px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.strat-rows { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.strat-item {
+  flex: 1;
+  background: white; border-radius: 12px;
+  border: 1.5px solid var(--border);
+  padding: 13px 16px 13px 20px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s, border-color 0.2s, box-shadow 0.2s;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.strat-item::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+}
+.strat-item.s1::before { background: var(--accent); }
+.strat-item.s2::before { background: var(--amber); }
+.strat-item.s3::before { background: var(--success); }
+.strat-item.s4::before { background: var(--cyan); }
+
+.strat-item.show { opacity: 1; transform: translateY(0); }
+.strat-item.active.s1 { border-color: rgba(0,102,255,0.35); box-shadow: 0 4px 16px rgba(0,102,255,0.08); }
+.strat-item.active.s2 { border-color: rgba(217,119,6,0.35); box-shadow: 0 4px 16px rgba(217,119,6,0.08); }
+.strat-item.active.s3 { border-color: rgba(22,163,74,0.35); box-shadow: 0 4px 16px rgba(22,163,74,0.08); }
+.strat-item.active.s4 { border-color: rgba(8,145,178,0.35); box-shadow: 0 4px 16px rgba(8,145,178,0.08); }
+
+.si-icon { flex-shrink: 0; width: 22px; height: 22px; margin-top: 1px; }
+.strat-item.s1 .si-icon { color: var(--accent); }
+.strat-item.s2 .si-icon { color: var(--amber); }
+.strat-item.s3 .si-icon { color: var(--success); }
+.strat-item.s4 .si-icon { color: var(--cyan); }
+
+.si-body { flex: 1; min-width: 0; }
+.si-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.si-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.si-saving {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+}
+.s1 .si-saving { background: rgba(0,102,255,0.08); color: var(--accent); }
+.s2 .si-saving { background: rgba(217,119,6,0.08); color: var(--amber); }
+.s3 .si-saving { background: rgba(22,163,74,0.08); color: var(--success); }
+.s4 .si-saving { background: rgba(8,145,178,0.08); color: var(--cyan); }
+
+.si-desc {
+  font-size: 13px; color: var(--sub); line-height: 1.65;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s ease, margin-top 0.2s;
+}
+.strat-item.active .si-desc { max-height: 80px; margin-top: 6px; }
+.si-desc b { color: var(--text); }
+
+.conclusion-bar {
+  background: rgba(229,62,62,0.04); border: 1px solid rgba(229,62,62,0.18);
+  border-radius: 12px; padding: 11px 16px; font-size: 14px;
+  color: var(--text); line-height: 1.65; flex-shrink: 0;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+.conclusion-bar.show { opacity: 1; transform: translateY(0); }
+.conclusion-bar b { color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="header">
+    <div>
+      <h2>RAG 的代价与优化策略</h2>
+      <p>每次 RAG 查询都要额外花钱——不优化，成本会随用量快速失控</p>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+  <div class="body">
+
+    <!-- 左：成本分析 -->
+    <div class="left">
+      <div class="sec-label">额外成本来源</div>
+
+      <div class="cost-rows">
+        <div class="cost-row" id="cr0">
+          <div class="cr-step">文档向量化</div>
+          <div class="cr-badge"><span class="pill low">低（一次性）</span></div>
+          <div class="cr-note">Embedding 入库时跑一次，之后复用</div>
+        </div>
+        <div class="cost-row" id="cr1">
+          <div class="cr-step">问题向量化</div>
+          <div class="cr-badge"><span class="pill low">低</span></div>
+          <div class="cr-note">每次查询约 0.1 元/百万 Token</div>
+        </div>
+        <div class="cost-row" id="cr2">
+          <div class="cr-step">向量检索</div>
+          <div class="cr-badge"><span class="pill mid">中</span></div>
+          <div class="cr-note">大规模知识库时延迟显著</div>
+        </div>
+        <div class="cost-row highlight" id="cr3">
+          <div class="cr-step">Prompt 增大</div>
+          <div class="cr-badge"><span class="pill high">高</span></div>
+          <div class="cr-note">每次多注入 500–2000 Token，LLM 费用倍增 ⚠</div>
+        </div>
+      </div>
+
+      <div class="insight-box" id="insightBox">
+        <b>最关键的优化：</b>先做"意图识别"，判断是否需要 RAG。<span class="key">70% 的对话其实不需要检索文档</span>，直接用 LLM 回答更快更便宜。
+      </div>
+
+      <div class="pm-box" id="pmBox">
+        <div class="pm-title">PM 应对策略</div>
+        <div class="pm-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><b>建立检索命中率评测</b>——知道有多少问题被成功检索到正确文档</span>
+        </div>
+        <div class="pm-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><b>引用来源强制显示</b>——让用户可核查，也倒逼知识库质量</span>
+        </div>
+        <div class="pm-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0;margin-top:2px"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><b>定期清洗知识库</b>——RAG 质量上限 = 知识库质量</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：四种优化策略 -->
+    <div class="right">
+      <div class="sec-label">四种优化策略（点击展开）</div>
+
+      <div class="strat-rows">
+
+        <div class="strat-item s1" id="si0" onclick="toggleStrat(0)">
+          <svg class="si-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><line x1="21" y1="2" x2="9.5" y2="13.5"/><line x1="15" y1="8" x2="17" y2="10"/></svg>
+          <div class="si-body">
+            <div class="si-header">
+              <div class="si-title">关键词触发（过滤）</div>
+              <div class="si-saving">节省成本：跳过 30–70% 查询</div>
+            </div>
+            <div class="si-desc">
+              先判断问题是否需要检索。「今天几号？」不需要查文档，直接回答；「我们的退款政策」才触发 RAG。<br>
+              <b>实现：</b>用意图分类器或简单规则预判断，跳过不必要的检索链路。
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-item s2" id="si1" onclick="toggleStrat(1)">
+          <svg class="si-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+          <div class="si-body">
+            <div class="si-header">
+              <div class="si-title">模型路由（分级处理）</div>
+              <div class="si-saving">整体 LLM 费用降低 60–80%</div>
+            </div>
+            <div class="si-desc">
+              简单问题用小模型（便宜），复杂问题才上旗舰模型。避免用 GPT-4 回答「你好」。<br>
+              <b>实现：</b>问题复杂度分级 + 模型梯队配置（小模型兜底，大模型按需调用）。
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-item s3" id="si2" onclick="toggleStrat(2)">
+          <svg class="si-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <div class="si-body">
+            <div class="si-header">
+              <div class="si-title">语义缓存</div>
+              <div class="si-saving">高频查询降低 50% 延迟和费用</div>
+            </div>
+            <div class="si-desc">
+              相似的问题复用同一检索结果。「退款政策」和「怎么退款」结果几乎一样，无需重复查询。<br>
+              <b>实现：</b>问题向量相似度 ≥ 0.95 时直接返回缓存，跳过整条 RAG 链路。
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-item s4" id="si3" onclick="toggleStrat(3)">
+          <svg class="si-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+          <div class="si-body">
+            <div class="si-header">
+              <div class="si-title">精准切块（Chunking 策略）</div>
+              <div class="si-saving">准确率提高 20–40%</div>
+            </div>
+            <div class="si-desc">
+              文档切割粒度影响检索质量。太大注入冗余 Token；太小丢失上下文。<br>
+              <b>最佳实践：</b>约 512–800 Token/块，以标题/段落为边界，保留语义完整性。
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="conclusion-bar" id="conclusionBar">
+        <b>RAG ≠ 全量检索。</b>生产级 RAG 系统的核心是「<b>什么情况下不用 RAG</b>」，做好过滤和路由才是关键。知识库质量 → 检索质量 → 回答质量，三层缺一不可。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// 步骤序列：先依次显示左侧4行成本 → insight → PM策略，
+// 再依次显示右侧4个策略（自动展开） → 结论
+const STEPS = [
+  () => { document.getElementById('cr0').classList.add('show'); },
+  () => { document.getElementById('cr1').classList.add('show'); },
+  () => { document.getElementById('cr2').classList.add('show'); },
+  () => { document.getElementById('cr3').classList.add('show'); },
+  () => { document.getElementById('insightBox').classList.add('show'); },
+  () => { document.getElementById('pmBox').classList.add('show'); },
+  () => { showStrat(0); },
+  () => { showStrat(1); },
+  () => { showStrat(2); },
+  () => { showStrat(3); },
+  () => {
+    document.getElementById('conclusionBar').classList.add('show');
+    document.getElementById('nextBtn').textContent = '完成 ✓';
+    document.getElementById('nextBtn').style.background = '#16a34a';
+    document.getElementById('nextBtn').disabled = true;
+  },
+];
+
+let step = 0;
+
+function nextStep() {
+  if (step >= STEPS.length) return;
+  STEPS[step]();
+  step++;
+}
+
+function showStrat(i) {
+  const el = document.getElementById('si' + i);
+  el.classList.add('show', 'active');
+}
+
+// 手动切换展开/收起（点击已展开的收起）
+function toggleStrat(i) {
+  const el = document.getElementById('si' + i);
+  if (!el.classList.contains('show')) return; // 未解锁不响应
+  el.classList.toggle('active');
+}
+
+// 初始：第一步自动触发，让用户进入感觉
+nextStep();
+</script>
+<script src="nav-inject.js"></script>
+</body>
+</html>

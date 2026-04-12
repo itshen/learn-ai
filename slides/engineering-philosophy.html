@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>大道至简：第一性原理</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b7280;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706;--gold:#b07d20}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Header ── */
+.hd{padding:16px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);z-index:10}
+.hd-left .tag{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:2px}
+.hd-left .title{font-size:22px;font-weight:800;color:var(--text)}
+.hd-left .title em{font-style:normal;color:var(--gold)}
+.hd-right{display:flex;align-items:center;gap:10px}
+.step-hint{font-size:13px;color:var(--muted);font-weight:600}
+.btn-r{padding:8px 14px;border-radius:10px;background:var(--surface2);color:var(--sub);font-size:13px;font-weight:600;border:1px solid var(--border);cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-r:hover{background:#e8e5de}
+.btn-n{padding:9px 22px;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-n:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-n:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* ── Body ── */
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+
+/* ── 左栏 ── */
+.left{padding:28px 36px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+
+.step{display:flex;gap:18px;align-items:flex-start;flex:1;padding:20px 0;opacity:0;transform:translateX(-20px);transition:opacity .5s ease,transform .5s ease}
+.step.show{opacity:1;transform:translateX(0)}
+
+.step-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;margin-top:2px}
+.step-body{display:flex;flex-direction:column;justify-content:center}
+.step-head{font-size:24px;font-weight:800;color:var(--text);margin-bottom:9px;line-height:1.3}
+.step-head em{font-style:normal}
+.step-desc{font-size:17px;color:var(--sub);line-height:1.75}
+.step-desc b{color:var(--text)}
+
+.step-divider{height:1px;background:var(--border);flex-shrink:0;opacity:0;transition:opacity .4s ease}
+.step-divider.show{opacity:1}
+
+/* ── 右栏 ── */
+.right{padding:28px 36px;display:flex;flex-direction:column;overflow:hidden}
+
+/* 每张卡片 */
+.rcard{display:none;flex-direction:column;gap:14px;flex:1;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease}
+.rcard.active{display:flex}
+.rcard.show{opacity:1;transform:translateY(0)}
+
+/* 卡0：核心宣言 */
+.mantra{background:linear-gradient(135deg,rgba(176,125,32,.1) 0%,rgba(91,79,207,.06) 100%);border:2px solid rgba(176,125,32,.25);border-radius:18px;padding:0 40px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mantra-pre{font-size:19px;color:var(--sub);margin-bottom:22px}
+.mantra-main{font-size:38px;font-weight:900;color:var(--gold);line-height:1.45}
+
+/* 卡1：三维度 */
+.dim-item{display:flex;align-items:center;gap:18px;padding:0 22px;background:var(--surface);border:1px solid var(--border);border-radius:14px;flex:1}
+.dim-badge{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:white;flex-shrink:0}
+.dim-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px}
+.dim-desc{font-size:17px;color:var(--sub);line-height:1.6}
+
+/* 卡2：做 vs 不做 */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1}
+.vs-box{border-radius:14px;padding:22px 24px;display:flex;flex-direction:column}
+.vs-box.do{background:rgba(22,163,74,.05);border:1.5px solid rgba(22,163,74,.2)}
+.vs-box.skip{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.15)}
+.vs-hd{font-size:20px;font-weight:800;margin-bottom:14px}
+.vs-box.do .vs-hd{color:var(--green)}
+.vs-box.skip .vs-hd{color:var(--red)}
+.vs-li{font-size:17px;color:var(--sub);line-height:1.8;padding-left:18px;position:relative}
+.vs-li::before{content:'•';position:absolute;left:0}
+.vs-li b{color:var(--text)}
+.warn-strip{background:rgba(234,88,12,.06);border:1px solid rgba(234,88,12,.2);border-radius:11px;padding:16px 20px;font-size:16px;color:var(--sub);line-height:1.7;flex-shrink:0}
+.warn-strip b{color:var(--text)}
+
+/* 卡3：终极问句 */
+.q-card{background:linear-gradient(135deg,rgba(176,125,32,.08),rgba(22,163,74,.06));border:2px solid rgba(176,125,32,.28);border-radius:18px;padding:0 48px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.q-pre{font-size:17px;color:var(--sub);margin-bottom:20px}
+.q-main{font-size:34px;font-weight:900;color:var(--gold);line-height:1.5;margin-bottom:24px}
+.q-footer{font-size:17px;color:var(--sub);line-height:1.75}
+.q-footer b{color:var(--text)}
+
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- Header -->
+  <div class="hd">
+    <div class="hd-left">
+      <div class="tag">AI 工程化 · 收官思考</div>
+      <div class="title">大道至简：<em>坚守第一性原理</em></div>
+    </div>
+    <div class="hd-right">
+      <span class="step-hint" id="stepHint"></span>
+      <button class="btn-r" onclick="resetAll()">重置</button>
+      <button class="btn-n" id="btnNext" onclick="nextStep()">开始 →</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- 左栏：4个步骤，逐一出现 -->
+    <div class="left">
+      <div class="step" id="s0">
+        <div class="step-icon" style="background:rgba(176,125,32,.12)">⚗️</div>
+        <div class="step-body">
+          <div class="step-head"><em style="color:var(--gold)">第一性原理</em>：本质只有一件事</div>
+          <div class="step-desc">一切工程化手段，归根到底都是为了<b>构造更优质的上下文</b>，让模型更准确理解你的意图。</div>
+        </div>
+      </div>
+
+      <div class="step-divider" id="d01"></div>
+
+      <div class="step" id="s1">
+        <div class="step-icon" style="background:rgba(91,79,207,.1)">📐</div>
+        <div class="step-body">
+          <div class="step-head">上下文管理的<em style="color:var(--purple)">三个维度</em></div>
+          <div class="step-desc"><b>质量</b>（精准信息）· <b>结构</b>（放对位置）· <b>成本</b>（最小 Token 最大密度）</div>
+        </div>
+      </div>
+
+      <div class="step-divider" id="d12"></div>
+
+      <div class="step" id="s2">
+        <div class="step-icon" style="background:rgba(234,88,12,.1)">⚖️</div>
+        <div class="step-body">
+          <div class="step-head">工程化：<em style="color:var(--orange)">做还是不做？</em></div>
+          <div class="step-desc">拼成本、拼效率、拼效果，工程化是护城河。但极耗资源、大模型升级后直接被替代的手段，可以放弃。</div>
+        </div>
+      </div>
+
+      <div class="step-divider" id="d23"></div>
+
+      <div class="step" id="s3">
+        <div class="step-icon" style="background:rgba(22,163,74,.1)">🎯</div>
+        <div class="step-body">
+          <div class="step-head">回到原点，问自己这个问题</div>
+          <div class="step-desc">能回答好这个问题，你就掌握了 AI 工程化的本质。<b style="color:var(--gold)">大道至简，上下文为王。</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右栏：配套卡片 -->
+    <div class="right">
+
+      <!-- 卡0 -->
+      <div class="rcard" id="r0">
+        <div class="mantra">
+          <div class="mantra-pre">一切工程化的终点，都指向同一件事——</div>
+          <div class="mantra-main">AI 工程化<br>= 用尽一切办法<br>做好上下文管理</div>
+        </div>
+      </div>
+
+      <!-- 卡1 -->
+      <div class="rcard" id="r1">
+        <div class="dim-item">
+          <div class="dim-badge" style="background:var(--purple)">质</div>
+          <div><div class="dim-title">质量</div><div class="dim-desc">注入精准、高密度的信息（RAG、语义压缩、Few-Shot 动态检索）</div></div>
+        </div>
+        <div class="dim-item">
+          <div class="dim-badge" style="background:var(--orange)">构</div>
+          <div><div class="dim-title">结构</div><div class="dim-desc">关键信息放首尾，核心约束写在 System Prompt，位置决定注意力</div></div>
+        </div>
+        <div class="dim-item">
+          <div class="dim-badge" style="background:var(--accent)">本</div>
+          <div><div class="dim-title">成本</div><div class="dim-desc">用最少的 Token 传递最多有效信息（输出控制、KV Cache、格式选择）</div></div>
+        </div>
+      </div>
+
+      <!-- 卡2 -->
+      <div class="rcard" id="r2">
+        <div class="vs">
+          <div class="vs-box do">
+            <div class="vs-hd">值得做的工程化</div>
+            <div class="vs-li">和友商拼<b>成本、效率、效果</b></div>
+            <div class="vs-li">大模型升级后<b>效果更好</b>（互补）</div>
+            <div class="vs-li">形成产品<b>护城河</b></div>
+            <div class="vs-li">收益明确，成本可控</div>
+          </div>
+          <div class="vs-box skip">
+            <div class="vs-hd">可以放弃的工程化</div>
+            <div class="vs-li">消耗<b>极大资源</b>，维护成本高</div>
+            <div class="vs-li">大模型升级后<b>直接被替代</b></div>
+            <div class="vs-li">用户<b>完全感知不到</b>效果提升</div>
+            <div class="vs-li">边际收益趋近于零</div>
+          </div>
+        </div>
+        <div class="warn-strip">⚠️ 随着大模型升级，许多工程化手段会被淘汰。要时刻问自己：<b>这件事模型版本升级后还需要吗？</b></div>
+      </div>
+
+      <!-- 卡3 -->
+      <div class="rcard" id="r3">
+        <div class="q-card">
+          <div class="q-pre">当你不知道该怎么做时，回到原点——</div>
+          <div class="q-main">「我现在给模型的上下文，<br>是它做好这件事所需要的全部吗？」</div>
+          <div class="q-footer">能回答好这个问题，<b>你就掌握了 AI 工程化的本质。</b><br>大道至简，上下文为王。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="nav-inject.js"></script>
+<script>
+const STEPS   = ['s0','s1','s2','s3'];
+const DIVS    = ['d01','d12','d23'];
+const RCARDS  = ['r0','r1','r2','r3'];
+const HINTS   = ['1 / 4','2 / 4','3 / 4','4 / 4'];
+const BTN_TXT = ['下一步 →','下一步 →','下一步 →','完成 ✓'];
+let cur = -1;
+
+function nextStep() {
+  cur++;
+  if (cur >= STEPS.length) return;
+
+  // 左侧步骤淡入
+  document.getElementById(STEPS[cur]).classList.add('show');
+  // 分割线
+  if (cur > 0) document.getElementById(DIVS[cur-1]).classList.add('show');
+
+  // 右侧：隐藏旧卡，显示新卡
+  RCARDS.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (i === cur) {
+      el.classList.add('active');
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    } else {
+      el.classList.remove('show');
+      setTimeout(() => { if (i !== cur) el.classList.remove('active'); }, 350);
+    }
+  });
+
+  document.getElementById('stepHint').textContent = HINTS[cur];
+  document.getElementById('btnNext').textContent   = BTN_TXT[cur];
+  if (cur >= STEPS.length - 1) document.getElementById('btnNext').disabled = true;
+}
+
+function resetAll() {
+  cur = -1;
+  STEPS.forEach(id => document.getElementById(id).classList.remove('show'));
+  DIVS.forEach(id  => document.getElementById(id).classList.remove('show'));
+  RCARDS.forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('show','active');
+  });
+  document.getElementById('stepHint').textContent = '';
+  document.getElementById('btnNext').textContent  = '开始 →';
+  document.getElementById('btnNext').disabled     = false;
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && cur < STEPS.length - 1) {
+    e.preventDefault();
+    nextStep();
+  }
+});
+</script>
+</body>
+</html>

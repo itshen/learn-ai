@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>输出层 + KV Cache 进阶</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:fadein .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes fadein{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.08);display:flex;flex-direction:column;overflow:hidden}
+
+/* Header */
+.hd{padding:16px 36px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--red)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--green)}
+.hd-sub{font-size:14px;color:var(--muted)}
+
+/* Body split */
+.body{flex:1;display:grid;grid-template-columns:380px 1fr;min-height:0}
+
+/* ── Left: nav ── */
+.nav-col{padding:20px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.nav-group{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:4px 2px 2px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid transparent;background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;width:100%;text-align:left}
+.nav-item:hover{border-color:rgba(0,0,0,0.1);background:#fafaf8}
+.nav-item.active{border-color:var(--accent);background:rgba(0,102,255,.04);box-shadow:0 2px 10px rgba(0,102,255,.1)}
+.nav-badge{padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800;flex-shrink:0}
+.badge-out{background:rgba(8,145,178,.12);color:var(--cyan)}
+.badge-kv{background:rgba(91,79,207,.12);color:var(--purple)}
+.nav-text h5{font-size:16px;font-weight:700;color:var(--text);line-height:1.3}
+.nav-text p{font-size:13px;color:var(--sub);margin-top:1px}
+.nav-save{margin-left:auto;font-size:15px;font-weight:900;flex-shrink:0;white-space:nowrap}
+
+/* ── Right: demo ── */
+.demo-col{padding:24px 30px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.demo-heading{flex-shrink:0}
+.demo-heading h3{font-size:22px;font-weight:800;color:var(--text)}
+.demo-heading p{font-size:16px;color:var(--sub);margin-top:4px;line-height:1.6}
+.demo-body{flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+
+/* 通用卡片 */
+.card{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:18px 20px}
+.card-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+
+/* Token 流动区 */
+.token-stream{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:52px}
+.tok{padding:9px 14px;border-radius:10px;font-size:16px;font-weight:700;font-family:'SF Mono',Menlo,monospace;transition:all .35s ease}
+.tok-ctx{background:rgba(0,102,255,.08);color:var(--accent);border:1px solid rgba(0,102,255,.2)}
+.tok-bad{background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.tok-good{background:rgba(22,163,74,.08);color:var(--green);border:1px solid rgba(22,163,74,.2);opacity:0;transform:translateY(6px)}
+.tok-good.show{opacity:1;transform:translateY(0)}
+.tok-stop{background:rgba(220,38,38,.15);color:var(--red);border:2px dashed rgba(220,38,38,.4);font-size:13px;padding:9px 10px}
+.tok-blocked{opacity:.2;text-decoration:line-through;filter:grayscale(1)}
+.tok-arrow{font-size:18px;color:#ccc}
+
+/* 概率条 */
+.prob-list{display:flex;flex-direction:column;gap:6px}
+.prob-row{display:flex;align-items:center;gap:10px}
+.prob-word{width:90px;font-size:14px;font-weight:700;font-family:monospace;color:var(--text);flex-shrink:0}
+.prob-track{flex:1;height:12px;background:rgba(0,0,0,.06);border-radius:6px;overflow:hidden}
+.prob-fill{height:100%;border-radius:6px;transition:width .5s ease}
+.prob-pct{font-size:13px;font-weight:800;min-width:36px;text-align:right;color:var(--sub)}
+
+/* 对比两列 */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1}
+.cmp-col{border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.cmp-col.bad{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.18)}
+.cmp-col.good{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.18)}
+.cmp-head{font-size:14px;font-weight:800}
+.cmp-col.bad .cmp-head{color:var(--red)}
+.cmp-col.good .cmp-head{color:var(--green)}
+.cmp-body{font-size:15px;color:var(--sub);line-height:1.65;flex:1}
+.cmp-body b{color:var(--text)}
+
+/* 代码块 */
+pre.code{background:#1e1e2e;border-radius:10px;padding:14px 16px;font-family:'SF Mono',Menlo,monospace;font-size:13.5px;line-height:1.75;color:#cdd6f4;overflow:auto;white-space:pre;flex-shrink:0}
+pre.code .c{color:#6c7086;font-style:italic}
+pre.code .k{color:#cba6f7}
+pre.code .s{color:#a6e3a1}
+pre.code .f{color:#89b4fa}
+pre.code .hl{color:#f38ba8}
+
+/* 结果统计 */
+.stats{display:flex;gap:10px;flex-shrink:0}
+.stat{flex:1;border-radius:10px;padding:12px 14px;text-align:center}
+.stat .sv{font-size:26px;font-weight:900}
+.stat .sl{font-size:12px;font-weight:700;margin-top:2px;color:var(--muted)}
+.stat.red-s{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.15)}.stat.red-s .sv{color:var(--red)}
+.stat.green-s{background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.15)}.stat.green-s .sv{color:var(--green)}
+.stat.blue-s{background:rgba(0,102,255,.07);border:1px solid rgba(0,102,255,.15)}.stat.blue-s .sv{color:var(--accent)}
+.stat.gray-s{background:var(--surface);border:1px solid var(--border)}.stat.gray-s .sv{color:var(--text)}
+
+/* 警告/提示 */
+.tip{border-radius:10px;padding:11px 14px;font-size:15px;line-height:1.6;flex-shrink:0}
+.tip.green{background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);color:var(--green)}
+.tip.red{background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.2);color:var(--red)}
+.tip.purple{background:rgba(91,79,207,.06);border:1px solid rgba(91,79,207,.2);color:var(--purple)}
+.tip b{font-weight:800}
+
+/* 按钮 */
+.btn-row{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.btn{padding:9px 20px;border-radius:9px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-p{background:var(--accent);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.35;cursor:not-allowed;filter:none}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-hint{font-size:13px;color:var(--muted)}
+
+/* KV 缓存条 */
+.kv-bar{height:36px;border-radius:8px;overflow:hidden;display:flex;gap:1px;background:var(--surface2);transition:all .4s}
+.kv-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;padding:0 6px;transition:all .5s ease;border-radius:4px}
+.kv-seg.sys-stable{background:var(--purple)}
+.kv-seg.kv-cached{background:rgba(22,163,74,.35);color:var(--green)}
+.kv-seg.kv-miss{background:var(--red)}
+.kv-seg.kv-new{background:var(--accent)}
+
+/* 闪烁动画 */
+@keyframes flash-red{0%{background:rgba(220,38,38,.5)}100%{background:rgba(220,38,38,.07)}}
+.flash-red{animation:flash-red .4s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease}
+@keyframes row-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.row-in{animation:row-in .3s ease}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块八 · 成本优化 · 第 9 页</div>
+      <div class="hd-title">输出层 + KV Cache 进阶：<em>控制输出 = 控制成本</em></div>
+    </div>
+    <div class="hd-sub">输出 Token 比输入贵 3-5 倍 · 点击左侧选技巧体验动画</div>
+  </div>
+  <div class="body">
+    <!-- 左栏导航 -->
+    <div class="nav-col">
+      <div class="nav-group">输出层优化</div>
+      <button class="nav-item active" onclick="pick(this,0)">
+        <span class="nav-badge badge-out">输出</span>
+        <div class="nav-text"><h5>负向约束：不要写"请简洁"</h5><p>明确说"不能做什么"</p></div>
+        <div class="nav-save" style="color:var(--green)">省 30%</div>
+      </button>
+      <button class="nav-item" onclick="pick(this,1)">
+        <span class="nav-badge badge-out">输出</span>
+        <div class="nav-text"><h5>Diff 输出：润色只改那几个词</h5><p>不要重写整段</p></div>
+        <div class="nav-save" style="color:var(--green)">省 90%+</div>
+      </button>
+      <button class="nav-item" onclick="pick(this,2)">
+        <span class="nav-badge badge-out">输出</span>
+        <div class="nav-text"><h5>停止序列：物理截断，比约束稳</h5><p>stop 参数精确控制</p></div>
+        <div class="nav-save" style="color:var(--accent)">精确控制</div>
+      </button>
+
+      <div class="nav-group" style="margin-top:6px">KV Cache 进阶陷阱</div>
+      <button class="nav-item" onclick="pick(this,3)">
+        <span class="nav-badge badge-kv">KV</span>
+        <div class="nav-text"><h5>动态切换工具：会破坏缓存</h5><p>前缀变了 = 全量重算</p></div>
+        <div class="nav-save" style="color:var(--red)">陷阱！</div>
+      </button>
+      <button class="nav-item" onclick="pick(this,4)">
+        <span class="nav-badge badge-kv">KV</span>
+        <div class="nav-text"><h5>滑动窗口：前缀总在变</h5><p>FIFO 队列破坏缓存</p></div>
+        <div class="nav-save" style="color:var(--red)">陷阱！</div>
+      </button>
+    </div>
+
+    <!-- 右栏演示 -->
+    <div class="demo-col" id="demoCol"></div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+/* ========== 技巧0：负向约束 ========== */
+function demo0() {
+  return `
+  <div class="demo-heading">
+    <h3>负向约束：不要写"请简洁"</h3>
+    <p>"简洁"对模型太抽象。明确说<b style="color:var(--red)">不能做什么</b>，比"要简洁"管用得多。</p>
+  </div>
+  <div class="demo-body">
+    <div class="cmp" style="flex:none;height:auto">
+      <div class="cmp-col bad">
+        <div class="cmp-head">❌ 模糊正向约束</div>
+        <div class="cmp-body" style="font-family:monospace;font-size:15px;background:rgba(220,38,38,.04);border-radius:8px;padding:10px">
+          请简洁地回答用户问题，<br>尽量不要啰嗦。
+        </div>
+        <div style="font-size:13px;color:var(--red);font-weight:700">模型不知道多简洁算简洁 😐</div>
+      </div>
+      <div class="cmp-col good">
+        <div class="cmp-head">✅ 明确负向约束</div>
+        <div class="cmp-body" style="font-family:monospace;font-size:15px;background:rgba(22,163,74,.04);border-radius:8px;padding:10px">
+          直接输出结果。<br><b>不要</b>寒暄、<b>不要</b>总结、<br><b>不要</b>客套、<b>不要</b>解释过程。
+        </div>
+        <div style="font-size:13px;color:var(--green);font-weight:700">确定性否定 → 模型精准执行 ✓</div>
+      </div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">点击"生成"看两种约束下的输出对比</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;height:calc(100% - 30px)">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">❌ 模糊约束输出</div>
+          <div id="out0bad" style="font-size:15px;color:var(--sub);line-height:1.7;min-height:80px"></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">✅ 负向约束输出</div>
+          <div id="out0good" style="font-size:15px;color:var(--sub);line-height:1.7;min-height:80px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" id="btn0" onclick="runDemo0()">▶ 模拟生成</button>
+      <button class="btn btn-r" onclick="resetDemo0()">重置</button>
+      <span class="btn-hint">用户问：今天天气怎么样？</span>
+    </div>
+    <div class="stats">
+      <div class="stat red-s"><div class="sv" id="s0bad">—</div><div class="sl">模糊约束 Token</div></div>
+      <div class="stat green-s"><div class="sv" id="s0good">—</div><div class="sl">负向约束 Token</div></div>
+      <div class="stat blue-s"><div class="sv" id="s0save">—</div><div class="sl">节省比例</div></div>
+    </div>
+  </div>`;
+}
+
+const BAD_WORDS = ['您好！我很乐意为您解答。', '今天', '北京', '的天气', '是晴天，', '温度约', '22°C，', '微风，', '空气质量', '良好。', '希望这个', '回答对', '您有帮助！', '如有其他', '问题欢迎', '随时提问。'];
+const GOOD_WORDS = ['晴天', '22°C', '微风'];
+let d0Timer = null;
+
+function runDemo0() {
+  document.getElementById('btn0').disabled = true;
+  let bi = 0, gi = 0;
+  const badEl = document.getElementById('out0bad');
+  const goodEl = document.getElementById('out0good');
+  badEl.innerHTML = ''; goodEl.innerHTML = '';
+
+  d0Timer = setInterval(() => {
+    if (bi < BAD_WORDS.length) {
+      badEl.innerHTML += `<span style="color:var(--text)">${BAD_WORDS[bi]}</span>`;
+      bi++;
+    }
+    if (gi < GOOD_WORDS.length) {
+      goodEl.innerHTML += `<span style="color:var(--green);font-weight:700;font-size:18px">${GOOD_WORDS[gi]} </span>`;
+      gi++;
+    }
+    if (bi >= BAD_WORDS.length && gi >= GOOD_WORDS.length) {
+      clearInterval(d0Timer);
+      document.getElementById('s0bad').textContent = '48T';
+      document.getElementById('s0good').textContent = '12T';
+      document.getElementById('s0save').textContent = '75%';
+      document.getElementById('s0save').classList.add('pop');
+    }
+  }, 180);
+}
+
+function resetDemo0() {
+  clearInterval(d0Timer);
+  ['out0bad','out0good'].forEach(id => document.getElementById(id).innerHTML = '');
+  ['s0bad','s0good','s0save'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('btn0').disabled = false;
+}
+
+/* ========== 技巧1：Diff 输出 ========== */
+function demo1() {
+  return `
+  <div class="demo-heading">
+    <h3>Diff 输出：润色只输出修改的部分</h3>
+    <p>用户说"改通顺一点"，模型会把整篇 2000 字全部输出。<b style="color:var(--red)">只动那两三个词，成本差几十倍。</b></p>
+  </div>
+  <div class="demo-body">
+    <div class="card">
+      <div class="card-title">原文（用户提交）</div>
+      <div style="font-size:17px;color:var(--text);line-height:1.7;padding:4px 0">
+        他非常猛烈地把那扇大门关闭了起来，发出了巨大的声响，然后就走了。
+      </div>
+    </div>
+    <div class="cmp" style="flex:1">
+      <div class="cmp-col bad">
+        <div class="cmp-head">❌ 旧做法：重写全文</div>
+        <div class="cmp-body" id="diffBad" style="font-size:15px;min-height:60px"></div>
+        <div style="font-size:13px;color:var(--red);font-weight:700" id="diffBadTok"></div>
+      </div>
+      <div class="cmp-col good">
+        <div class="cmp-head">✅ Diff 输出：只改动的句子</div>
+        <div class="cmp-body" id="diffGood" style="font-size:15px;min-height:60px"></div>
+        <div style="font-size:13px;color:var(--green);font-weight:700" id="diffGoodTok"></div>
+      </div>
+    </div>
+    <pre class="code" style="font-size:13px"><span class="c"># System Prompt 约束</span>
+<span class="s">"只输出需要修改的句子，格式：
+ 原文：[原句]
+ 改后：[新句]
+ 不要输出未修改的内容。"</span></pre>
+    <div class="btn-row">
+      <button class="btn btn-p" id="btn1" onclick="runDemo1()">▶ 模拟润色</button>
+      <button class="btn btn-r" onclick="resetDemo1()">重置</button>
+    </div>
+    <div class="stats">
+      <div class="stat red-s"><div class="sv" id="s1bad">—</div><div class="sl">重写全文 Token</div></div>
+      <div class="stat green-s"><div class="sv" id="s1good">—</div><div class="sl">Diff 输出 Token</div></div>
+      <div class="stat blue-s"><div class="sv" id="s1save">—</div><div class="sl">节省</div></div>
+    </div>
+  </div>`;
+}
+
+let d1t = null;
+function runDemo1() {
+  document.getElementById('btn1').disabled = true;
+  const badSegs = ['他', '非常猛烈地', '把那扇大门', '关闭了起来，', '发出了巨大的声响，', '然后就走了。'];
+  let i = 0;
+  document.getElementById('diffBad').innerHTML = '';
+  d1t = setInterval(() => {
+    if (i < badSegs.length) {
+      document.getElementById('diffBad').innerHTML += `<span style="color:var(--text)">${badSegs[i]}</span>`;
+      i++;
+    } else {
+      clearInterval(d1t);
+      document.getElementById('diffBadTok').textContent = '约 48 Token（输出整句话）';
+      setTimeout(() => {
+        const g = document.getElementById('diffGood');
+        g.innerHTML = `<div style="margin-bottom:6px"><span style="color:var(--muted)">原文：</span><span style="text-decoration:line-through;color:var(--red)">他非常猛烈地把那扇大门关闭了起来</span></div>`;
+        setTimeout(() => {
+          g.innerHTML += `<div><span style="color:var(--muted)">改后：</span><span style="color:var(--green);font-weight:700">他轻轻带上了门。</span></div>`;
+          document.getElementById('diffGoodTok').textContent = '约 18 Token（仅改动部分）';
+          document.getElementById('s1bad').textContent = '48T';
+          document.getElementById('s1good').textContent = '18T';
+          document.getElementById('s1save').textContent = '63%';
+          document.getElementById('s1save').classList.add('pop');
+        }, 500);
+      }, 400);
+    }
+  }, 220);
+}
+function resetDemo1() {
+  clearInterval(d1t);
+  ['diffBad','diffGood','diffBadTok','diffGoodTok'].forEach(id => document.getElementById(id).innerHTML = '');
+  ['s1bad','s1good','s1save'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('btn1').disabled = false;
+}
+
+/* ========== 技巧2：停止序列 ========== */
+function demo2() {
+  return `
+  <div class="demo-heading">
+    <h3>停止序列：物理截断，比约束稳</h3>
+    <p>Prompt 里写"只输出 3 项"，模型听不听是玄学。<b style="color:var(--accent)">stop 参数是物理截断，和模型无关。</b></p>
+  </div>
+  <div class="demo-body">
+    <div class="card" style="flex:1">
+      <div class="card-title">模型正在生成列表 · stop=["4."] 时触发截断</div>
+      <div id="stopStream" class="token-stream"></div>
+    </div>
+    <pre class="code"><span class="c"># stop 参数用法</span>
+response = client.chat.completions.create(
+  model=<span class="s">"qwen3.6-plus"</span>,
+  messages=messages,
+  stop=[<span class="s">"4."</span>]  <span class="c"># 准备写第4项时立刻截断</span>
+)
+
+<span class="c"># 其他常见场景</span>
+stop=[<span class="s">"\n"</span>]    <span class="c"># 只要第一行答案</span>
+stop=[<span class="s">"}"</span>]    <span class="c"># JSON 闭合即停</span>
+stop=[<span class="s">"用户："</span>]  <span class="c"># 防止模型自问自答</span></pre>
+    <div class="btn-row">
+      <button class="btn btn-p" id="btn2" onclick="runDemo2()">▶ 开始生成</button>
+      <button class="btn btn-r" onclick="resetDemo2()">重置</button>
+      <span class="btn-hint">观察第 4 项被物理截断</span>
+    </div>
+    <div class="tip green"><b>截断的内容不会进入历史上下文</b> — 省 Token 省时间，还不用担心模型后续乱讲。</div>
+  </div>`;
+}
+
+const STOP_TOKS = [
+  {t:'1.',cls:'tok-ctx'},{t:'高蛋白食物',cls:'tok-good'},{t:'2.',cls:'tok-ctx'},
+  {t:'控制碳水',cls:'tok-good'},{t:'3.',cls:'tok-ctx'},{t:'规律运动',cls:'tok-good'},
+  {t:'4.',cls:'tok-stop',isStop:true},{t:'足够睡眠',cls:'tok-blocked'},{t:'5.',cls:'tok-blocked'},{t:'多喝水',cls:'tok-blocked'}
+];
+let d2t = null, d2i = 0;
+function runDemo2() {
+  document.getElementById('btn2').disabled = true;
+  document.getElementById('stopStream').innerHTML = '';
+  d2i = 0;
+  d2t = setInterval(() => {
+    if (d2i >= STOP_TOKS.length) { clearInterval(d2t); return; }
+    const tk = STOP_TOKS[d2i];
+    const span = document.createElement('span');
+    // 先用正确class，但tok-good需要先加，再下一帧加show触发动画
+    span.className = 'tok ' + tk.cls;
+    span.textContent = tk.t;
+    document.getElementById('stopStream').appendChild(span);
+    // tok-good 需要触发 show class
+    if (tk.cls === 'tok-good') {
+      requestAnimationFrame(() => requestAnimationFrame(() => span.classList.add('show')));
+    }
+    if (tk.isStop) {
+      const note = document.createElement('span');
+      note.textContent = '⛔ 截断！';
+      note.style.cssText = 'font-size:15px;font-weight:800;color:var(--red);padding:8px 0';
+      document.getElementById('stopStream').appendChild(note);
+      clearInterval(d2t);
+      setTimeout(() => {
+        STOP_TOKS.slice(d2i+1).forEach(tk2 => {
+          const s2 = document.createElement('span');
+          s2.className = 'tok ' + tk2.cls;
+          s2.textContent = tk2.t;
+          s2.style.opacity = '0.2';
+          s2.style.textDecoration = 'line-through';
+          document.getElementById('stopStream').appendChild(s2);
+        });
+      }, 400);
+    }
+    d2i++;
+  }, 500);
+}
+function resetDemo2() {
+  clearInterval(d2t); d2i = 0;
+  document.getElementById('stopStream').innerHTML = '';
+  document.getElementById('btn2').disabled = false;
+}
+
+/* ========== 技巧3：动态工具切换 ========== */
+function demo3() {
+  return `
+  <div class="demo-heading">
+    <h3>KV Cache 陷阱：动态切换工具</h3>
+    <p>按需加载工具看起来省 Token，实际上每轮工具列表不同，<b style="color:var(--red)">前缀一变 = 缓存全失效 = 成本翻倍</b>。</p>
+  </div>
+  <div class="demo-body">
+    <div class="cmp" style="flex:1;min-height:0;overflow:hidden">
+      <!-- 左：动态工具 -->
+      <div class="cmp-col bad" style="overflow:hidden;display:flex;flex-direction:column;gap:6px">
+        <div class="cmp-head">❌ 动态工具（按需加载）</div>
+        <div id="kvDynLog" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <!-- 右：固定工具 -->
+      <div class="cmp-col good" style="overflow:hidden;display:flex;flex-direction:column;gap:6px">
+        <div class="cmp-head">✅ 全量工具固定挂载</div>
+        <div id="kvFixLog" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat red-s"><div class="sv" id="s3cost">0T</div><div class="sl">动态方案累计计算量</div></div>
+      <div class="stat green-s"><div class="sv" id="s3save">0T</div><div class="sl">固定方案累计计算量</div></div>
+      <div class="stat blue-s"><div class="sv" id="s3round">0</div><div class="sl">已演示轮次</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" id="btn3" onclick="runDemo3()">▶ 下一轮对话</button>
+      <button class="btn btn-r" onclick="resetDemo3()">重置</button>
+    </div>
+    <div class="tip red"><b>根因：</b>System Prompt 后插入工具说明。工具变 → 前缀变 → 缓存归零。宁可多挂 200T 工具，也要保住缓存命中率。</div>
+  </div>`;
+}
+
+// 工具配置
+const TOOLS3 = [
+  { name:'WeatherTool', tok:80,  q:'今天北京天气怎么样？' },
+  { name:'MapTool',     tok:75,  q:'从公司到机场怎么走？' },
+  { name:'WeatherTool', tok:80,  q:'明天上海会下雨吗？' },
+  { name:'SearchTool',  tok:90,  q:'最新 iPhone 发布消息' },
+];
+const SYS3_TOK = 100; // SYS Prompt token
+let d3round = 0, d3dynTotal = 0, d3fixTotal = 0;
+
+function runDemo3() {
+  if (d3round >= TOOLS3.length) return;
+  const t = TOOLS3[d3round];
+  d3round++;
+  const isFirst = d3round === 1;
+
+  // ── 左侧：动态方案 ──
+  const dynLog = document.getElementById('kvDynLog');
+  const dynCard = document.createElement('div');
+  dynCard.className = 'row-in';
+  dynCard.style.cssText = 'background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:8px 10px;flex-shrink:0;font-size:13px;line-height:1.7';
+
+  const dynCost = SYS3_TOK + t.tok + 20 + (d3round - 1) * 30; // SYS + 当前工具 + 问题 + 历史
+  d3dynTotal += dynCost;
+
+  dynCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span style="font-weight:800;color:var(--text)">轮${d3round}：${t.q}</span>
+      <span style="font-weight:800;color:var(--red)">✗ MISS 全量重算</span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
+      <span style="background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:12px">SYS(${SYS3_TOK}T)</span>
+      <span style="background:rgba(220,38,38,.15);color:var(--red);padding:2px 9px;border-radius:4px;font-size:12px;font-weight:800;border:1px solid rgba(220,38,38,.3)">${t.name}(${t.tok}T)</span>
+      <span style="font-size:11px;color:var(--red);font-weight:700">← 本轮特有</span>
+      ${d3round > 1 ? `<span style="background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:12px">历史(${(d3round-1)*30}T)</span>` : ''}
+      <span style="background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:12px">问题(20T)</span>
+    </div>
+    <div style="color:var(--red);font-size:12px">本轮全量重算 <b>${dynCost}T</b>（工具不同 → 前缀变 → 缓存失效）</div>`;
+  dynLog.appendChild(dynCard);
+  dynLog.scrollTop = dynLog.scrollHeight;
+
+  document.getElementById('s3cost').textContent = d3dynTotal + 'T';
+
+  // ── 右侧：固定方案 ──
+  const fixLog = document.getElementById('kvFixLog');
+  const fixCard = document.createElement('div');
+  fixCard.className = 'row-in';
+  fixCard.style.cssText = 'background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:8px 10px;flex-shrink:0;font-size:13px;line-height:1.7';
+
+  const allToolsTok = 200; // 三个工具全部挂载
+  const fixCost = isFirst ? (SYS3_TOK + allToolsTok + 20) : (20 + (d3round-1)*30); // 首轮写入，之后只算新增
+  d3fixTotal += fixCost;
+
+  fixCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span style="font-weight:800;color:var(--text)">轮${d3round}：${t.q}</span>
+      <span style="font-weight:800;color:${isFirst?'var(--accent)':'var(--green)'}">${isFirst ? '⚡ 写入缓存' : '✓ 命中！'}</span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
+      <span style="background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:12px">SYS(${SYS3_TOK}T)${isFirst?'':' ✓'}</span>
+      <span style="background:var(--surface2);color:var(--muted);padding:2px 8px;border-radius:4px;font-size:12px">全部工具(${allToolsTok}T)${isFirst?'':' ✓'}</span>
+      <span style="background:${isFirst?'rgba(0,102,255,.12)':'rgba(22,163,74,.12)'};color:${isFirst?'var(--accent)':'var(--green)'};padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700">问题(20T)${isFirst?'':' ← 仅此计算'}</span>
+    </div>
+    <div style="color:${isFirst?'var(--accent)':'var(--green)'};font-size:12px">${isFirst?`首次写入 <b>${fixCost}T</b>，后续每轮只需算新问题`:`本轮只算 <b>${fixCost}T</b>（前缀命中，仅算新问题）`}</div>`;
+  fixLog.appendChild(fixCard);
+  fixLog.scrollTop = fixLog.scrollHeight;
+
+  document.getElementById('s3save').textContent = d3fixTotal + 'T';
+  document.getElementById('s3round').textContent = d3round;
+  if (d3round >= TOOLS3.length) document.getElementById('btn3').disabled = true;
+}
+
+function resetDemo3() {
+  d3round = 0; d3dynTotal = 0; d3fixTotal = 0;
+  ['kvDynLog','kvFixLog'].forEach(id => document.getElementById(id).innerHTML = '');
+  document.getElementById('s3cost').textContent = '0T';
+  document.getElementById('s3save').textContent = '0T';
+  document.getElementById('s3round').textContent = '0';
+  document.getElementById('btn3').disabled = false;
+}
+
+/* ========== 技巧4：滑动窗口 ========== */
+function demo4() {
+  return `
+  <div class="demo-heading" style="flex-shrink:0">
+    <h3>KV Cache 陷阱：滑动窗口破坏前缀</h3>
+    <p>点击「下一轮」，观察两种策略下上下文如何变化——<b style="color:var(--red)">滑动窗口每轮前缀都在变，缓存永远失效</b>。</p>
+  </div>
+  <div class="demo-body" style="gap:10px">
+    <!-- 两列可视化上下文窗口 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-shrink:0">
+
+      <!-- 左：滑动窗口 -->
+      <div style="background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.18);border-radius:12px;padding:14px 16px">
+        <div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:10px">❌ 滑动窗口（FIFO，保留最近3轮）</div>
+        <!-- 上下文条 -->
+        <div id="slidBar" style="display:flex;gap:4px;align-items:stretch;height:44px;margin-bottom:8px"></div>
+        <!-- 状态行 -->
+        <div id="slidStatus" style="font-size:13px;color:var(--sub);line-height:1.6;min-height:36px"></div>
+        <!-- 命中率 -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <span style="font-size:12px;color:var(--muted);font-weight:700">命中率</span>
+          <div style="flex:1;height:8px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden">
+            <div id="slidHitBar" style="height:100%;border-radius:4px;background:var(--red);transition:width .5s ease;width:0%"></div>
+          </div>
+          <span id="slidHitPct" style="font-size:13px;font-weight:800;color:var(--red);min-width:36px">—</span>
+        </div>
+      </div>
+
+      <!-- 右：分层策略 -->
+      <div style="background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.18);border-radius:12px;padding:14px 16px">
+        <div style="font-size:14px;font-weight:800;color:var(--green);margin-bottom:10px">✅ 分层策略（SYS 稳定 + 最近3轮活跃）</div>
+        <!-- 上下文条 -->
+        <div id="layerBar" style="display:flex;gap:4px;align-items:stretch;height:44px;margin-bottom:8px"></div>
+        <!-- 状态行 -->
+        <div id="layerStatus" style="font-size:13px;color:var(--sub);line-height:1.6;min-height:36px"></div>
+        <!-- 命中率 -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <span style="font-size:12px;color:var(--muted);font-weight:700">命中率</span>
+          <div style="flex:1;height:8px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden">
+            <div id="layerHitBar" style="height:100%;border-radius:4px;background:var(--green);transition:width .5s ease;width:0%"></div>
+          </div>
+          <span id="layerHitPct" style="font-size:13px;font-weight:800;color:var(--green);min-width:36px">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 当前轮问题 + 日志 -->
+    <div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:12px 16px;flex-shrink:0">
+      <div id="d4CurrentQ" style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">点击「下一轮」开始演示</div>
+      <div id="d4Log" style="font-size:13px;color:var(--sub);line-height:1.8;min-height:32px"></div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats" style="flex-shrink:0">
+      <div class="stat red-s"><div class="sv" id="s4slidCost">0T</div><div class="sl">滑窗累计重算量</div></div>
+      <div class="stat green-s"><div class="sv" id="s4layerCost">0T</div><div class="sl">分层累计重算量</div></div>
+      <div class="stat blue-s"><div class="sv" id="s4round2">0 / 5</div><div class="sl">轮次</div></div>
+    </div>
+
+    <div class="btn-row" style="flex-shrink:0">
+      <button class="btn btn-p" id="btn4" onclick="runDemo4()">▶ 下一轮</button>
+      <button class="btn btn-r" onclick="resetDemo4()">重置</button>
+    </div>
+    <div class="tip purple" style="flex-shrink:0"><b>核心差异：</b>滑动窗口 SYS 之后的历史每轮都变 → 前缀总不匹配 → 每轮全量重算。分层策略 SYS 永远在最前且不动 → 命中率 80%+，省下巨量算力。</div>
+  </div>`;
+}
+
+const QUESTIONS4 = [
+  '你们的退款政策是什么？',
+  '退款需要多少个工作日？',
+  '运费谁来承担？',
+  '退款到哪个账户？',
+  '申请了为什么还没处理？'
+];
+const SYS4_TOK = 150;
+const TURN_TOK = 40;
+let d4r = 0, d4slidTotal = 0, d4layerTotal = 0, d4slidHits = 0, d4layerHits = 0;
+const WSIZE = 3;
+
+// 生成可视化上下文块
+function makeCtxBlocks(segments) {
+  // segments: [{label, color, hit, width}]
+  return segments.map(s => {
+    const hitMark = s.hit === true ? '✓' : s.hit === false ? '✗' : '';
+    const opacity = s.dim ? 0.22 : 1;
+    return `<div style="
+      flex:${s.flex||1};min-width:${s.minW||36}px;max-width:${s.maxW||120}px;
+      background:${s.bg};color:${s.color};
+      border-radius:8px;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;line-height:1.3;
+      opacity:${opacity};transition:all .4s ease;
+      border:${s.border||'none'};
+      padding:2px 4px;text-align:center
+    "><span>${s.label}</span>${hitMark?`<span style="font-size:14px">${hitMark}</span>`:''}</div>`;
+  }).join('');
+}
+
+function runDemo4() {
+  if (d4r >= QUESTIONS4.length) return;
+  const q = QUESTIONS4[d4r];
+  d4r++;
+
+  const isFirst = d4r === 1;
+  // 滑动窗口：保留最近 WSIZE 轮
+  const winStart = Math.max(1, d4r - WSIZE + 1);
+  const winRounds = Math.min(d4r, WSIZE);
+
+  // ── 左侧可视化：滑动窗口 ──
+  // 前缀 = SYS + 窗口历史。第1轮写入，之后前缀总变 → MISS
+  const slidMiss = !isFirst; // 轮1 写入，之后每轮都 MISS
+  if (!slidMiss) d4slidHits++;
+  const slidCost = SYS4_TOK + winRounds * TURN_TOK;
+  d4slidTotal += slidCost;
+
+  // 构建色块：SYS + 被丢弃轮次(暗) + 窗口内轮次
+  const slidSegs = [];
+  // SYS 块（始终在，但前缀后面历史变了，所以还是 MISS）
+  slidSegs.push({label:`SYS\n${SYS4_TOK}T`, bg:'rgba(220,38,38,.15)', color:'var(--red)', flex:3, minW:60, hit: false, border:'1px solid rgba(220,38,38,.3)'});
+  // 被丢弃的轮次（暗显示）
+  for (let i = 1; i < winStart; i++) {
+    slidSegs.push({label:`轮${i}\n丢弃`, bg:'rgba(0,0,0,.06)', color:'var(--muted)', flex:1, minW:32, dim:true});
+  }
+  // 窗口内的轮次
+  for (let i = winStart; i <= d4r; i++) {
+    const isNew = i === d4r;
+    slidSegs.push({label:`轮${i}${isNew?'\n新':''}`, bg: isNew?'rgba(220,38,38,.12)':'rgba(220,38,38,.06)', color:isNew?'var(--red)':'rgba(220,38,38,.7)', flex:1, minW:36, border: isNew?'1px solid rgba(220,38,38,.3)':'none'});
+  }
+  document.getElementById('slidBar').innerHTML = makeCtxBlocks(slidSegs);
+
+  const slidStatusHtml = isFirst
+    ? `<b style="color:var(--accent)">⚡ 写入缓存</b>：SYS + 轮1 = ${slidCost}T`
+    : `<b style="color:var(--red)">✗ MISS 全量重算 ${slidCost}T</b>：轮${winStart-1}被丢弃，前缀和上轮不同 → 缓存失效`;
+  document.getElementById('slidStatus').innerHTML = slidStatusHtml;
+
+  const slidHitRate = Math.round(d4slidHits / d4r * 100);
+  document.getElementById('slidHitBar').style.width = slidHitRate + '%';
+  document.getElementById('slidHitPct').textContent = slidHitRate + '%';
+  document.getElementById('s4slidCost').textContent = d4slidTotal + 'T';
+
+  // ── 右侧可视化：分层策略 ──
+  // SYS 永远在最前且不变 → 命中；活跃最近3轮附加在后
+  const layerMiss = false; // SYS 永远命中，新轮次计算量极少
+  d4layerHits++;
+  let layerCost;
+  if (isFirst) layerCost = SYS4_TOK + TURN_TOK;
+  else layerCost = TURN_TOK; // SYS 命中，只算新轮
+
+  d4layerTotal += layerCost;
+
+  // 构建分层色块
+  const layerSegs = [];
+  layerSegs.push({label:`SYS\n${SYS4_TOK}T`, bg: isFirst?'rgba(0,102,255,.12)':'rgba(22,163,74,.15)', color: isFirst?'var(--accent)':'var(--green)', flex:3, minW:60, hit: isFirst?undefined:true, border: isFirst?'1px solid rgba(0,102,255,.3)':'1px solid rgba(22,163,74,.3)'});
+  // 活跃最近3轮
+  const activeStart = Math.max(1, d4r - WSIZE + 1);
+  for (let i = activeStart; i <= d4r; i++) {
+    const isNew = i === d4r;
+    layerSegs.push({label:`轮${i}${isNew?'\n新':''}`, bg: isNew?'rgba(0,102,255,.12)':'rgba(22,163,74,.08)', color: isNew?'var(--accent)':'var(--green)', flex:1, minW:36, border: isNew?'1px solid rgba(0,102,255,.3)':'none'});
+  }
+  document.getElementById('layerBar').innerHTML = makeCtxBlocks(layerSegs);
+
+  const layerStatusHtml = isFirst
+    ? `<b style="color:var(--accent)">⚡ 写入SYS缓存</b>：首轮写入 ${layerCost}T，后续 SYS 永久命中`
+    : `<b style="color:var(--green)">✓ SYS 命中</b>：SYS 前缀不变 → 缓存命中！本轮只计算新增 <b>${layerCost}T</b>`;
+  document.getElementById('layerStatus').innerHTML = layerStatusHtml;
+
+  const layerHitRate = Math.round(d4layerHits / d4r * 100);
+  document.getElementById('layerHitBar').style.width = layerHitRate + '%';
+  document.getElementById('layerHitPct').textContent = layerHitRate + '%';
+  document.getElementById('s4layerCost').textContent = d4layerTotal + 'T';
+
+  // 当前问题展示
+  document.getElementById('d4CurrentQ').innerHTML = `<span style="color:var(--muted);font-weight:600">第 ${d4r} 轮：</span>${q}`;
+
+  // 日志对比
+  const savings = slidCost - layerCost;
+  document.getElementById('d4Log').innerHTML = [
+    `<span style="color:var(--red)">滑动窗口本轮重算 <b>${slidCost}T</b></span>`,
+    `<span style="color:var(--green)">分层策略本轮只算 <b>${layerCost}T</b></span>`,
+    savings > 0 ? `<span style="color:var(--accent);font-weight:700">→ 本轮节省 ${savings}T（累计节省 ${d4slidTotal - d4layerTotal}T）</span>` : ''
+  ].filter(Boolean).join('　　');
+
+  document.getElementById('s4round2').textContent = `${d4r} / 5`;
+  if (d4r >= QUESTIONS4.length) document.getElementById('btn4').disabled = true;
+}
+
+function resetDemo4() {
+  d4r = 0; d4slidTotal = 0; d4layerTotal = 0; d4slidHits = 0; d4layerHits = 0;
+  document.getElementById('slidBar').innerHTML = '';
+  document.getElementById('layerBar').innerHTML = '';
+  document.getElementById('slidStatus').innerHTML = '';
+  document.getElementById('layerStatus').innerHTML = '';
+  document.getElementById('slidHitBar').style.width = '0%';
+  document.getElementById('layerHitBar').style.width = '0%';
+  document.getElementById('slidHitPct').textContent = '—';
+  document.getElementById('layerHitPct').textContent = '—';
+  document.getElementById('s4slidCost').textContent = '0T';
+  document.getElementById('s4layerCost').textContent = '0T';
+  document.getElementById('s4round2').textContent = '0 / 5';
+  document.getElementById('d4CurrentQ').innerHTML = '点击「下一轮」开始演示';
+  document.getElementById('d4Log').innerHTML = '';
+  document.getElementById('btn4').disabled = false;
+}
+
+// makeKvBar 保留（可能被其他地方引用，放个空实现）
+function makeKvBar(segs) { return document.createElement('div'); }
+
+/* ========== 主控 ========== */
+// makeKvBar 已定义在 demo3 段，供 demo4 复用（顺序OK）
+const DEMOS = [demo0, demo1, demo2, demo3, demo4];
+
+function pick(btn, idx) {
+  document.querySelectorAll('.nav-item').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.getElementById('demoCol').innerHTML = DEMOS[idx]();
+}
+
+pick(document.querySelector('.nav-item'), 0);
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>第二篇章汇总（下）· 成本优化 + AI PM 认知</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--amber:#d97706;--green:#16a34a;--red:#dc2626;--purple:#7c3aed;--cyan:#0891b2;--accent:#0066ff;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .2s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+
+.hd{padding:16px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:linear-gradient(135deg,rgba(22,163,74,.04) 0%,transparent 100%)}
+.hd-sub{font-size:13px;font-weight:800;color:var(--green);letter-spacing:.5px;margin-bottom:5px}
+.hd-title{font-size:28px;font-weight:900;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--green)}
+.hd-right{display:flex;gap:10px;align-items:center}
+.pill{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700}
+.pill-green{background:rgba(22,163,74,.1);color:var(--green)}
+.pill-muted{background:var(--surface2);color:var(--muted)}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0;overflow:hidden}
+.col{padding:16px 22px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.col:last-child{border-right:none}
+.col-inner{display:flex;flex-direction:column;gap:10px;transform-origin:top left;}
+.col-hd{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.col-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.col-label{font-size:15px;font-weight:800;color:var(--text)}
+.col-desc{font-size:12px;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+.card-tag{font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase}
+.card-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:5px;line-height:1.3}
+.card-body{font-size:14px;color:var(--sub);line-height:1.6}
+.card-body strong{color:var(--text)}
+
+/* 成本五层 */
+.cost-layers{display:flex;flex-direction:column;gap:5px}
+.cl-row{display:flex;gap:8px;align-items:flex-start;padding:8px 12px;border-radius:8px;font-size:13px}
+.cl-tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;min-width:66px;text-align:center;flex-shrink:0;margin-top:1px}
+.cl-body{color:var(--sub);line-height:1.4;flex:1}
+.cl-save{font-size:11px;font-weight:800;color:var(--green);flex-shrink:0;margin-top:2px}
+
+/* KV Cache 对比 */
+.kv-cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv-box{border-radius:9px;padding:10px 12px;border:1.5px solid transparent}
+.kv-box .kv-label{font-size:11px;font-weight:800;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.kv-box .kv-title{font-size:14px;font-weight:800;margin-bottom:3px}
+.kv-box .kv-body{font-size:12px;color:var(--sub);line-height:1.45}
+
+/* AI PM 总结 */
+.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pm-box{border-radius:10px;padding:11px 13px;border:1.5px solid transparent}
+.pm-box .pm-icon{font-size:18px;margin-bottom:4px}
+.pm-box .pm-title{font-size:14px;font-weight:800;margin-bottom:4px}
+.pm-box .pm-body{font-size:12px;color:var(--sub);line-height:1.5}
+
+/* 结论 */
+.conclusion{background:linear-gradient(135deg,rgba(234,88,12,.07),rgba(215,119,6,.07));border:1px solid rgba(234,88,12,.2);border-radius:12px;padding:13px 16px}
+.con-label{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:.5px;margin-bottom:6px;text-transform:uppercase}
+.con-text{font-size:16px;font-weight:800;color:var(--text);line-height:1.5}
+.con-text em{font-style:normal;color:var(--orange)}
+
+.footer{padding:10px 40px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--surface)}
+.footer-msg{font-size:14px;color:var(--sub)}
+.footer-msg strong{color:var(--text)}
+.nav-btns{display:flex;gap:10px}
+.btn{padding:9px 22px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--green);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-s:hover{border-color:var(--green);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-sub">第二篇章 · 总结回顾 · 下半页</div>
+      <div class="hd-title"><em>成本优化</em> · AI PM 带走的完整工程视角</div>
+    </div>
+    <div class="hd-right">
+      <span class="pill pill-muted">2 / 2</span>
+      <span class="pill pill-green">全程完结</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：成本优化五层 -->
+    <div class="col" id="col-left">
+      <div class="col-inner" id="inner-left">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(22,163,74,.1)">💰</div>
+        <div><div class="col-label">三、成本优化五层体系</div><div class="col-desc">综合使用可降低 70-90% Token 成本</div></div>
+      </div>
+
+      <div class="cost-layers">
+        <div class="cl-row" style="background:rgba(0,102,255,.05)">
+          <span class="cl-tag" style="background:rgba(0,102,255,.12);color:var(--accent)">模型路由</span>
+          <span class="cl-body">简单任务用轻量模型（分类、抽取）；复杂推理才用旗舰模型</span>
+          <span class="cl-save">省 60-80%</span>
+        </div>
+        <div class="cl-row" style="background:rgba(215,119,6,.05)">
+          <span class="cl-tag" style="background:rgba(215,119,6,.12);color:var(--amber)">语法层</span>
+          <span class="cl-body">YAML 替代 JSON（省 15-30%），CSV 替代数组（省 40%+），删 Markdown 装饰</span>
+          <span class="cl-save">省 15-40%</span>
+        </div>
+        <div class="cl-row" style="background:rgba(124,58,237,.05)">
+          <span class="cl-tag" style="background:rgba(124,58,237,.12);color:var(--purple)">语义层</span>
+          <span class="cl-body">动态 Few-Shot 向量匹配（省 87%），LLMLingua-2 压缩长文档（省 60%），关键信息放开头/结尾</span>
+          <span class="cl-save">省 60-87%</span>
+        </div>
+        <div class="cl-row" style="background:rgba(8,145,178,.05)">
+          <span class="cl-tag" style="background:rgba(8,145,178,.12);color:var(--cyan)">输出层</span>
+          <span class="cl-body">负向约束（精准截止废话），Diff 润色（只输出改动），Stop Sequence（及时截止）</span>
+          <span class="cl-save">省 20-50%</span>
+        </div>
+        <div class="cl-row" style="background:rgba(22,163,74,.05)">
+          <span class="cl-tag" style="background:rgba(22,163,74,.12);color:var(--green)">KV Cache</span>
+          <span class="cl-body">固定 System Prompt 前缀 → 缓存命中率高；避免动态时间戳（每次不同 = 永远 MISS）</span>
+          <span class="cl-save">省 30-60%</span>
+        </div>
+      </div>
+
+      <div class="kv-cmp">
+        <div class="kv-box" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="kv-label" style="color:var(--red)">❌ 动态时间戳</div>
+          <div class="kv-title" style="color:var(--red)">每次前缀不同</div>
+          <div class="kv-body">System Prompt 含 "现在是 {time}"，每次请求前缀变化 → KV Cache 永远 MISS</div>
+        </div>
+        <div class="kv-box" style="background:rgba(22,163,74,.05);border-color:rgba(22,163,74,.2)">
+          <div class="kv-label" style="color:var(--green)">✅ 静态前缀</div>
+          <div class="kv-title" style="color:var(--green)">前缀不变，缓存稳定</div>
+          <div class="kv-body">时间放 user message 而非 system；System Prompt 保持固定 → 持续 HIT</div>
+        </div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+
+    <!-- 右栏：AI PM 综合认知 -->
+    <div class="col" id="col-right">
+      <div class="col-inner" id="inner-right">
+      <div class="col-hd">
+        <div class="col-icon" style="background:rgba(234,88,12,.1)">🎯</div>
+        <div><div class="col-label">四、AI PM 综合认知</div><div class="col-desc">从基础到工程，带走完整视角</div></div>
+      </div>
+
+      <div class="pm-grid">
+        <div class="pm-box" style="background:rgba(234,88,12,.05);border-color:rgba(234,88,12,.2)">
+          <div class="pm-icon">🖼️</div>
+          <div class="pm-title" style="color:var(--orange)">图片 Token 成本</div>
+          <div class="pm-body">分辨率 ≠ 质量。粗分类 512px 足够，OCR 用 1K-2K，高精检测才用 4K。按任务匹配可降低 60-90% 图片成本。</div>
+        </div>
+        <div class="pm-box" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.2)">
+          <div class="pm-icon">🛡️</div>
+          <div class="pm-title" style="color:var(--red)">Prompt 安全</div>
+          <div class="pm-body">4 类攻击：越权注入 / 角色逃逸 / Few-Shot 污染 / 符号注入。4 层防御：输入过滤 + 权限分层 + 输出验证 + 审计日志。</div>
+        </div>
+        <div class="pm-box" style="background:rgba(8,145,178,.05);border-color:rgba(8,145,178,.2)">
+          <div class="pm-icon">📊</div>
+          <div class="pm-title" style="color:var(--cyan)">多轮对话成本</div>
+          <div class="pm-body">每轮都把完整历史带入 → 成本指数增长。必须主动做上下文压缩，设计历史管理策略。</div>
+        </div>
+        <div class="pm-box" style="background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.2)">
+          <div class="pm-icon">🔄</div>
+          <div class="pm-title" style="color:var(--purple)">流式返回</div>
+          <div class="pm-body">Markdown 和 XML 流式友好；JSON/YAML 需等全文才能解析。格式选择影响用户体验和工程复杂度。</div>
+        </div>
+      </div>
+
+      <div class="conclusion">
+        <div class="con-label">两篇章的终极结论</div>
+        <div class="con-text">AI 工程化的本质是<em>精心设计每一条 Message</em>。从上下文管理到成本优化，全都是在设计那个发给模型的 Message List。</div>
+      </div>
+
+      <div style="background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.2);border-radius:12px;padding:12px 16px;flex-shrink:0">
+        <div style="font-size:12px;font-weight:800;color:var(--green);letter-spacing:.4px;margin-bottom:7px;text-transform:uppercase">你已掌握的能力</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">理解 LLM 原理</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">识别并缓解幻觉</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">设计 Prompt</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">评估输出格式</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">规划 Agent 架构</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">系统性降低成本</span>
+          <span style="padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(22,163,74,.1);color:var(--green)">防御 Prompt 攻击</span>
+        </div>
+      </div>
+    </div><!-- /col-inner -->
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-msg">第二篇章完结 · <strong>恭喜完成 AI 工程化完整学习</strong> · 从基础认知到工程落地，你已具备 AI PM 的核心视角</div>
+    <div class="nav-btns">
+      <button class="btn btn-s" onclick="location.href='summary-2.html'">← 上一页</button>
+      <button class="btn btn-s" onclick="location.href='summary-1.html'">← 回顾第一篇章</button>
+      <button class="btn btn-s" onclick="location.href='llm-story.html'">返回目录</button>
+      <button class="btn btn-p" onclick="location.href='llm-story.html'">课程完结</button>
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js"></script>
+<script>
+function fitCol(colId, innerId) {
+  const col = document.getElementById(colId);
+  const inner = document.getElementById(innerId);
+  if (!col || !inner) return;
+  inner.style.transform = '';
+  inner.style.width = '';
+  const availH = col.clientHeight;
+  const contentH = inner.scrollHeight;
+  if (contentH > availH) {
+    const scale = availH / contentH;
+    inner.style.transform = `scale(${scale})`;
+    inner.style.width = (100 / scale) + '%';
+  }
+}
+function fitAll() {
+  fitCol('col-left', 'inner-left');
+  fitCol('col-right', 'inner-right');
+}
+window.addEventListener('load', fitAll);
+window.addEventListener('resize', fitAll);
+</script>
+</body>
+</html>
