@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Prompt 防御：TiedStory 实战</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt 防御实战：多层防御策略解析 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--green:#16a34a;--red:#dc2626;--muted:#8e8e93;--orange:#ea580c;--cyan:#0891b2;--purple:#7c3aed;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -116,6 +117,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 @keyframes flash-r{0%{box-shadow:0 0 0 3px rgba(220,38,38,.35)}100%{box-shadow:none}}
 @keyframes flash-g{0%{box-shadow:0 0 0 3px rgba(22,163,74,.35)}100%{box-shadow:none}}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="如何在真实产品中防御 Prompt 注入攻击？讲解输入过滤、指令分离、防御性 System Prompt 设计、输出检测等多层防御策略，以 TiedStory 案例为基础展开。">
+<meta name="keywords" content="Prompt防御,AI安全防御,System Prompt安全,输入过滤,AI产品安全">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/prompt-defense.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Prompt 防御实战：多层防御策略解析">
+<meta property="og:description" content="如何在真实产品中防御 Prompt 注入攻击？讲解输入过滤、指令分离、防御性 System Prompt 设计、输出检测等多层防御策略，以 TiedStory 案例为基础展开。">
+<meta property="og:url" content="https://xueai.app/slides/prompt-defense.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt 防御实战：多层防御策略解析">
+<meta name="twitter:description" content="如何在真实产品中防御 Prompt 注入攻击？讲解输入过滤、指令分离、防御性 System Prompt 设计、输出检测等多层防御策略，以 TiedStory 案例为基础展开。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -324,7 +347,7 @@ content 固定输出：<span class="s">"这片树林只接受真实的心声。"
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 // ===== 标签切换 =====
 function switchTab(id) {

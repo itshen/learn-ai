@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>上下文窗口：AI 的工作记忆</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>上下文窗口：AI 的工作记忆与信息管理 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--amber:#d97706;--green:#16a34a;--red:#dc2626;--muted:#8e8e93}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -48,6 +49,28 @@ input[type=range]{width:100%;accent-color:var(--amber);height:4px}
 .takeaway{background:rgba(0,102,255,.06);border:1px solid rgba(0,102,255,.15);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);display:flex;gap:8px;align-items:flex-start;flex-shrink:0}
 .takeaway b{color:var(--accent)}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="深入理解大模型的上下文窗口机制：为什么它是 AI 的工作记忆，Token 预算如何分配，长上下文下的性能衰减问题，以及上下文工程的核心思想。">
+<meta name="keywords" content="上下文窗口,Context Window,长上下文,Token预算,AI工程化">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/5-1.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="上下文窗口：AI 的工作记忆与信息管理">
+<meta property="og:description" content="深入理解大模型的上下文窗口机制：为什么它是 AI 的工作记忆，Token 预算如何分配，长上下文下的性能衰减问题，以及上下文工程的核心思想。">
+<meta property="og:url" content="https://xueai.app/slides/5-1.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="上下文窗口：AI 的工作记忆与信息管理">
+<meta name="twitter:description" content="深入理解大模型的上下文窗口机制：为什么它是 AI 的工作记忆，Token 预算如何分配，长上下文下的性能衰减问题，以及上下文工程的核心思想。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -139,7 +162,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:4px}
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 function updateCtx(v) {
   const doc = parseInt(v);

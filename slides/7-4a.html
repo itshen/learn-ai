@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ReAct 循环：Agent 的思考-行动-观察 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:10px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:300px 1fr;min-height:0;overflow:hidden}
+
+/* Left panel */
+.left{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.l-section{padding:10px 16px;flex-shrink:0}
+.l-label{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin-bottom:6px}
+.user-req{background:rgba(8,145,178,.06);border:1.5px solid rgba(8,145,178,.18);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6;color:var(--text)}
+
+/* Loop diagram */
+.loop-vis{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 12px;min-height:0;overflow:visible}
+.loop-svg{width:100%;height:100%;max-width:250px;max-height:250px;overflow:visible}
+
+/* Stats */
+.stats-bar{padding:8px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;flex-shrink:0;background:var(--surface)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.stat-label{color:var(--muted);font-weight:600}
+.stat-val{font-weight:800;color:var(--text)}
+.stat-val.warn{color:var(--orange)}
+.progress-track{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:2px}
+.progress-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .4s ease}
+
+/* Decision area */
+.dec-area{padding:8px 16px;border-top:1px solid var(--border);flex-shrink:0;max-height:140px;overflow-y:auto}
+.dec-card{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);line-height:1.5;opacity:0;transform:translateY(4px);transition:all .35s}
+.dec-card.show{opacity:1;transform:translateY(0)}
+.dec-card b{color:var(--orange)}
+
+/* Right panel - iteration timeline */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-bar{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.r-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px}
+.r-badge{display:flex;gap:10px}
+.r-badge-item{font-size:13px;color:var(--muted);font-weight:600}
+.r-badge-item span{font-weight:800;color:var(--text)}
+
+.timeline{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:6px}
+
+/* Iteration block */
+.iter-block{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;opacity:0;transform:translateY(8px);transition:all .35s ease;flex-shrink:0;background:var(--surface)}
+.iter-block.show{opacity:1;transform:translateY(0)}
+.iter-hd{padding:5px 12px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;background:rgba(0,0,0,.025);border-bottom:1px solid var(--border)}
+.iter-num{font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:13px;font-weight:800;color:var(--muted)}
+.iter-body{padding:8px 12px;display:flex;flex-direction:column;gap:5px}
+
+.react-row{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.6}
+.react-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700}
+.react-content{flex:1;min-width:0}
+.react-label{font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:1px}
+.react-text{font-size:13.5px;color:var(--text);line-height:1.55}
+
+/* Tool call visual */
+.tool-call-box{background:rgba(234,88,12,.04);border:1px solid rgba(234,88,12,.15);border-radius:8px;padding:6px 10px;margin-top:2px}
+.tool-fn{font-size:13px;font-weight:700;color:var(--orange);display:flex;align-items:center;gap:5px}
+.tool-params{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tool-param{padding:2px 8px;border-radius:4px;font-size:12px;background:var(--surface);border:1px solid var(--border);color:var(--sub);font-weight:600}
+.tool-param b{color:var(--text);font-weight:700}
+
+/* Observation result */
+.obs-result{padding:5px 9px;border-radius:6px;font-size:13px;margin-top:2px;font-weight:600}
+.obs-ok{background:rgba(22,163,74,.06);color:var(--green);border:1px solid rgba(22,163,74,.15)}
+.obs-fail{background:rgba(220,38,38,.06);color:var(--red);border:1px solid rgba(220,38,38,.15)}
+.obs-info{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+
+/* Fast-forward indicator */
+.fast-fwd{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:rgba(124,58,237,.04);border:1px dashed rgba(124,58,237,.2);font-size:13px;color:var(--purple);font-weight:600;opacity:0;transform:translateY(6px);transition:all .3s;flex-shrink:0}
+.fast-fwd.show{opacity:1;transform:translateY(0)}
+
+/* Final answer */
+.final-answer{border:1.5px solid rgba(22,163,74,.25);border-radius:10px;background:rgba(22,163,74,.04);padding:10px 14px;opacity:0;transform:translateY(8px);transition:all .4s;flex-shrink:0}
+.final-answer.show{opacity:1;transform:translateY(0)}
+.fa-label{font-size:11px;font-weight:800;color:var(--green);letter-spacing:.5px;margin-bottom:4px}
+.fa-text{font-size:14px;color:var(--text);line-height:1.6}
+
+/* Controls */
+.ctrl{padding:8px 16px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:7px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:13px;color:var(--muted)}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:13.5px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+/* SVG animations */
+@keyframes rotate-loop{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse-node{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.node-active{animation:pulse-node .8s ease infinite}
+.loop-arrow{opacity:.2;transition:opacity .4s}
+.loop-arrow.active{opacity:1}
+</style>
+<meta name="description" content="ReAct 循环详解：Agent 如何通过思考-行动-观察的迭代循环完成复杂任务。一个删除 console.log 的任务可能经历 6 轮循环。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-4a.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="ReAct 循环：Agent 的思考-行动-观察">
+<meta property="og:url" content="https://xueai.app/slides/7-4a.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 执行 · 第 1 页</div>
+      <div class="hd-title">ReAct 循环：<em>思考 → 行动 → 观察</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">Reasoning + Acting — Agent 不是一问一答，而是循环</div>
+  </div>
+
+  <div class="body">
+    <!-- Left: user request + loop diagram + stats -->
+    <div class="left">
+      <div class="l-section">
+        <div class="l-label">用户指令</div>
+        <div class="user-req">帮我把项目中所有的 console.log 删掉，然后跑一下测试确保没问题</div>
+      </div>
+
+      <div class="loop-vis">
+        <svg class="loop-svg" viewBox="0 0 260 250" id="loopSvg">
+          <circle cx="130" cy="125" r="82" fill="none" stroke="rgba(0,0,0,.06)" stroke-width="2"/>
+          <defs>
+            <marker id="arrowO" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--orange)"/></marker>
+            <marker id="arrowG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--green)"/></marker>
+            <marker id="arrowP" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--purple)"/></marker>
+            <marker id="arrowM" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="var(--muted)"/></marker>
+          </defs>
+          <!-- 思考→行动 -->
+          <path id="arc-t2a" class="loop-arrow" d="M 155 50 A 82 82 0 0 1 200 100" fill="none" stroke="var(--orange)" stroke-width="2.5" stroke-dasharray="4 3" marker-end="url(#arrowO)"/>
+          <!-- 行动→观察 -->
+          <path id="arc-a2o" class="loop-arrow" d="M 205 140 A 82 82 0 0 1 155 200" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-dasharray="4 3" marker-end="url(#arrowG)"/>
+          <!-- 观察→下一轮思考 -->
+          <path id="arc-o2t" class="loop-arrow" d="M 100 205 A 82 82 0 0 1 55 140" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-dasharray="4 3" marker-end="url(#arrowP)"/>
+          <path id="arc-loop" class="loop-arrow" d="M 55 110 A 82 82 0 0 1 105 50" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 4" marker-end="url(#arrowM)"/>
+          <!-- 思考（顶部） -->
+          <g id="node-thought" transform="translate(130,43)">
+            <circle r="28" fill="rgba(124,58,237,.08)" stroke="var(--purple)" stroke-width="2"/>
+            <text y="-4" text-anchor="middle" fill="var(--purple)" font-size="16">🧠</text>
+            <text y="11" text-anchor="middle" fill="var(--purple)" font-size="11" font-weight="800">思考</text>
+          </g>
+          <!-- 行动（右侧） -->
+          <g id="node-action" transform="translate(205,125)">
+            <circle r="28" fill="rgba(234,88,12,.08)" stroke="var(--orange)" stroke-width="2"/>
+            <text y="-4" text-anchor="middle" fill="var(--orange)" font-size="16">🔧</text>
+            <text y="11" text-anchor="middle" fill="var(--orange)" font-size="11" font-weight="800">行动</text>
+          </g>
+          <!-- 观察（底部偏左） -->
+          <g id="node-obs" transform="translate(80,200)">
+            <circle r="28" fill="rgba(22,163,74,.08)" stroke="var(--green)" stroke-width="2"/>
+            <text y="-4" text-anchor="middle" fill="var(--green)" font-size="16">👁</text>
+            <text y="11" text-anchor="middle" fill="var(--green)" font-size="11" font-weight="800">观察</text>
+          </g>
+          <!-- 中心标签 -->
+          <text x="125" y="122" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="700" font-style="italic">ReAct</text>
+          <text x="125" y="138" text-anchor="middle" fill="var(--muted)" font-size="10">循环</text>
+        </svg>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-row">
+          <span class="stat-label">当前轮次</span>
+          <span class="stat-val" id="iterNum">0 / 50</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="iterProgress" style="width:0%"></div></div>
+        <div class="stat-row" style="margin-top:4px">
+          <span class="stat-label">工具调用</span>
+          <span class="stat-val" id="toolCount">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">消耗 Token</span>
+          <span class="stat-val" id="tokenCount">0</span>
+        </div>
+      </div>
+
+      <div class="dec-area" id="decArea"></div>
+    </div>
+
+    <!-- Right: iteration timeline -->
+    <div class="right">
+      <div class="r-bar">
+        <div class="r-title">ReAct 执行过程</div>
+        <div class="r-badge">
+          <div class="r-badge-item"><span style="color:var(--purple)">思考</span></div>
+          <div class="r-badge-item"><span style="color:var(--orange)">行动</span></div>
+          <div class="r-badge-item"><span style="color:var(--green)">观察</span></div>
+        </div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+      <div class="ctrl">
+        <button class="btn btn-p" id="btnNext" onclick="next()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="reset()">重置</button>
+        <span class="ctrl-hint" id="hint">共 8 步 · 看一个复杂任务如何经历多轮循环</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar" id="insightBar">
+    <b>Takeaway</b> Agent 不是一次性回答问题，而是一个「思考 → 行动 → 观察 → 再思考」的循环。一个复杂任务可能循环十几轮。这就是 Agent 和普通聊天机器人的本质区别：它会根据执行结果调整策略。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var STEPS = [
+  {
+    iter: 1, tools: 1, tokens: 1200,
+    hint: '1/8 · 第 1 轮：先搜索项目中哪些文件包含 console.log',
+    activeNode: 'thought',
+    decision: '<b>📌 设计决策：</b>Agent 不是"一问一答"——它是一个循环。一个任务可能需要 5-15 轮思考-行动-观察。这一步，模型没有急着动手，而是先调研。',
+    items: [
+      { phase:'thought', text:'用户要删除所有 console.log，我先搜索项目中有哪些文件包含 console.log' },
+      { phase:'action', fn:'search_files', params:[['pattern','console.log'],['scope','项目全局']] },
+      { phase:'observation', status:'info', text:'找到 12 个文件包含 console.log，共 47 处' }
+    ]
+  },
+  {
+    iter: 2, tools: 2, tokens: 2800,
+    hint: '2/8 · 第 2 轮：开始逐个文件编辑，删除 console.log',
+    activeNode: 'action',
+    decision: '<b>📌 设计决策：</b>每轮循环都消耗 Token。模型会把上一轮的观察结果作为下一轮思考的输入。12 个文件 × 每个 ~200 Token ≈ 这个任务光编辑就要 2400 Token。',
+    items: [
+      { phase:'thought', text:'找到了 12 个文件，我逐个编辑删除。先处理 src/api.ts' },
+      { phase:'action', fn:'edit_file', params:[['file','src/api.ts'],['remove_lines','15, 28, 45']] },
+      { phase:'observation', status:'ok', text:'src/api.ts 已修改，删除了 3 处 console.log' }
+    ]
+  },
+  {
+    iter: 3, tools: 3, tokens: 4100,
+    hint: '3/8 · 第 3 轮：继续处理下一个文件',
+    activeNode: 'action',
+    decision: null,
+    items: [
+      { phase:'thought', text:'继续处理 src/utils.ts' },
+      { phase:'action', fn:'edit_file', params:[['file','src/utils.ts'],['remove_lines','8, 22, 67, 89']] },
+      { phase:'observation', status:'ok', text:'src/utils.ts 已修改，删除了 4 处 console.log' }
+    ]
+  },
+  {
+    iter: null, tools: 12, tokens: 18600,
+    hint: '4/8 · 第 4-11 轮被快进：重复处理剩余 10 个文件',
+    activeNode: 'action',
+    decision: '<b>📌 设计决策：</b>这里省略了第 4-11 轮——每轮结构完全相同：思考 → edit_file → 确认。实际产品中，这些循环都在后台静默执行。50 轮上限 × 每轮约 1000 Token = 一个任务最多可能花 5 万 Token。',
+    fastForward: true,
+    ffText: '⏩ 重复处理剩余 10 个文件（第 4-11 轮）… 共删除 47 处 console.log'
+  },
+  {
+    iter: 12, tools: 13, tokens: 20200,
+    hint: '5/8 · 第 12 轮：文件都处理完了，用户还要求跑测试',
+    activeNode: 'thought',
+    decision: null,
+    items: [
+      { phase:'thought', text:'所有 12 个文件处理完毕。用户还要求跑测试确保没问题，我来执行 npm test' },
+      { phase:'action', fn:'run_command', params:[['cmd','npm test']] },
+      { phase:'observation', status:'fail', text:'测试结果：2 个测试失败！\nsrc/api.test.ts 第 34 行和第 78 行的断言依赖了 console.log 的输出' }
+    ]
+  },
+  {
+    iter: 13, tools: 14, tokens: 22500,
+    hint: '6/8 · 第 13 轮：发现测试失败 → 自动修复（自我纠错！）',
+    activeNode: 'thought',
+    decision: '<b>📌 设计决策：</b>当 Agent 发现测试失败时自动去修复——这种「自我纠错」能力是 ReAct 循环最强大的地方。不需要人类介入，它自己发现问题、分析原因、修复代码。',
+    items: [
+      { phase:'thought', text:'测试失败了！2 个测试用例依赖了 console.log 输出做断言。我需要修复这些测试，把断言逻辑改为不依赖 console 输出' },
+      { phase:'action', fn:'edit_file', params:[['file','src/api.test.ts'],['fix','修改 2 处断言逻辑']] },
+      { phase:'observation', status:'ok', text:'src/api.test.ts 已修改，2 处断言已重写' }
+    ]
+  },
+  {
+    iter: 14, tools: 15, tokens: 24800,
+    hint: '7/8 · 第 14 轮：修复后重新跑测试 → 全部通过',
+    activeNode: 'observation',
+    decision: null,
+    items: [
+      { phase:'thought', text:'测试文件已修复，再跑一次 npm test 验证是否全部通过' },
+      { phase:'action', fn:'run_command', params:[['cmd','npm test']] },
+      { phase:'observation', status:'ok', text:'✅ 全部 48 个测试通过！' }
+    ]
+  },
+  {
+    iter: 14, tools: 15, tokens: 25600,
+    hint: '8/8 · 循环结束：模型返回最终回答（不含 tool_calls）',
+    activeNode: null,
+    decision: '<b>📌 设计决策：</b>循环何时结束？当模型返回的消息只有 text 没有 tool_calls 时，循环自动终止。14 轮循环、15 次工具调用、消耗约 2.5 万 Token——这是一个中等复杂度任务的真实开销。',
+    finalAnswer: '已完成！删除了 12 个文件中的 47 处 console.log，修复了 2 个受影响的测试用例，全部 48 个测试通过 ✅'
+  }
+];
+
+var cur = 0;
+var activeNodes = {thought:false, action:false, obs:false};
+
+function highlightNode(name) {
+  ['thought','action','obs'].forEach(function(n) {
+    var el = document.getElementById('node-' + (n === 'obs' ? 'obs' : n));
+    var circle = el ? el.querySelector('circle') : null;
+    if (!circle) return;
+    if (n === name || (name === 'observation' && n === 'obs')) {
+      circle.setAttribute('stroke-width', '3');
+      el.classList.add('node-active');
+    } else {
+      circle.setAttribute('stroke-width', '2');
+      el.classList.remove('node-active');
+    }
+  });
+
+  var arcs = {
+    thought: ['arc-t2a'],
+    action: ['arc-a2o'],
+    observation: ['arc-o2t', 'arc-loop']
+  };
+  ['arc-t2a','arc-a2o','arc-o2t','arc-loop'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var keys = arcs[name] || [];
+    el.classList.toggle('active', keys.indexOf(id) >= 0);
+  });
+}
+
+function clearHighlights() {
+  ['thought','action','obs'].forEach(function(n) {
+    var el = document.getElementById('node-' + n);
+    if (el) {
+      el.classList.remove('node-active');
+      var c = el.querySelector('circle');
+      if (c) c.setAttribute('stroke-width', '2');
+    }
+  });
+  ['arc-t2a','arc-a2o','arc-o2t','arc-loop'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+}
+
+function renderIteration(step, delay) {
+  var tl = document.getElementById('timeline');
+
+  if (step.fastForward) {
+    var ff = document.createElement('div');
+    ff.className = 'fast-fwd';
+    ff.textContent = step.ffText;
+    tl.appendChild(ff);
+    setTimeout(function() {
+      ff.classList.add('show');
+      tl.scrollTop = tl.scrollHeight;
+    }, delay);
+    return;
+  }
+
+  if (step.finalAnswer) {
+    var fa = document.createElement('div');
+    fa.className = 'final-answer';
+    fa.innerHTML = '<div class="fa-label">💬 最终回答（循环结束）</div><div class="fa-text">' + step.finalAnswer + '</div>';
+    tl.appendChild(fa);
+    setTimeout(function() {
+      fa.classList.add('show');
+      tl.scrollTop = tl.scrollHeight;
+    }, delay);
+    return;
+  }
+
+  var block = document.createElement('div');
+  block.className = 'iter-block';
+
+  var iterLabel = step.iter ? '第 ' + step.iter + ' 轮' : '';
+  var hdHtml = '<div class="iter-hd"><span class="iter-num">' + iterLabel + '</span>';
+  hdHtml += '<span style="font-size:12px;color:var(--muted);font-weight:600">LLM call + tool call</span></div>';
+
+  var bodyHtml = '<div class="iter-body">';
+  for (var i = 0; i < step.items.length; i++) {
+    var item = step.items[i];
+    bodyHtml += buildReactRow(item);
+  }
+  bodyHtml += '</div>';
+
+  block.innerHTML = hdHtml + bodyHtml;
+  tl.appendChild(block);
+
+  var baseDelay = delay;
+  var rows = block.querySelectorAll('.react-row');
+  rows.forEach(function(row, idx) {
+    row.style.opacity = '0';
+    row.style.transform = 'translateY(4px)';
+    row.style.transition = 'all .3s ease';
+    setTimeout(function() {
+      row.style.opacity = '1';
+      row.style.transform = 'translateY(0)';
+      var phase = step.items[idx] ? step.items[idx].phase : null;
+      if (phase) highlightNode(phase);
+    }, baseDelay + idx * 250);
+  });
+
+  setTimeout(function() {
+    block.classList.add('show');
+    tl.scrollTop = tl.scrollHeight;
+  }, delay);
+}
+
+function buildReactRow(item) {
+  var colors = {
+    thought: {bg:'rgba(124,58,237,.06)', color:'var(--purple)', label:'THOUGHT · 思考', icon:'🧠'},
+    action:  {bg:'rgba(234,88,12,.06)',  color:'var(--orange)', label:'ACTION · 行动',  icon:'🔧'},
+    observation: {bg:'rgba(22,163,74,.06)', color:'var(--green)', label:'OBSERVATION · 观察', icon:'👁'}
+  };
+  var c = colors[item.phase];
+  var html = '<div class="react-row">';
+  html += '<div class="react-icon" style="background:' + c.bg + '">' + c.icon + '</div>';
+  html += '<div class="react-content">';
+  html += '<div class="react-label" style="color:' + c.color + '">' + c.label + '</div>';
+
+  if (item.phase === 'action') {
+    html += '<div class="tool-call-box"><div class="tool-fn">↗ tool_call → ' + item.fn + '()</div>';
+    html += '<div class="tool-params">';
+    for (var p = 0; p < item.params.length; p++) {
+      html += '<div class="tool-param"><b>' + item.params[p][0] + ':</b> ' + item.params[p][1] + '</div>';
+    }
+    html += '</div></div>';
+  } else if (item.phase === 'observation') {
+    var cls = item.status === 'ok' ? 'obs-ok' : (item.status === 'fail' ? 'obs-fail' : 'obs-info');
+    html += '<div class="obs-result ' + cls + '" style="white-space:pre-line">' + item.text + '</div>';
+  } else {
+    html += '<div class="react-text" style="color:var(--sub);font-style:italic">"' + item.text + '"</div>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+function next() {
+  if (cur >= STEPS.length) return;
+  var s = STEPS[cur];
+
+  document.getElementById('hint').textContent = s.hint;
+
+  var iterVal = s.iter || '-';
+  document.getElementById('iterNum').textContent = iterVal + ' / 50';
+  document.getElementById('iterProgress').style.width = ((s.iter || 0) / 50 * 100) + '%';
+  document.getElementById('toolCount').textContent = s.tools;
+  var tokenEl = document.getElementById('tokenCount');
+  tokenEl.textContent = s.tokens.toLocaleString();
+  if (s.tokens > 20000) tokenEl.classList.add('warn');
+
+  if (s.activeNode) {
+    highlightNode(s.activeNode);
+  } else {
+    clearHighlights();
+  }
+
+  renderIteration(s, 50);
+
+  if (s.decision) {
+    var da = document.getElementById('decArea');
+    da.innerHTML = '<div class="dec-card">' + s.decision + '</div>';
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      var dc = da.querySelector('.dec-card');
+      if (dc) dc.classList.add('show');
+    })});
+  }
+
+  cur++;
+  if (cur >= STEPS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 完成';
+  }
+}
+
+function reset() {
+  cur = 0;
+  document.getElementById('timeline').innerHTML = '';
+  document.getElementById('decArea').innerHTML = '';
+  document.getElementById('iterNum').textContent = '0 / 50';
+  document.getElementById('iterProgress').style.width = '0%';
+  document.getElementById('toolCount').textContent = '0';
+  var tokenEl = document.getElementById('tokenCount');
+  tokenEl.textContent = '0';
+  tokenEl.classList.remove('warn');
+  document.getElementById('hint').textContent = '共 8 步 · 看一个复杂任务如何经历多轮循环';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  clearHighlights();
+}
+</script>
+</body>
+</html>

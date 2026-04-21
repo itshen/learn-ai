@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>chat/completions 之谜 · 为什么叫补全</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>chat/completions 之谜：为什么 API 叫补全而不叫对话 | xueai.app</title>
 <script src="../global-attn.js"></script>
 <style>
 :root {
@@ -209,7 +210,29 @@ body {
   background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; color: var(--accent);
 }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="OpenAI 的 chat/completions 接口为什么叫补全？理解对话 API 的本质：每次请求都是独立的文本补全，多轮对话是靠客户端拼接上下文实现的，不是服务端记忆。">
+<meta name="keywords" content="chat completions,OpenAI API,大模型API,对话接口,补全接口">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-api.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="chat/completions 之谜：为什么 API 叫补全而不叫对话">
+<meta property="og:description" content="OpenAI 的 chat/completions 接口为什么叫补全？理解对话 API 的本质：每次请求都是独立的文本补全，多轮对话是靠客户端拼接上下文实现的，不是服务端记忆。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-api.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="chat/completions 之谜：为什么 API 叫补全而不叫对话">
+<meta name="twitter:description" content="OpenAI 的 chat/completions 接口为什么叫补全？理解对话 API 的本质：每次请求都是独立的文本补全，多轮对话是靠客户端拼接上下文实现的，不是服务端记忆。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
 
@@ -417,6 +440,6 @@ function replayAll() {
   btn.style.background = '';
 }
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

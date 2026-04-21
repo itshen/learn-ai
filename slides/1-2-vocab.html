@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>从语料到词间矩阵</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Token 与词表：从语料到词向量的建立 | xueai.app</title>
 <script>
 // 全局词间注意力权重矩阵 (PMI + 语义分组)
 // vocab: 116 个不重复 token
@@ -346,7 +347,29 @@ canvas#heatmap {
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="深入解析大模型的词表构建原理：BPE 分词算法、Token 与词的关系、中英文 Token 效率差异、词向量矩阵的含义，是理解大模型生成机制的第一步。">
+<meta name="keywords" content="Token,词表,BPE分词,词向量,大模型分词器,Tokenizer">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-vocab.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="从语料到词向量：Token 与词表是怎么建立的">
+<meta property="og:description" content="深入解析大模型的词表构建原理：BPE 分词算法、Token 与词的关系、中英文 Token 效率差异、词向量矩阵的含义，是理解大模型生成机制的第一步。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-vocab.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="从语料到词向量：Token 与词表是怎么建立的">
+<meta name="twitter:description" content="深入解析大模型的词表构建原理：BPE 分词算法、Token 与词的关系、中英文 Token 效率差异、词向量矩阵的含义，是理解大模型生成机制的第一步。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 
 <div class="slide-container" id="app">
@@ -1018,6 +1041,6 @@ window.addEventListener('resize', () => {
   else if(currentStage === 3) drawMatrix(activeVId);
 });
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

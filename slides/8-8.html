@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>输出层 + KV Cache 进阶</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>输出层优化 + KV Cache 进阶：成本优化的最后一公里 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -124,6 +125,28 @@ pre.code .hl{color:#f38ba8}
 @keyframes row-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .row-in{animation:row-in .3s ease}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="输出 Token 通常比输入贵 2-3 倍。讲解如何通过限制输出长度、要求简洁回答、格式约束来控制输出成本，以及 KV Cache 的进阶使用场景与边界条件。">
+<meta name="keywords" content="输出Token优化,KV Cache进阶,大模型输出成本,max_tokens,AI成本精细化">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/8-8.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="输出层优化 + KV Cache 进阶：成本优化的最后一公里">
+<meta property="og:description" content="输出 Token 通常比输入贵 2-3 倍。讲解如何通过限制输出长度、要求简洁回答、格式约束来控制输出成本，以及 KV Cache 的进阶使用场景与边界条件。">
+<meta property="og:url" content="https://xueai.app/slides/8-8.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="输出层优化 + KV Cache 进阶：成本优化的最后一公里">
+<meta name="twitter:description" content="输出 Token 通常比输入贵 2-3 倍。讲解如何通过限制输出长度、要求简洁回答、格式约束来控制输出成本，以及 KV Cache 的进阶使用场景与边界条件。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -171,7 +194,7 @@ pre.code .hl{color:#f38ba8}
     <div class="demo-col" id="demoCol"></div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 /* ========== 技巧0：负向约束 ========== */
 function demo0() {

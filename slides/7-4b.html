@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent 卡死的 5 种模式 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0;overflow:hidden}
+
+.sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow-y:auto;background:var(--surface)}
+.sb-label{padding:8px 14px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;border-bottom:1px solid var(--border);flex-shrink:0}
+
+.mode-card{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:all .15s;position:relative}
+.mode-card:hover{background:var(--surface2)}
+.mode-card.active{background:rgba(234,88,12,.05);border-left:3px solid var(--orange)}
+.mode-card.active .mc-name{color:var(--orange)}
+.mc-icon{font-size:20px;margin-bottom:4px}
+.mc-name{font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;transition:color .15s}
+.mc-brief{font-size:12px;color:var(--muted);line-height:1.4}
+.mc-num{position:absolute;top:10px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted)}
+.mode-card.active .mc-num{background:rgba(234,88,12,.12);color:var(--orange)}
+
+.main{display:flex;flex-direction:column;overflow:hidden}
+.main-top{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.mt-scenario{font-size:14px;color:var(--text);font-weight:700}
+
+.main-body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;overflow:hidden}
+.sim-col{display:flex;flex-direction:column;overflow:hidden}
+.sim-col:first-child{border-right:1px solid var(--border)}
+.sim-hd{padding:8px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sim-hd-fail{color:var(--red);background:rgba(220,38,38,.03)}
+.sim-hd-fix{color:var(--green);background:rgba(22,163,74,.03)}
+.sim-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+
+.msg{border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(6px);transition:all .35s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg-role{font-size:10px;font-weight:800;letter-spacing:.4px;margin-bottom:3px;text-transform:uppercase}
+.msg-text{white-space:pre-line}
+
+.msg-user{background:rgba(8,145,178,.06);border:1px solid rgba(8,145,178,.12)}
+.msg-user .msg-role{color:var(--cyan)}
+.msg-model{background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.1)}
+.msg-model .msg-role{color:var(--purple)}
+.msg-tool{background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.12)}
+.msg-tool .msg-role{color:var(--green)}
+.msg-error{background:rgba(220,38,38,.06);border:1.5px solid rgba(220,38,38,.2)}
+.msg-error .msg-role{color:var(--red)}
+.msg-warning{background:rgba(215,119,6,.06);border:1.5px solid rgba(215,119,6,.2)}
+.msg-warning .msg-role{color:var(--amber)}
+.msg-loop{background:rgba(124,58,237,.03);border:1.5px dashed rgba(124,58,237,.2)}
+.msg-loop .msg-role{color:var(--purple)}
+.msg-ok{background:rgba(22,163,74,.06);border:1.5px solid rgba(22,163,74,.2)}
+.msg-ok .msg-role{color:var(--green)}
+.msg-framework{background:rgba(234,88,12,.05);border:1px dashed rgba(234,88,12,.2)}
+.msg-framework .msg-role{color:var(--orange)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+.shake{animation:shake .4s ease}
+@keyframes pulse-border{0%,100%{border-color:rgba(220,38,38,.2)}50%{border-color:rgba(220,38,38,.5)}}
+.pulse{animation:pulse-border 1.2s ease infinite}
+
+.decision-bar{padding:8px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.dec{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.55}
+.dec b{color:var(--orange)}
+
+.ctrl{padding:8px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:13px;color:var(--muted)}
+
+.insight-bar{padding:8px 24px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+.empty-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:14px}
+.empty-state-icon{font-size:36px;opacity:.4}
+
+.counter{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px;font-size:12px;font-weight:700}
+.counter-fail{background:rgba(220,38,38,.08);color:var(--red)}
+.counter-fix{background:rgba(22,163,74,.08);color:var(--green)}
+</style>
+<meta name="description" content="Agent 不是万能的——它有 5 种典型的卡死模式。好的产品设计不是假装问题不存在，而是为每种故障预设应对方案。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-4b.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Agent 卡死的 5 种模式">
+<meta property="og:url" content="https://xueai.app/slides/7-4b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 执行 · 第 2 页</div>
+      <div class="hd-title">Agent 卡死的 <em>5 种模式</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击左侧卡片 → 观看故障模拟 → 理解解决方案</div>
+  </div>
+
+  <div class="body">
+    <div class="sidebar">
+      <div class="sb-label">故障模式</div>
+      <div id="cardList"></div>
+    </div>
+
+    <div class="main" id="mainArea">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">←</div>
+        <div>选择一种故障模式，查看动画模拟</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> Agent 不是万能的——它有 5 种典型的卡死模式。好的产品设计不是假装这些问题不存在，而是为每种故障预设了应对方案：<b>参数校验、工具验证、循环检测、主动提问机制、超时兜底。</b>
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var MODES = [
+  {
+    icon:'📋❌', name:'参数格式错误', brief:'模型猜参数格式，反复出错',
+    scenario:'模型调用 get_weather，但参数格式和 API 要求的不一致',
+    decision:'<b>📌 设计决策：</b>工具描述里要写清参数格式示例，否则模型只能猜。你写不写 "city 必须是拼音，如 beijing" 这一句话，决定了模型要猜几次。',
+    fail:[
+      {type:'msg-user',role:'用户',text:'北京明天天气怎么样？'},
+      {type:'msg-model',role:'模型推理',text:'调用 get_weather 工具\ncity → "北京市"'},
+      {type:'msg-error',role:'API 返回',text:'❌ 错误 400：city 字段不合法，需要英文城市名',shake:true},
+      {type:'msg-model',role:'模型重试 #1',text:'换个格式试试……\ncity → "Beijing"'},
+      {type:'msg-error',role:'API 返回',text:'❌ 错误 400：city 必须全小写',shake:true},
+      {type:'msg-model',role:'模型重试 #2',text:'再试……\ncity → "beijing"'},
+      {type:'msg-tool',role:'API 返回',text:'✅ 终于成功了。但已经消耗 3 轮重试、1800 Token。'},
+      {type:'msg-warning',role:'结果',text:'⚠️ 运气好最终蒙对了，运气不好会达到最大重试次数后放弃。'}
+    ],
+    fix:[
+      {type:'msg-framework',role:'框架：工具描述',text:'get_weather\n描述：查询城市天气\ncity：城市拼音（全小写），如 beijing、shanghai\ndate：YYYY-MM-DD 格式'},
+      {type:'msg-user',role:'用户',text:'北京明天天气怎么样？'},
+      {type:'msg-model',role:'模型推理',text:'描述说 city 要用全小写拼音\ncity → "beijing"\ndate → "2026-04-23"'},
+      {type:'msg-ok',role:'API 返回',text:'✅ 一次成功！北京明天：小雨转多云，12-20°C'},
+      {type:'msg-ok',role:'结果',text:'零重试，节省 1200 Token。关键：描述里的一句示例。'}
+    ]
+  },
+  {
+    icon:'👻🔧', name:'幻觉工具', brief:'模型调用不存在的工具名',
+    scenario:'模型幻觉出一个系统中不存在的工具并尝试调用',
+    decision:'<b>📌 设计决策：</b>当模型调用不存在的工具时，框架应该返回可用工具列表，帮模型纠错。不要只说 "tool not found"——这等于让模型在黑暗中猜。',
+    fail:[
+      {type:'msg-user',role:'用户',text:'会议快开始了，提醒一下所有参会者'},
+      {type:'msg-model',role:'模型推理',text:'发通知给参会者……调用 send_notification 工具'},
+      {type:'msg-error',role:'框架返回',text:'❌ Tool not found: send_notification',shake:true},
+      {type:'msg-model',role:'模型重试 #1',text:'那试试 push_notification？'},
+      {type:'msg-error',role:'框架返回',text:'❌ Tool not found: push_notification',shake:true},
+      {type:'msg-model',role:'模型重试 #2',text:'也许叫 notify_users？'},
+      {type:'msg-error',role:'框架返回',text:'❌ Tool not found: notify_users',shake:true},
+      {type:'msg-warning',role:'结果',text:'⚠️ 模型连猜 3 个工具名都不对，耗费 2400 Token。\n实际系统里只有 send_email 可以通知人。'}
+    ],
+    fix:[
+      {type:'msg-user',role:'用户',text:'会议快开始了，提醒一下所有参会者'},
+      {type:'msg-model',role:'模型推理',text:'发通知……调用 send_notification'},
+      {type:'msg-framework',role:'框架返回（带引导）',text:'⚠️ send_notification 不存在。\n可用工具：send_email, get_calendar, search_contacts\n提示：要发送通知可以使用 send_email'},
+      {type:'msg-model',role:'模型纠正',text:'原来要用 send_email！\n先用 get_calendar 查参会者，再逐一 send_email'},
+      {type:'msg-ok',role:'结果',text:'✅ 一轮纠错后成功。框架给出可用列表 = 给模型一盏灯。'}
+    ]
+  },
+  {
+    icon:'🔄♾️', name:'无限循环', brief:'读-改-验-改，反复不止',
+    scenario:'模型陷入"读文件 → 修改 → 验证 → 再修改"的死循环',
+    decision:'<b>📌 设计决策：</b>默认最多循环 50 次。太少会限制复杂任务；太多会烧钱。你的产品该设多少？还要加循环检测——如果连续 3 次做相同操作就强制中断。',
+    fail:[
+      {type:'msg-user',role:'用户',text:'帮我优化这段代码的性能'},
+      {type:'msg-model',role:'模型 → 第 1 轮',text:'调用 read_file("app.js")\n→ 发现可以优化第 42 行'},
+      {type:'msg-tool',role:'工具',text:'调用 edit_file("app.js", ...)  修改第 42 行'},
+      {type:'msg-model',role:'模型 → 第 2 轮',text:'调用 read_file("app.js") 验证修改\n→ 嗯，第 58 行也可以优化'},
+      {type:'msg-tool',role:'工具',text:'调用 edit_file("app.js", ...)  修改第 58 行'},
+      {type:'msg-loop',role:'模型 → 第 3 轮',text:'调用 read_file("app.js") 再次验证\n→ 又发现第 42 行可以改回来……'},
+      {type:'msg-loop',role:'模型 → 第 4、5、6… 轮',text:'🔄 read → edit → read → edit → read → edit …\n同样的文件被读了 20 次，改了 15 次'},
+      {type:'msg-error',role:'第 50 轮',text:'❌ 达到 maxIterations(50)，强制终止\n已消耗 48,000 Token，代码反而改坏了',pulse:true}
+    ],
+    fix:[
+      {type:'msg-user',role:'用户',text:'帮我优化这段代码的性能'},
+      {type:'msg-framework',role:'框架：循环检测器',text:'规则：连续对同一文件执行相同操作 ≥ 3 次 → 中断\nmaxIterations = 25（防止极端情况）'},
+      {type:'msg-model',role:'模型 → 第 1 轮',text:'read_file → edit_file → 修改完成'},
+      {type:'msg-model',role:'模型 → 第 2 轮',text:'read_file 验证 → 发现新优化点 → edit_file'},
+      {type:'msg-model',role:'模型 → 第 3 轮',text:'read_file 验证 → 又想改回第 1 轮的修改'},
+      {type:'msg-framework',role:'框架中断',text:'⚠️ 检测到循环：read_file("app.js") 已连续 3 次\n自动中断，要求模型总结当前状态'},
+      {type:'msg-ok',role:'结果',text:'✅ 在第 3 轮就被截停，节省 40,000+ Token\n模型被迫总结并交付阶段成果'}
+    ]
+  },
+  {
+    icon:'🤷❓', name:'信息不足却不提问', brief:'缺关键信息时自行脑补',
+    scenario:'用户指令模糊，模型不问就猜，导致执行错误',
+    decision:'<b>📌 设计决策：</b>Agent 应该多问还是多猜？过度提问烦人，过度猜测危险。经验法则：涉及<b>不可逆操作</b>（发邮件、删文件、付款）时必须确认；可逆操作可以先做再说。',
+    fail:[
+      {type:'msg-user',role:'用户',text:'帮我发邮件'},
+      {type:'msg-model',role:'模型推理',text:'用户要发邮件。没说发给谁……\n没说主题……没说内容……\n但我是一个 helpful 的助手，我来猜！'},
+      {type:'msg-model',role:'模型执行',text:'调用 send_email\n收件人 → team@company.com（猜的）\n主题 → "通知"（猜的）\n内容 → "你好，这是一封通知邮件。"（猜的）'},
+      {type:'msg-tool',role:'API 返回',text:'✅ 邮件发送成功！'},
+      {type:'msg-error',role:'用户反应',text:'😱 什么？！我只是想给张三发一份合同！\n你发了一封莫名其妙的邮件给全团队？！',shake:true},
+      {type:'msg-warning',role:'结果',text:'⚠️ 技术上"成功"了，但用户信任崩塌。\n不可逆操作 + 瞎猜 = 灾难。'}
+    ],
+    fix:[
+      {type:'msg-user',role:'用户',text:'帮我发邮件'},
+      {type:'msg-framework',role:'System Prompt 规则',text:'规则：执行不可逆操作前，如果缺少关键参数，\n必须调用 ask_user 工具向用户确认'},
+      {type:'msg-model',role:'模型推理',text:'发邮件是不可逆操作，缺少：收件人、主题、内容\n→ 调用 ask_user 工具'},
+      {type:'msg-model',role:'ask_user',text:'请补充以下信息：\n1. 发给谁？（姓名或邮箱）\n2. 邮件主题是什么？\n3. 邮件内容的要点？'},
+      {type:'msg-user',role:'用户回复',text:'发给张三，主题是合同确认，\n内容就说请查收附件中的合同'},
+      {type:'msg-ok',role:'结果',text:'✅ 信息完整后准确发送。\n多问一句话，避免一次事故。'}
+    ]
+  },
+  {
+    icon:'⏱️💥', name:'API 超时级联', brief:'外部 API 慢，错误消息堆积撑爆上下文',
+    scenario:'外部 API 响应缓慢，重试堆积错误消息直到上下文溢出',
+    decision:'<b>📌 设计决策：</b>工具超时设多久？5 秒太短可能误杀正常请求，60 秒太长用户等不了。建议：<b>读操作 10 秒、写操作 30 秒</b>，并设置最大重试 2 次，失败后返回友好提示而非原始错误堆栈。',
+    fail:[
+      {type:'msg-user',role:'用户',text:'查一下特斯拉最新的股价'},
+      {type:'msg-model',role:'模型',text:'调用 get_stock_price("TSLA")'},
+      {type:'msg-error',role:'等待 30 秒后…',text:'❌ 请求超时：股票 API 无响应（30s timeout）',shake:true},
+      {type:'msg-model',role:'模型重试 #1',text:'超时了？再试一次……\n调用 get_stock_price("TSLA")'},
+      {type:'msg-error',role:'又等 30 秒…',text:'❌ 请求超时：股票 API 无响应（30s timeout）',shake:true},
+      {type:'msg-model',role:'模型重试 #2',text:'再试一次……'},
+      {type:'msg-error',role:'再等 30 秒…',text:'❌ 请求超时：股票 API 无响应（30s timeout）',shake:true},
+      {type:'msg-warning',role:'结果',text:'⚠️ 用户等了 90 秒，什么都没得到\n上下文被 3 条超时错误占满，浪费大量 Token\n而且模型可能还想继续重试…',pulse:true}
+    ],
+    fix:[
+      {type:'msg-user',role:'用户',text:'查一下特斯拉最新的股价'},
+      {type:'msg-framework',role:'框架：超时 & 重试策略',text:'get_stock_price 配置：\ntimeout = 10 秒 ｜ maxRetries = 2\n失败后 fallback = 返回友好消息（不含原始错误栈）'},
+      {type:'msg-model',role:'模型',text:'调用 get_stock_price("TSLA")'},
+      {type:'msg-error',role:'10 秒后超时',text:'超时 → 自动重试 1 次 → 仍超时'},
+      {type:'msg-framework',role:'框架 fallback',text:'返回给模型的消息：\n"股票 API 暂时不可用，建议告知用户稍后再试\n或引导用户访问 finance.yahoo.com 自行查看"'},
+      {type:'msg-model',role:'模型回复用户',text:'抱歉，股票数据服务暂时响应较慢。\n您可以稍后再试，或访问 Yahoo Finance 查看。'},
+      {type:'msg-ok',role:'结果',text:'✅ 20 秒内给出明确回复\n上下文只多了 1 条简洁 fallback 消息，不烧 Token'}
+    ]
+  }
+];
+
+var activeMode = -1, playing = false, failStep = 0, fixStep = 0, timers = [];
+
+function buildCards() {
+  var html = '';
+  for (var i = 0; i < MODES.length; i++) {
+    var m = MODES[i];
+    html += '<div class="mode-card' + (i === activeMode ? ' active' : '') + '" onclick="selectMode(' + i + ')" id="card' + i + '">' +
+      '<div class="mc-num">' + (i + 1) + '</div>' +
+      '<div class="mc-icon">' + m.icon + '</div>' +
+      '<div class="mc-name">' + m.name + '</div>' +
+      '<div class="mc-brief">' + m.brief + '</div>' +
+      '</div>';
+  }
+  document.getElementById('cardList').innerHTML = html;
+}
+
+function selectMode(i) {
+  clearTimers();
+  playing = false;
+  failStep = 0;
+  fixStep = 0;
+  activeMode = i;
+  buildCards();
+  renderMain();
+}
+
+function renderMain() {
+  if (activeMode < 0) return;
+  var m = MODES[activeMode];
+  var mainEl = document.getElementById('mainArea');
+  var es = document.getElementById('emptyState');
+  if (es) es.style.display = 'none';
+
+  mainEl.innerHTML =
+    '<div class="main-top">' +
+      '<div class="mt-scenario"><span style="color:var(--orange);margin-right:6px">' + m.icon + '</span> ' + m.scenario + '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="btn btn-p" id="btnPlay" onclick="playAll()" style="padding:5px 14px;font-size:13px">▶ 播放模拟</button>' +
+        '<button class="btn btn-r" onclick="resetSim()" style="padding:5px 12px;font-size:13px">重置</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="main-body">' +
+      '<div class="sim-col">' +
+        '<div class="sim-hd sim-hd-fail">❌ 没有防护时 <span class="counter counter-fail" id="failCount">0 / ' + m.fail.length + '</span></div>' +
+        '<div class="sim-body" id="failSim"></div>' +
+      '</div>' +
+      '<div class="sim-col">' +
+        '<div class="sim-hd sim-hd-fix">✅ 加了防护后 <span class="counter counter-fix" id="fixCount">0 / ' + m.fix.length + '</span></div>' +
+        '<div class="sim-body" id="fixSim"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="decision-bar">' +
+      '<div class="dec">' + m.decision + '</div>' +
+    '</div>';
+}
+
+function addMsg(containerId, step, callback) {
+  var el = document.createElement('div');
+  el.className = 'msg ' + step.type;
+  el.innerHTML = '<div class="msg-role">' + step.role + '</div><div class="msg-text">' + step.text + '</div>';
+  document.getElementById(containerId).appendChild(el);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      el.classList.add('show');
+      if (step.shake) setTimeout(function() { el.classList.add('shake'); }, 100);
+      if (step.pulse) setTimeout(function() { el.classList.add('pulse'); }, 300);
+      el.parentElement.scrollTop = el.parentElement.scrollHeight;
+      if (callback) callback();
+    });
+  });
+}
+
+function clearTimers() {
+  for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+  timers = [];
+}
+
+function playAll() {
+  if (playing) return;
+  playing = true;
+  var m = MODES[activeMode];
+  var btn = document.getElementById('btnPlay');
+  if (btn) { btn.disabled = true; btn.textContent = '播放中…'; }
+
+  var maxLen = Math.max(m.fail.length, m.fix.length);
+  var step = 0;
+
+  function tick() {
+    if (step >= maxLen) {
+      playing = false;
+      if (btn) btn.textContent = '✓ 播放完成';
+      return;
+    }
+    if (step < m.fail.length) {
+      addMsg('failSim', m.fail[step]);
+      failStep = step + 1;
+      var fc = document.getElementById('failCount');
+      if (fc) fc.textContent = failStep + ' / ' + m.fail.length;
+    }
+    if (step < m.fix.length) {
+      addMsg('fixSim', m.fix[step]);
+      fixStep = step + 1;
+      var xc = document.getElementById('fixCount');
+      if (xc) xc.textContent = fixStep + ' / ' + m.fix.length;
+    }
+    step++;
+    timers.push(setTimeout(tick, 850));
+  }
+  tick();
+}
+
+function resetSim() {
+  clearTimers();
+  playing = false;
+  failStep = 0;
+  fixStep = 0;
+  renderMain();
+}
+
+buildCards();
+</script>
+</body>
+</html>

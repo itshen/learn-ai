@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent 工程全景图：模块七知识地图 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:10px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0;overflow:hidden}
+.map-area{position:relative;overflow:hidden;min-height:0}
+.map-svg{width:100%;height:100%;display:block}
+.branch-line{stroke-width:2.5;fill:none;opacity:.2;transition:opacity .3s}
+.branch-line.active{opacity:.55}
+.center-label{font-size:22px;font-weight:900;fill:var(--orange);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.branch-label{font-size:15px;font-weight:800;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.leaf-group{cursor:pointer}
+.leaf-bg{fill:var(--surface);stroke-width:1.5;transition:all .25s;filter:drop-shadow(0 1px 3px rgba(0,0,0,.06))}
+.leaf-group:hover .leaf-bg,.leaf-group.active .leaf-bg{filter:drop-shadow(0 3px 10px rgba(0,0,0,.13));stroke-width:2.5}
+.leaf-title{font-size:12.5px;font-weight:700;pointer-events:none}
+.leaf-sub{font-size:10px;fill:var(--muted);pointer-events:none}
+.panel{display:flex;flex-direction:column;border-left:1px solid var(--border);overflow:hidden}
+.panel-hd{padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;flex-shrink:0;background:var(--surface)}
+.detail-area{flex:1;padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.detail-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;transition:all .3s;opacity:0;transform:translateY(8px)}
+.detail-card.show{opacity:1;transform:translateY(0)}
+.dc-branch{font-size:11px;font-weight:800;letter-spacing:.5px;margin-bottom:4px}
+.dc-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px}
+.dc-ref{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px}
+.dc-desc{font-size:13px;color:var(--text);line-height:1.7}
+.dc-desc b{font-weight:700}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);text-align:center;padding:20px}
+.empty-icon{font-size:28px;opacity:.35}
+.empty-text{font-size:13px;line-height:1.6}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px 14px;flex-shrink:0}
+.num-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px 6px;text-align:center}
+.num-val{font-size:14px;font-weight:800;color:var(--text)}
+.num-label{font-size:10px;color:var(--muted);margin-top:1px}
+.formula-bar{padding:7px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface)}
+.formula{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap}
+.formula span{padding:2px 7px;border-radius:5px;font-weight:800}
+.f-llm{background:rgba(234,88,12,.08);color:var(--orange)}
+.f-tool{background:rgba(8,145,178,.08);color:var(--cyan)}
+.f-mem{background:rgba(22,163,74,.08);color:var(--green)}
+.f-loop{background:rgba(124,58,237,.08);color:var(--purple)}
+.f-eng{background:rgba(234,88,12,.08);color:var(--orange)}
+.formula-plus{color:var(--muted);font-weight:400}
+.insight-bar{padding:7px 24px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5;flex-shrink:0}
+.insight-bar b{color:var(--orange)}
+@keyframes pulse{0%,100%{opacity:.06}50%{opacity:.12}}
+.center-pulse{animation:pulse 2.5s ease-in-out infinite}
+.tip-g{opacity:0;transition:opacity .2s;pointer-events:none}
+</style>
+<meta name="description" content="Agent 工程全景图：工具、记忆、执行、工程四大支柱的完整知识地图。点击节点查看详细说明。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-summary.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Agent 工程全景图：模块七知识地图">
+<meta property="og:url" content="https://xueai.app/slides/7-summary.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 总结</div>
+      <div class="hd-title">Agent 工程<em>全景图</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击节点查看详情 · 共 14 个知识点</div>
+  </div>
+  <div class="body">
+    <div class="map-area">
+      <svg class="map-svg" id="mapSvg" viewBox="0 0 880 480"></svg>
+    </div>
+    <div class="panel">
+      <div class="panel-hd">知识点详情</div>
+      <div class="detail-area" id="detailArea">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">←</div>
+          <div class="empty-text">点击左侧知识地图中的<br>任意节点查看详细说明</div>
+        </div>
+      </div>
+      <div class="numbers">
+        <div class="num-card"><div class="num-val">~60</div><div class="num-label">Token/工具定义</div></div>
+        <div class="num-card"><div class="num-val">128K</div><div class="num-label">上下文窗口</div></div>
+        <div class="num-card"><div class="num-val">60→95%</div><div class="num-label">压缩阈值</div></div>
+        <div class="num-card"><div class="num-val">768</div><div class="num-label">向量维度</div></div>
+        <div class="num-card"><div class="num-val">50 轮</div><div class="num-label">最大迭代</div></div>
+        <div class="num-card"><div class="num-val">200K</div><div class="num-label">字符输出限制</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="formula-bar">
+    <div class="formula">
+      Agent = <span class="f-llm">LLM</span>
+      <span class="formula-plus">+</span>
+      <span class="f-tool">工具</span>
+      <span class="formula-plus">+</span>
+      <span class="f-mem">记忆</span>
+      <span class="formula-plus">+</span>
+      <span class="f-loop">循环</span>
+      <span class="formula-plus">+</span>
+      <span class="f-eng">工程</span>
+    </div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.5;margin-left:12px">LLM 提供智能，工具提供能力，记忆提供连续性，循环提供自主性，工程提供稳定性。<b style="color:var(--orange)">五个缺一不可。</b></div>
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var BRANCHES = [
+  {
+    id:'tool', label:'工具', color:'#0891b2',
+    leaves: [
+      {id:'fc', title:'Function Calling', ref:'7-2a', tag:'工具调用',
+       summary:'模型输出结构化文字 → 框架执行 → 结果注入',
+       detail:'Function Calling 是 Agent 使用工具的基础机制。模型并不直接执行任何操作——它输出一段结构化的文字（JSON），告诉你的代码"我想调用哪个工具、传什么参数"。你的工程代码负责校验参数、调用真实 API、把结果注入回 Message List。整个过程中，<b>模型只负责"说"，代码负责"做"</b>。一次简单的查天气，背后是 5 条消息、2 次模型调用。'},
+      {id:'desc', title:'工具描述', ref:'7-2b', tag:'描述质量',
+       summary:'描述质量 = 调用成功率',
+       detail:'工具描述是给模型的"使用说明书"。描述写得好，模型一次调对；描述含糊，模型反复试错。<b>好描述的三要素：说清用途、规定格式、给出示例。</b>产品经理应该像写 PRD 一样写工具描述——这不只是工程问题，它直接影响用户体验和 Token 成本。'},
+      {id:'multi', title:'多工具编排', ref:'7-2c', tag:'编排策略',
+       summary:'并发 / 串行 / 智能分批',
+       detail:'当 Agent 需要同时使用多个工具时，编排策略决定效率。<b>并发</b>：互不依赖的工具同时调用。<b>串行</b>：后一个工具依赖前一个的结果。<b>智能分批</b>：先分析依赖关系，自动把能并发的放一批。选错策略 = 白白多等几秒 + 多花几千 Token。'},
+      {id:'mcp', title:'MCP 协议', ref:'7-2d', tag:'标准协议',
+       summary:'工具的 USB 标准',
+       detail:'MCP（Model Context Protocol）是工具接入的标准化协议，就像 USB 统一了外设接口。有了 MCP，<b>任何工具只需实现一次，就能被任何支持 MCP 的框架调用</b>。它定义了工具的描述格式、调用方式和结果返回标准，解决了碎片化问题。'}
+    ]
+  },
+  {
+    id:'memory', label:'记忆', color:'#16a34a',
+    leaves: [
+      {id:'ctx', title:'上下文窗口', ref:'7-3a', tag:'工作台',
+       summary:'128K Token 的工作台',
+       detail:'上下文窗口是模型的"工作台"——所有信息必须放在这张桌子上，模型才看得到。128K Token 听起来很大，但 System Prompt + 工具定义 + 历史对话 + 当前输入，<b>很快就会用满</b>。理解上下文窗口的容量限制，是设计 Agent 产品的第一步。'},
+      {id:'compress', title:'四层压缩', ref:'7-3b', tag:'压缩策略',
+       summary:'60% → 75% → 85% → 95%',
+       detail:'当上下文即将溢出时，分四个阶段压缩：<b>60%</b> 精简工具结果；<b>75%</b> 压缩早期对话为摘要；<b>85%</b> 只保留关键事实和最近几轮；<b>95%</b> 紧急截断，仅保留系统指令和最后一轮。每一层都是在"信息量"和"上下文空间"之间做权衡。'},
+      {id:'longmem', title:'长期记忆', ref:'7-3c', tag:'持久存储',
+       summary:'向量检索 + 持久存储',
+       detail:'长期记忆让 Agent 突破单次对话限制。核心机制：把重要信息编码为 <b>768 维向量</b>存入向量数据库，需要时通过语义检索召回。解决了"聊了 100 轮后 Agent 忘了第 1 轮"的问题。存什么、何时存、召回多少条——都是产品设计决策。'}
+    ]
+  },
+  {
+    id:'exec', label:'执行', color:'#7c3aed',
+    leaves: [
+      {id:'react', title:'ReAct 循环', ref:'7-4a', tag:'核心循环',
+       summary:'思考 → 行动 → 观察 → 再思考',
+       detail:'ReAct 是 Agent 自主运行的核心模式。每一轮循环：<b>思考</b>（分析当前状况）→ <b>行动</b>（调用工具或输出结果）→ <b>观察</b>（读取工具返回）→ <b>再思考</b>（根据观察调整计划）。这个循环让 Agent 能处理事先无法预测所有步骤的复杂任务。'},
+      {id:'fault', title:'故障模式', ref:'7-4b', tag:'故障应对',
+       summary:'5 种卡死 + 5 种应对',
+       detail:'Agent 会卡死。<b>五种常见模式</b>：死循环、幻觉工具、参数错误、无限展开、沉默失败。<b>五种应对</b>：迭代上限、参数校验、去重检测、任务深度限制、强制汇报。识别故障模式是 PM 的核心能力之一。'},
+      {id:'perm', title:'权限安全', ref:'7-4c', tag:'安全机制',
+       summary:'确认 / 自动 / 智能三档',
+       detail:'不是所有工具都该自动执行。<b>三档机制</b>：高风险操作（删除、支付）必须人工确认；低风险操作（查询、搜索）可以自动执行；中间地带由模型智能判断。<b>原则：可逆操作自动化，不可逆操作要确认。</b>'}
+    ]
+  },
+  {
+    id:'eng', label:'工程', color:'#ea580c',
+    leaves: [
+      {id:'skill', title:'Skill 经验封装', ref:'7-5a/b', tag:'效率提升',
+       summary:'经验封装 → 效率 3x',
+       detail:'Skill 把反复使用的 Prompt + 工具组合 + 流程封装成可复用模块。一个好的 Skill 让 Agent 不用从零推理，直接调用"已验证的最佳实践"。<b>效果：同样任务快 3 倍，成功率显著提升。</b>Skill 是 Agent 的"肌肉记忆"。'},
+      {id:'guard', title:'护栏机制', ref:'7-6a', tag:'安全保障',
+       summary:'迭代上限 / 截断 / 超时 / 中断 / 急救',
+       detail:'护栏是防止 Agent 失控的安全网。<b>五道防线</b>：① 迭代上限（最多 50 轮）② 输出截断（超 200K 字符停止）③ 超时控制 ④ 用户中断 ⑤ 急救回退。没有护栏的 Agent 就像没有刹车的车。'},
+      {id:'multi_agent', title:'多 Agent 协作', ref:'7-6b', tag:'架构模式',
+       summary:'拆任务 / 并行 / 串行',
+       detail:'复杂任务不一定要一个 Agent 全干。<b>拆任务</b>：分解给专门的子 Agent。<b>并行</b>：互不依赖的子任务同时处理。<b>串行</b>：有依赖关系的按顺序传递。核心问题：谁来拆任务？怎么汇总结果？'},
+      {id:'observe', title:'可观测性', ref:'7-6c', tag:'运维监控',
+       summary:'事件流 + Token 追踪',
+       detail:'看不到就优化不了。<b>事件流</b>记录每次思考、工具调用、结果返回的完整链路；<b>Token 追踪</b>告诉你钱花在了哪里。这是从"能用"到"好用"的关键——没有可观测性，你只能凭感觉调优。'}
+    ]
+  }
+];
+
+var activeLeaf = null;
+var CX = 430, CY = 240;
+var NS = 'http://www.w3.org/2000/svg';
+var LW = 126, LH = 42;
+
+var LAYOUT = {
+  tool:   {bx:175, by:CY, leaves:[{x:16,y:90},{x:16,y:175},{x:16,y:305},{x:16,y:390}]},
+  memory: {bx:CX,  by:78, leaves:[{x:230,y:34},{x:410,y:34},{x:590,y:34}]},
+  exec:   {bx:685, by:CY, leaves:[{x:740,y:120},{x:740,y:240},{x:740,y:360}]},
+  eng:    {bx:CX,  by:402,leaves:[{x:140,y:440},{x:310,y:440},{x:510,y:440},{x:680,y:440}]}
+};
+
+function el(tag, attrs) {
+  var e = document.createElementNS(NS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function buildMap() {
+  var svg = document.getElementById('mapSvg');
+  svg.innerHTML = '';
+
+  var pulse = el('circle', {cx:CX, cy:CY, r:44, fill:'rgba(234,88,12,.06)', stroke:'none', 'class':'center-pulse'});
+  svg.appendChild(pulse);
+
+  for (var b = 0; b < BRANCHES.length; b++) {
+    var br = BRANCHES[b];
+    var lay = LAYOUT[br.id];
+
+    var mainLine = el('line', {x1:CX, y1:CY, x2:lay.bx, y2:lay.by, stroke:br.color, 'class':'branch-line', 'data-branch':br.id});
+    svg.appendChild(mainLine);
+
+    for (var i = 0; i < lay.leaves.length; i++) {
+      var lp = lay.leaves[i];
+      var lcx = lp.x + LW/2, lcy = lp.y;
+      var subLine = el('line', {x1:lay.bx, y1:lay.by, x2:lcx, y2:lcy, stroke:br.color, 'class':'branch-line', 'data-branch':br.id});
+      svg.appendChild(subLine);
+    }
+
+    svg.appendChild(el('circle', {cx:lay.bx, cy:lay.by, r:24, fill:br.color, opacity:'.1'}));
+    svg.appendChild(el('circle', {cx:lay.bx, cy:lay.by, r:18, fill:br.color, opacity:'.18'}));
+    var bLabel = el('text', {x:lay.bx, y:lay.by, fill:br.color, 'class':'branch-label'});
+    bLabel.textContent = br.label;
+    svg.appendChild(bLabel);
+
+    for (var j = 0; j < br.leaves.length; j++) {
+      var leaf = br.leaves[j];
+      var pos = lay.leaves[j];
+      var g = el('g', {'class':'leaf-group', 'data-leaf':leaf.id, 'data-branch':br.id});
+      g.appendChild(el('rect', {x:pos.x, y:pos.y - LH/2, width:LW, height:LH, rx:10, ry:10, stroke:br.color, 'stroke-opacity':'.3', 'class':'leaf-bg'}));
+      var t1 = el('text', {x:pos.x + LW/2, y:pos.y - 4, fill:br.color, 'text-anchor':'middle', 'class':'leaf-title'});
+      t1.textContent = leaf.title;
+      g.appendChild(t1);
+      var t2 = el('text', {x:pos.x + LW/2, y:pos.y + 12, 'text-anchor':'middle', 'class':'leaf-sub'});
+      t2.textContent = leaf.ref;
+      g.appendChild(t2);
+      g.addEventListener('click', (function(lf, branch) { return function() { selectLeaf(lf, branch); }; })(leaf, br));
+      g.addEventListener('mouseenter', (function(lf, brId) { return function() { showTip(lf.id, true); hlBranch(brId, true); }; })(leaf, br.id));
+      g.addEventListener('mouseleave', (function(lf, brId) { return function() { showTip(lf.id, false); if (!activeLeaf || activeLeaf._branch !== brId) hlBranch(brId, false); }; })(leaf, br.id));
+      svg.appendChild(g);
+    }
+  }
+
+  svg.appendChild(el('circle', {cx:CX, cy:CY, r:36, fill:'var(--surface)', stroke:'var(--orange)', 'stroke-width':3, filter:'drop-shadow(0 2px 8px rgba(234,88,12,.2))'}));
+  var cText = el('text', {x:CX, y:CY, 'class':'center-label'});
+  cText.textContent = 'Agent';
+  svg.appendChild(cText);
+
+  buildTips(svg);
+}
+
+function buildTips(svg) {
+  for (var b = 0; b < BRANCHES.length; b++) {
+    var br = BRANCHES[b];
+    var lay = LAYOUT[br.id];
+    for (var i = 0; i < br.leaves.length; i++) {
+      var leaf = br.leaves[i];
+      var pos = lay.leaves[i];
+      var text = leaf.summary;
+      var tw = Math.min(text.length * 9.5 + 20, 260);
+      var th = 26;
+      var tx = pos.x + LW/2 - tw/2;
+      var ty;
+      if (lay.by < CY) ty = pos.y + LH/2 + 6;
+      else if (lay.by > CY) ty = pos.y - LH/2 - th - 6;
+      else if (lay.bx < CX) ty = pos.y + LH/2 + 6;
+      else ty = pos.y - LH/2 - th - 6;
+
+      if (tx < 4) tx = 4;
+      if (tx + tw > 876) tx = 876 - tw;
+
+      var tg = el('g', {'class':'tip-g', 'data-tip':leaf.id});
+      tg.appendChild(el('rect', {x:tx, y:ty, width:tw, height:th, rx:5, fill:'#1c1c1e', opacity:'.88'}));
+      var tt = el('text', {x:tx + tw/2, y:ty + th/2 + 1, 'text-anchor':'middle', 'dominant-baseline':'central', fill:'#fff', 'font-size':'11', 'font-weight':'600'});
+      tt.textContent = text;
+      tg.appendChild(tt);
+      svg.appendChild(tg);
+    }
+  }
+}
+
+function showTip(id, on) {
+  var t = document.querySelector('[data-tip="' + id + '"]');
+  if (t) t.style.opacity = on ? '1' : '0';
+}
+
+function hlBranch(id, on) {
+  var lines = document.querySelectorAll('.branch-line[data-branch="' + id + '"]');
+  for (var i = 0; i < lines.length; i++) {
+    if (on) lines[i].classList.add('active');
+    else lines[i].classList.remove('active');
+  }
+}
+
+function selectLeaf(leaf, branch) {
+  var all = document.querySelectorAll('.leaf-group');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
+  var tgt = document.querySelector('[data-leaf="' + leaf.id + '"]');
+  if (tgt) tgt.classList.add('active');
+
+  for (var b = 0; b < BRANCHES.length; b++) hlBranch(BRANCHES[b].id, false);
+  hlBranch(branch.id, true);
+  activeLeaf = {id: leaf.id, _branch: branch.id};
+
+  var area = document.getElementById('detailArea');
+  var empty = document.getElementById('emptyState');
+  if (empty) empty.style.display = 'none';
+  var old = area.querySelector('.detail-card');
+  if (old) old.remove();
+
+  var card = document.createElement('div');
+  card.className = 'detail-card';
+  card.innerHTML =
+    '<div class="dc-branch" style="color:' + branch.color + '">' + branch.label + ' · ' + leaf.tag + '</div>' +
+    '<div class="dc-title">' + leaf.title + '</div>' +
+    '<div class="dc-ref">课件 ' + leaf.ref + '</div>' +
+    '<div class="dc-desc">' + leaf.detail + '</div>';
+  area.insertBefore(card, area.firstChild);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { card.classList.add('show'); }); });
+}
+
+buildMap();
+</script>
+</body>
+</html>

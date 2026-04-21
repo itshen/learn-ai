@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>短期记忆：上下文窗口就是工作台 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 260px;min-height:0;overflow:hidden}
+
+/* ── 主区域：工作台 ── */
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+/* 进度条 */
+.progress-wrap{padding:10px 24px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.progress-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-title{font-size:14px;font-weight:700;color:var(--text)}
+.progress-nums{font-size:13px;color:var(--muted);font-weight:600}
+.progress-nums span{font-weight:800}
+.progress-track{height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;position:relative}
+.progress-fill{height:100%;border-radius:5px;transition:width .5s ease, background .3s ease;width:0;background:var(--green)}
+.progress-warn{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:800;color:var(--red);opacity:0;transition:opacity .3s}
+.progress-warn.show{opacity:1}
+
+/* 桌面区域 */
+.desk-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.desk-label{padding:8px 24px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px}
+.desk-label-icon{font-size:15px}
+.desk{flex:1;padding:12px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;background:linear-gradient(180deg,rgba(240,237,230,.5) 0%,rgba(229,226,218,.3) 100%)}
+
+/* 消息块 */
+.msg-block{border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;opacity:0;transform:translateY(8px) scale(.98);transition:all .4s cubic-bezier(.4,.0,.2,1);flex-shrink:0;border:1.5px solid transparent}
+.msg-block.show{opacity:1;transform:translateY(0) scale(1)}
+.msg-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.msg-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;color:white}
+.msg-info{min-width:0}
+.msg-role{font-size:12px;font-weight:800;letter-spacing:.3px;margin-bottom:1px}
+.msg-text{font-size:13px;color:var(--sub);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+.msg-tokens{font-size:13px;font-weight:800;white-space:nowrap;padding:3px 10px;border-radius:6px;flex-shrink:0}
+.msg-size{display:none;height:4px;border-radius:2px;margin-top:6px;background:var(--surface2);overflow:hidden;transition:all .3s}
+.msg-block.show .msg-size{display:block}
+.msg-size-fill{height:100%;border-radius:2px;transition:width .5s ease}
+
+/* 决策卡片 */
+.decision-area{padding:8px 20px;flex-shrink:0;border-top:1px solid var(--border)}
+.dec-card{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--text);line-height:1.6;opacity:0;transform:translateY(4px);transition:all .35s}
+.dec-card.show{opacity:1;transform:translateY(0)}
+.dec-card b{color:var(--orange)}
+
+/* ── 右侧面板 ── */
+.panel{display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)}
+.panel-section{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.5px;margin-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
+.stat-label{font-size:13px;color:var(--sub)}
+.stat-val{font-size:15px;font-weight:800;color:var(--text)}
+.stat-val.warn{color:var(--amber)}
+.stat-val.danger{color:var(--red)}
+
+/* 费用计算器 */
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px dashed var(--border);margin-top:4px}
+.cost-label{font-size:13px;color:var(--sub)}
+.cost-val{font-size:15px;font-weight:800;color:var(--orange)}
+
+/* 消息列表 */
+.msg-list{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:4px}
+.msg-chip{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;font-size:12px;opacity:0;transform:translateX(8px);transition:all .3s}
+.msg-chip.show{opacity:1;transform:translateX(0)}
+.msg-chip-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.msg-chip-role{font-weight:700;min-width:32px}
+.msg-chip-tk{color:var(--muted);font-weight:600;margin-left:auto}
+
+/* 控制栏 */
+.ctrl{padding:8px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:7px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:13px;color:var(--muted)}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+/* 桌面溢出警告 */
+@keyframes pulse-warn{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.3)}50%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+.desk.overflow{background:linear-gradient(180deg,rgba(220,38,38,.04) 0%,rgba(220,38,38,.08) 100%);animation:pulse-warn 2s ease infinite}
+</style>
+<meta name="description" content="上下文窗口是模型的唯一短期记忆。通过可视化工作台演示，展示 128K Token 如何在多轮对话中被迅速填满，以及产品经理需要做出的设计决策。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-3a.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="短期记忆：上下文窗口就是工作台">
+<meta property="og:url" content="https://xueai.app/slides/7-3a.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 记忆 · 第 1 页</div>
+      <div class="hd-title">上下文窗口就是<em>工作台</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">模型能"看到"的一切，都必须放在这张桌子上</div>
+  </div>
+
+  <div class="body">
+    <!-- 主区域 -->
+    <div class="main">
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span class="progress-title">上下文窗口使用率</span>
+          <span class="progress-nums"><span id="pctText">0%</span>&nbsp;&nbsp;<span id="usedTokens">0</span> / 131,072 Token</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+          <div class="progress-warn" id="progressWarn">⚠️ 即将触发压缩策略</div>
+        </div>
+      </div>
+
+      <div class="desk-wrap">
+        <div class="desk-label"><span class="desk-label-icon">🖥</span> 模型的工作台（上下文窗口 = 128K Token）</div>
+        <div class="desk" id="desk"></div>
+      </div>
+
+      <div class="decision-area" id="decArea"></div>
+
+      <div class="ctrl">
+        <button class="btn btn-p" id="btnNext" onclick="next()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="reset()">重置</button>
+        <span class="ctrl-hint" id="hint">共 10 步 · 观察工作台如何被填满</span>
+      </div>
+    </div>
+
+    <!-- 右侧统计面板 -->
+    <div class="panel">
+      <div class="panel-section">
+        <div class="panel-title">实时统计</div>
+        <div class="stat-row">
+          <span class="stat-label">总 Token 数</span>
+          <span class="stat-val" id="statTokens">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">消息条数</span>
+          <span class="stat-val" id="statMsgs">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">使用率</span>
+          <span class="stat-val" id="statPct">0%</span>
+        </div>
+        <div class="cost-row">
+          <span class="cost-label">预估费用</span>
+          <span class="cost-val" id="statCost">¥0.000</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">按 ¥0.006 / 1K Token 估算</div>
+      </div>
+
+      <div style="padding:8px 16px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);flex-shrink:0">消息组成</div>
+      <div class="msg-list" id="msgList"></div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> 上下文窗口是模型的唯一工作记忆——128K Token 看似很大，但每轮对话都要重发全部历史消息。10 轮深度对话 + 一份长文档，就可能把窗口撑满。管理上下文，就是管理产品的记忆寿命。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var TOTAL = 131072;
+var RATE = 0.006;
+
+var STEPS = [
+  {
+    tokens: 220, role: 'system', color: '#6b6b70', bg: 'rgba(107,107,112,.08)', border: 'rgba(107,107,112,.15)',
+    label: '系统指令', text: '系统指令 + 工具定义（get_weather, search_docs, send_email…）',
+    decision: '<b>📌 设计决策：</b>System Prompt 是每次请求的固定开销。你注册了 10 个工具？每轮对话的"底线"就是 200+ Token。还没开口说话，桌子上已经放了一叠纸。'
+  },
+  {
+    tokens: 30, role: 'user', color: '#0891b2', bg: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)',
+    label: '用户', text: '用户: 帮我分析这份报告，重点看营收趋势和风险因素',
+    decision: '<b>📌 设计决策：</b>用户的一句话只占 30 Token。但请注意——这句话在后续每一轮都会被重复发送。第 10 轮时，它已经被发送了 10 次。'
+  },
+  {
+    tokens: 500, role: 'assistant', color: '#7c3aed', bg: 'rgba(124,58,237,.05)', border: 'rgba(124,58,237,.12)',
+    label: '助手', text: '助手: 好的，我来分析这份报告。首先我需要调用工具来读取文档内容…',
+    decision: '<b>📌 设计决策：</b>模型的回复通常比用户的问题长 10-20 倍。如果不限制 max_tokens，一轮回复就可能占满 4000 Token。你需要在"回复质量"和"上下文寿命"之间取舍。'
+  },
+  {
+    tokens: 8000, role: 'user', color: '#0891b2', bg: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)',
+    label: '用户 · 长文档', text: '用户: [上传了一份 20 页报告 — 公司年度财报全文]',
+    big: true,
+    decision: '<b>📌 设计决策：</b>一份 20 页报告 ≈ 8000 Token，瞬间占满工作台的 6%。产品经理必须回答：允许用户上传多大的文件？超过上限怎么办——截断？摘要？还是拒绝？'
+  },
+  {
+    tokens: 2000, role: 'tool', color: '#16a34a', bg: 'rgba(22,163,74,.05)', border: 'rgba(22,163,74,.12)',
+    label: '工具返回', text: '工具返回: 报告分析结果 — 营收同比增长 23%，毛利率下降 2.1%，现金流风险…',
+    decision: '<b>📌 设计决策：</b>工具返回的原始数据有多大？一次数据库查询可能返回 5000 Token 的 JSON。你是全量塞进上下文，还是先做摘要再塞？这个决策直接影响上下文寿命。'
+  },
+  {
+    tokens: 1200, role: 'assistant', color: '#7c3aed', bg: 'rgba(124,58,237,.05)', border: 'rgba(124,58,237,.12)',
+    label: '助手', text: '助手: 根据报告分析，该公司营收增长强劲但毛利率承压，建议关注三个风险点…',
+    decision: '<b>📌 设计决策：</b>到这里才第 3 轮对话，窗口已经用了将近 10%。注意：每次 API 调用都要把前面所有消息重发一遍——也就是说，这些 Token 的费用会被反复计算。'
+  },
+  {
+    tokens: 50, role: 'user', color: '#0891b2', bg: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)',
+    label: '用户', text: '用户: 能不能对比一下去年同期的数据？',
+    decision: '<b>📌 设计决策：</b>用户的追问很短，但它触发了新一轮的工具调用——这意味着上下文里又要加入一大块工具返回数据。短问题可能引发长链路。'
+  },
+  {
+    tokens: 6000, role: 'tool', color: '#16a34a', bg: 'rgba(22,163,74,.05)', border: 'rgba(22,163,74,.12)',
+    label: '工具返回 · 历史数据', text: '工具返回: 去年同期数据 — 含 12 个月逐月营收、利润、成本明细表…',
+    big: true,
+    decision: '<b>📌 设计决策：</b>又一次大块数据涌入！如果不做数据裁剪，两轮工具调用就占了 8000 Token。你的产品是否需要一个"上下文管理器"来自动压缩旧数据？'
+  },
+  {
+    tokens: 1800, role: 'assistant', color: '#7c3aed', bg: 'rgba(124,58,237,.05)', border: 'rgba(124,58,237,.12)',
+    label: '助手', text: '助手: 对比分析完成。同比来看：营收 +23%、净利润 +15%、但运营成本 +31%……详细对比如下……',
+    decision: '<b>📌 关键认知：</b>每轮对话的 Token 消耗 = 之前所有消息的 Token 之和 + 本轮新增。这是一个<b>累加结构</b>——第 N 轮的真实 Token 消耗远大于你看到的数字。'
+  },
+  {
+    tokens: 45000, role: 'multi', color: '#dc2626', bg: 'rgba(220,38,38,.04)', border: 'rgba(220,38,38,.2)',
+    label: '后续 5 轮对话', text: '第 5-10 轮: 用户继续深挖（竞品对比、预测模型、风险评估）+ 多次工具调用 + 长回复…',
+    big: true,
+    decision: '<b>📌 设计决策：</b>10 轮深度对话，窗口使用率已接近 50%。而真实费用是表面 Token 数的 3-5 倍（因为每轮都要重发历史）。你的产品需要：① 对话轮次上限 ② 自动摘要压缩 ③ 关键信息提取策略。这不是工程问题——这是产品架构决策。'
+  }
+];
+
+var cur = 0;
+var totalTokens = 0;
+var msgCount = 0;
+
+function getBarColor(pct) {
+  if (pct < 0.6) return 'var(--green)';
+  if (pct < 0.85) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function updateStats() {
+  var pct = totalTokens / TOTAL;
+  var pctStr = (pct * 100).toFixed(1) + '%';
+  var cost = (totalTokens / 1000 * RATE).toFixed(3);
+
+  document.getElementById('pctText').textContent = pctStr;
+  document.getElementById('usedTokens').textContent = totalTokens.toLocaleString();
+
+  var fill = document.getElementById('progressFill');
+  fill.style.width = Math.min(pct * 100, 100) + '%';
+  fill.style.background = getBarColor(pct);
+
+  var warn = document.getElementById('progressWarn');
+  warn.classList.toggle('show', pct >= 0.4);
+
+  document.getElementById('statTokens').textContent = totalTokens.toLocaleString();
+  document.getElementById('statMsgs').textContent = msgCount;
+
+  var pctEl = document.getElementById('statPct');
+  pctEl.textContent = pctStr;
+  pctEl.className = 'stat-val' + (pct >= 0.85 ? ' danger' : pct >= 0.6 ? ' warn' : '');
+
+  document.getElementById('statCost').textContent = '¥' + cost;
+
+  var desk = document.getElementById('desk');
+  desk.classList.toggle('overflow', pct >= 0.85);
+}
+
+function addMsgChip(step) {
+  var list = document.getElementById('msgList');
+  var chip = document.createElement('div');
+  chip.className = 'msg-chip';
+  chip.style.background = step.bg;
+  chip.innerHTML =
+    '<span class="msg-chip-dot" style="background:' + step.color + '"></span>' +
+    '<span class="msg-chip-role" style="color:' + step.color + '">' + step.label.split('·')[0].trim() + '</span>' +
+    '<span class="msg-chip-tk">' + step.tokens.toLocaleString() + ' tk</span>';
+  list.appendChild(chip);
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    chip.classList.add('show');
+    list.scrollTop = list.scrollHeight;
+  })});
+}
+
+function addBlock(step) {
+  var desk = document.getElementById('desk');
+  var block = document.createElement('div');
+  block.className = 'msg-block';
+  block.style.background = step.bg;
+  block.style.borderColor = step.border;
+
+  var height = step.big ? 'min-height:56px' : 'min-height:40px';
+  block.style.cssText += ';' + height;
+
+  var sizePct = Math.min((step.tokens / TOTAL) * 100, 100);
+  var sizeWidth = Math.max(sizePct * 15, 2);
+
+  block.innerHTML =
+    '<div class="msg-left">' +
+      '<div class="msg-icon" style="background:' + step.color + '">' + step.role.charAt(0).toUpperCase() + '</div>' +
+      '<div class="msg-info">' +
+        '<div class="msg-role" style="color:' + step.color + '">' + step.label + '</div>' +
+        '<div class="msg-text">' + step.text + '</div>' +
+        (step.big ? '<div class="msg-size" style="display:block"><div class="msg-size-fill" style="width:' + Math.min(sizeWidth, 100) + '%;background:' + step.color + '"></div></div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="msg-tokens" style="background:' + step.bg + ';color:' + step.color + ';border:1px solid ' + step.border + '">' + step.tokens.toLocaleString() + ' Token</div>';
+
+  desk.appendChild(block);
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    block.classList.add('show');
+    desk.scrollTop = desk.scrollHeight;
+  })});
+}
+
+function next() {
+  if (cur >= STEPS.length) return;
+  var s = STEPS[cur];
+
+  totalTokens += s.tokens;
+  msgCount++;
+
+  addBlock(s);
+  addMsgChip(s);
+  updateStats();
+
+  var da = document.getElementById('decArea');
+  da.innerHTML = '<div class="dec-card">' + s.decision + '</div>';
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    var dc = da.querySelector('.dec-card');
+    if (dc) dc.classList.add('show');
+  })});
+
+  cur++;
+  document.getElementById('hint').textContent = cur + ' / ' + STEPS.length + ' 步';
+
+  if (cur >= STEPS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 工作台已满';
+  }
+}
+
+function reset() {
+  cur = 0;
+  totalTokens = 0;
+  msgCount = 0;
+  document.getElementById('desk').innerHTML = '';
+  document.getElementById('desk').classList.remove('overflow');
+  document.getElementById('msgList').innerHTML = '';
+  document.getElementById('decArea').innerHTML = '';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+  document.getElementById('hint').textContent = '共 ' + STEPS.length + ' 步 · 观察工作台如何被填满';
+  updateStats();
+}
+
+updateStats();
+</script>
+</body>
+</html>

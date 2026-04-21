@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Base 模型 · Token 推 Token 的机器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Base 模型：Token 推 Token 的预测机器 | xueai.app</title>
 <script src="../global-attn.js"></script>
 <style>
 :root {
@@ -203,7 +204,29 @@ body {
 }
 .conclusion-card b { color: var(--accent); }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="大模型的核心是什么？Base 模型通过海量语料学习 Token 序列的统计规律，每次生成只做一件事：预测下一个最可能的 Token。理解这个机制是一切的起点。">
+<meta name="keywords" content="Base模型,大模型原理,Token预测,自回归语言模型,GPT预训练">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-base.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Base 模型：Token 推 Token 的预测机器">
+<meta property="og:description" content="大模型的核心是什么？Base 模型通过海量语料学习 Token 序列的统计规律，每次生成只做一件事：预测下一个最可能的 Token。理解这个机制是一切的起点。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-base.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Base 模型：Token 推 Token 的预测机器">
+<meta name="twitter:description" content="大模型的核心是什么？Base 模型通过海量语料学习 Token 序列的统计规律，每次生成只做一件事：预测下一个最可能的 Token。理解这个机制是一切的起点。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
 
@@ -539,6 +562,6 @@ function replayAll() {
   document.getElementById('conclusionCard').classList.remove('show');
 }
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

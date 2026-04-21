@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>长期记忆：让 Agent 记住上个月的事 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:10px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.analogy{padding:8px 32px;display:flex;gap:24px;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.analogy-item{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text)}
+.analogy-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.analogy-label{font-weight:800;font-size:13px;margin-bottom:1px}
+.analogy-desc{font-size:13px;color:var(--sub);line-height:1.4}
+.analogy-arrow{font-size:18px;color:var(--muted);font-weight:800}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;overflow:hidden}
+.col:first-child{border-right:1px solid var(--border)}
+.col-hd{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.col-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.col-badge{padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800}
+.col-body{flex:1;padding:8px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+
+.mem-entry{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);transition:all .4s ease;cursor:default;position:relative}
+.mem-entry.matched{border-color:rgba(22,163,74,.5);background:rgba(22,163,74,.04)}
+.mem-entry.filtered{border-color:rgba(220,38,38,.3);background:rgba(220,38,38,.02);opacity:.55}
+.mem-entry.dimmed{opacity:.35}
+.mem-date{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;min-width:72px;padding-top:1px}
+.mem-text{font-size:13px;color:var(--text);line-height:1.5;flex:1}
+.mem-score{position:absolute;right:10px;top:8px;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:800;opacity:0;transform:scale(.8);transition:all .3s}
+.mem-score.show{opacity:1;transform:scale(1)}
+.mem-score.pass{background:rgba(22,163,74,.1);color:var(--green)}
+.mem-score.fail{background:rgba(220,38,38,.08);color:var(--red)}
+
+.query-section{flex-shrink:0;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.query-label{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.4px}
+.query-btns{display:flex;gap:6px;flex-wrap:wrap}
+.q-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;font-weight:600;color:var(--text);font-family:inherit;transition:all .15s;line-height:1.4}
+.q-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.q-btn.active{border-color:var(--cyan);background:rgba(8,145,178,.06);color:var(--cyan);font-weight:700}
+
+.process-area{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.proc-step{border-radius:9px;padding:9px 12px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(6px);transition:all .35s ease;display:flex;align-items:flex-start;gap:8px}
+.proc-step.show{opacity:1;transform:translateY(0)}
+.proc-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px}
+.proc-text{flex:1}
+.proc-text b{font-weight:800}
+
+.inject-preview{margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(124,58,237,.04);border:1px solid rgba(124,58,237,.12);font-size:12px;color:var(--sub);line-height:1.6}
+.inject-preview b{color:var(--purple);font-weight:700}
+
+.spec-bar{padding:6px 16px;border-top:1px solid var(--border);display:flex;gap:16px;flex-shrink:0;background:var(--surface);flex-wrap:wrap}
+.spec-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--sub)}
+.spec-item b{color:var(--text);font-weight:700}
+
+.decisions{padding:6px 20px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;overflow-x:auto}
+.dec-card{flex:1;min-width:200px;background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.5}
+.dec-card b{color:var(--orange)}
+
+.insight-bar{padding:8px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.2)}50%{box-shadow:0 0 0 6px rgba(22,163,74,0)}}
+.mem-entry.matched{animation:pulse .8s ease 1}
+</style>
+<meta name="description" content="长期记忆让 Agent 记住上个月的事：通过向量检索，把用户偏好、项目配置、历史 Bug 注入当前对话，实现真正的个性化服务。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-3c.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="长期记忆：让 Agent 记住上个月的事">
+<meta property="og:url" content="https://xueai.app/slides/7-3c.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 记忆 · 第 3 页</div>
+      <div class="hd-title">长期记忆：让 Agent <em>记住上个月的事</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">左边：记忆库 ｜ 右边：向量检索过程</div>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-item">
+      <div class="analogy-icon" style="background:rgba(8,145,178,.08)">🗂</div>
+      <div>
+        <div class="analogy-label" style="color:var(--cyan)">短期记忆 = 你的桌面</div>
+        <div class="analogy-desc">上下文窗口，放得下的信息有限</div>
+      </div>
+    </div>
+    <div class="analogy-arrow">→</div>
+    <div class="analogy-item">
+      <div class="analogy-icon" style="background:rgba(124,58,237,.08)">🗄</div>
+      <div>
+        <div class="analogy-label" style="color:var(--purple)">长期记忆 = 你的档案柜</div>
+        <div class="analogy-desc">向量数据库，需要时检索相关档案放到桌面上</div>
+      </div>
+    </div>
+    <div class="analogy-arrow" style="margin-left:auto">→</div>
+    <div style="font-size:13px;color:var(--sub);max-width:260px;line-height:1.5">桌面放不下所有东西，但你可以随时从档案柜里<b style="color:var(--orange)">调取最相关的文件</b></div>
+  </div>
+
+  <div class="body">
+    <div class="col">
+      <div class="col-hd">
+        <span class="col-title">
+          <span style="font-size:16px">🗄</span> 记忆库
+        </span>
+        <span class="col-badge" style="background:rgba(124,58,237,.08);color:var(--purple)">8 条历史记忆</span>
+      </div>
+      <div class="col-body" id="memStore"></div>
+      <div class="spec-bar">
+        <div class="spec-item"><b>Embedding</b> gemini-embedding-001</div>
+        <div class="spec-item"><b>维度</b> 768</div>
+        <div class="spec-item"><b>存储</b> LanceDB</div>
+        <div class="spec-item"><b>topK</b> 5</div>
+        <div class="spec-item"><b>minScore</b> 0.3</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="query-section">
+        <div class="query-label">点击模拟不同的用户提问</div>
+        <div class="query-btns" id="queryBtns"></div>
+      </div>
+      <div class="col-hd" style="border-bottom:1px solid var(--border)">
+        <span class="col-title">
+          <span style="font-size:16px">🔍</span> 向量检索过程
+        </span>
+        <span id="matchInfo" class="col-badge" style="background:rgba(22,163,74,.08);color:var(--green);opacity:0;transition:opacity .3s">—</span>
+      </div>
+      <div class="process-area" id="processArea"></div>
+    </div>
+  </div>
+
+  <div class="decisions">
+    <div class="dec-card"><b>📌 设计决策 ①</b><br>什么信息该存入长期记忆？用户偏好、项目配置、历史 Bug、常用操作——这些决定了 Agent 的"个性化"程度。</div>
+    <div class="dec-card"><b>📌 设计决策 ②</b><br>记忆检索质量取决于 Embedding 模型。"修登录接口"和"登录接口并发 500"，模型能匹配到同一条记忆吗？</div>
+    <div class="dec-card"><b>📌 设计决策 ③</b><br>记忆太多也是问题：topK=5 意味着每次最多召回 5 条。如何保证最重要的记忆排在最前面？</div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> 短期记忆（上下文窗口）让 Agent 记住当前对话，长期记忆（向量检索）让 Agent 记住上个月的事。两者配合，Agent 才能像真正的助手一样：既了解你现在在做什么，也记得你过去的偏好。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var MEMORIES = [
+  {id:0, date:'2026-03-15', text:'用户偏好：喜欢简洁的代码风格，不喜欢过多注释', tags:['style','code']},
+  {id:1, date:'2026-03-20', text:'项目架构：使用 React + FastAPI，数据库是 SQLite', tags:['arch','api','react']},
+  {id:2, date:'2026-04-01', text:'用户说过：API Key 存在 .env 文件里', tags:['config','api','env']},
+  {id:3, date:'2026-04-05', text:'上次部署：服务器 IP 是 120.xx.xx.xx，用 nginx 反代', tags:['deploy','server','nginx']},
+  {id:4, date:'2026-04-10', text:'用户习惯：每次改完代码喜欢先跑测试', tags:['test','habit']},
+  {id:5, date:'2026-04-15', text:'Bug 记录：登录接口在并发时会 500', tags:['bug','login','api']},
+  {id:6, date:'2026-04-18', text:'用户要求：所有 API 都要流式返回', tags:['api','stream','requirement']},
+  {id:7, date:'2026-04-20', text:'性能优化：图片压缩后上传，减少带宽', tags:['perf','upload']}
+];
+
+var QUERIES = [
+  {
+    text: '帮我修一下登录接口的问题',
+    results: [
+      {id:5, score:0.92},
+      {id:3, score:0.41},
+      {id:6, score:0.38},
+      {id:1, score:0.28},
+      {id:4, score:0.22}
+    ],
+    threshold: 0.3,
+    steps: [
+      {num:'1', color:'var(--cyan)', bg:'rgba(8,145,178,.06)', text:'<b>Embedding 编码</b>：把用户的话"帮我修一下登录接口的问题"转成 768 维向量'},
+      {num:'2', color:'var(--purple)', bg:'rgba(124,58,237,.05)', text:'<b>向量相似度搜索</b>：在记忆库 8 条记忆中找 topK=5 条最相似的'},
+      {num:'3', color:'var(--green)', bg:'rgba(22,163,74,.05)', text:'<b>阈值过滤</b>：minScore=0.3，过滤掉相似度太低的条目 → <b>3 条通过</b>，2 条被过滤'},
+      {num:'4', color:'var(--orange)', bg:'rgba(234,88,12,.05)',
+        text:'<b>注入 System Message</b>：把 3 条记忆插入到 system prompt 中',
+        inject: [
+          '以下是与用户当前问题相关的历史记忆：',
+          '• [0.92] Bug 记录：登录接口在并发时会 500',
+          '• [0.41] 上次部署：服务器 IP 是 120.xx.xx.xx，用 nginx 反代',
+          '• [0.38] 用户要求：所有 API 都要流式返回'
+        ]
+      }
+    ]
+  },
+  {
+    text: '帮我加一个新的 API',
+    results: [
+      {id:6, score:0.88},
+      {id:1, score:0.82},
+      {id:2, score:0.45},
+      {id:0, score:0.36},
+      {id:5, score:0.21}
+    ],
+    threshold: 0.3,
+    steps: [
+      {num:'1', color:'var(--cyan)', bg:'rgba(8,145,178,.06)', text:'<b>Embedding 编码</b>：把用户的话"帮我加一个新的 API"转成 768 维向量'},
+      {num:'2', color:'var(--purple)', bg:'rgba(124,58,237,.05)', text:'<b>向量相似度搜索</b>：在记忆库 8 条记忆中找 topK=5 条最相似的'},
+      {num:'3', color:'var(--green)', bg:'rgba(22,163,74,.05)', text:'<b>阈值过滤</b>：minScore=0.3，过滤掉相似度太低的条目 → <b>4 条通过</b>，1 条被过滤'},
+      {num:'4', color:'var(--orange)', bg:'rgba(234,88,12,.05)',
+        text:'<b>注入 System Message</b>：把 4 条记忆插入到 system prompt 中',
+        inject: [
+          '以下是与用户当前问题相关的历史记忆：',
+          '• [0.88] 用户要求：所有 API 都要流式返回',
+          '• [0.82] 项目架构：使用 React + FastAPI，数据库是 SQLite',
+          '• [0.45] 用户说过：API Key 存在 .env 文件里',
+          '• [0.36] 用户偏好：喜欢简洁的代码风格，不喜欢过多注释'
+        ]
+      }
+    ]
+  },
+  {
+    text: '帮我部署到服务器',
+    results: [
+      {id:3, score:0.95},
+      {id:1, score:0.52},
+      {id:2, score:0.40},
+      {id:7, score:0.33},
+      {id:4, score:0.18}
+    ],
+    threshold: 0.3,
+    steps: [
+      {num:'1', color:'var(--cyan)', bg:'rgba(8,145,178,.06)', text:'<b>Embedding 编码</b>：把用户的话"帮我部署到服务器"转成 768 维向量'},
+      {num:'2', color:'var(--purple)', bg:'rgba(124,58,237,.05)', text:'<b>向量相似度搜索</b>：在记忆库 8 条记忆中找 topK=5 条最相似的'},
+      {num:'3', color:'var(--green)', bg:'rgba(22,163,74,.05)', text:'<b>阈值过滤</b>：minScore=0.3，过滤掉相似度太低的条目 → <b>4 条通过</b>，1 条被过滤'},
+      {num:'4', color:'var(--orange)', bg:'rgba(234,88,12,.05)',
+        text:'<b>注入 System Message</b>：把 4 条记忆插入到 system prompt 中',
+        inject: [
+          '以下是与用户当前问题相关的历史记忆：',
+          '• [0.95] 上次部署：服务器 IP 是 120.xx.xx.xx，用 nginx 反代',
+          '• [0.52] 项目架构：使用 React + FastAPI，数据库是 SQLite',
+          '• [0.40] 用户说过：API Key 存在 .env 文件里',
+          '• [0.33] 性能优化：图片压缩后上传，减少带宽'
+        ]
+      }
+    ]
+  }
+];
+
+var activeQuery = -1;
+var animTimer = null;
+
+function initMemStore() {
+  var html = '';
+  for (var i = 0; i < MEMORIES.length; i++) {
+    var m = MEMORIES[i];
+    html += '<div class="mem-entry" id="mem' + m.id + '">' +
+      '<span class="mem-date">' + m.date + '</span>' +
+      '<span class="mem-text">' + m.text + '</span>' +
+      '<span class="mem-score" id="score' + m.id + '"></span>' +
+      '</div>';
+  }
+  document.getElementById('memStore').innerHTML = html;
+}
+
+function initQueryBtns() {
+  var html = '';
+  for (var i = 0; i < QUERIES.length; i++) {
+    html += '<button class="q-btn" id="qbtn' + i + '" onclick="selectQuery(' + i + ')">"' + QUERIES[i].text + '"</button>';
+  }
+  document.getElementById('queryBtns').innerHTML = html;
+}
+
+function clearState() {
+  if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+  for (var i = 0; i < MEMORIES.length; i++) {
+    var el = document.getElementById('mem' + i);
+    el.className = 'mem-entry';
+    var sc = document.getElementById('score' + i);
+    sc.className = 'mem-score';
+    sc.textContent = '';
+  }
+  document.getElementById('processArea').innerHTML = '';
+  document.getElementById('matchInfo').style.opacity = '0';
+  for (var j = 0; j < QUERIES.length; j++) {
+    document.getElementById('qbtn' + j).classList.remove('active');
+  }
+}
+
+function selectQuery(idx) {
+  clearState();
+  activeQuery = idx;
+  document.getElementById('qbtn' + idx).classList.add('active');
+  runSearch(QUERIES[idx]);
+}
+
+function runSearch(query) {
+  var area = document.getElementById('processArea');
+  var steps = query.steps;
+  var results = query.results;
+  var threshold = query.threshold;
+
+  var passCount = 0;
+  for (var k = 0; k < results.length; k++) {
+    if (results[k].score >= threshold) passCount++;
+  }
+
+  function showStep(i) {
+    if (i >= steps.length) return;
+    var s = steps[i];
+    var el = document.createElement('div');
+    el.className = 'proc-step';
+    el.style.background = s.bg;
+    el.style.border = '1px solid rgba(0,0,0,.05)';
+
+    var inner = '<div class="proc-num" style="background:' + s.bg + ';color:' + s.color + ';border:1.5px solid ' + s.color + '">' + s.num + '</div>';
+    inner += '<div class="proc-text">' + s.text;
+    if (s.inject) {
+      inner += '<div class="inject-preview"><b>注入到 system message 的内容：</b><br>';
+      for (var x = 0; x < s.inject.length; x++) {
+        inner += s.inject[x] + '<br>';
+      }
+      inner += '</div>';
+    }
+    inner += '</div>';
+    el.innerHTML = inner;
+    area.appendChild(el);
+
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      el.classList.add('show');
+      area.scrollTop = area.scrollHeight;
+    })});
+
+    if (i === 2) {
+      highlightMemories(results, threshold);
+    }
+
+    animTimer = setTimeout(function() { showStep(i + 1); }, 700);
+  }
+
+  animTimer = setTimeout(function() { showStep(0); }, 200);
+
+  setTimeout(function() {
+    var info = document.getElementById('matchInfo');
+    info.textContent = passCount + ' 条命中 / ' + (results.length - passCount) + ' 条过滤';
+    info.style.opacity = '1';
+  }, 2400);
+}
+
+function highlightMemories(results, threshold) {
+  var matchedIds = {};
+  for (var i = 0; i < results.length; i++) {
+    matchedIds[results[i].id] = results[i].score;
+  }
+
+  for (var j = 0; j < MEMORIES.length; j++) {
+    var el = document.getElementById('mem' + j);
+    var sc = document.getElementById('score' + j);
+
+    if (matchedIds[j] !== undefined) {
+      var score = matchedIds[j];
+      var pass = score >= threshold;
+
+      (function(el, sc, score, pass, delay) {
+        setTimeout(function() {
+          el.className = 'mem-entry ' + (pass ? 'matched' : 'filtered');
+          sc.textContent = score.toFixed(2);
+          sc.className = 'mem-score show ' + (pass ? 'pass' : 'fail');
+        }, delay);
+      })(el, sc, score, pass, j * 60);
+    } else {
+      (function(el, delay) {
+        setTimeout(function() {
+          el.className = 'mem-entry dimmed';
+        }, delay);
+      })(el, j * 60);
+    }
+  }
+}
+
+initMemStore();
+initQueryBtns();
+</script>
+</body>
+</html>

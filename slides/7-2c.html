@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>多工具编排：并发还是串行？ | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:280px 1fr;min-height:0;overflow:hidden}
+
+/* Left panel */
+.left{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.l-label{padding:10px 16px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.user-req{padding:14px 16px;font-size:15px;line-height:1.7;color:var(--text);background:rgba(8,145,178,.04);border-bottom:1px solid var(--border);flex-shrink:0}
+.user-req b{color:var(--cyan)}
+
+.tool-list{flex:1;padding:10px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.tool-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1.5px solid var(--border);transition:border-color .3s,box-shadow .3s}
+.tool-chip.active{border-color:rgba(234,88,12,.35);box-shadow:0 0 0 3px rgba(234,88,12,.08)}
+.tool-chip.done{border-color:rgba(22,163,74,.3);box-shadow:0 0 0 3px rgba(22,163,74,.06)}
+.tc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tc-info{flex:1;min-width:0}
+.tc-name{font-size:14px;font-weight:700;color:var(--text)}
+.tc-time{font-size:12px;color:var(--muted);margin-top:2px}
+.tc-badge{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:800;flex-shrink:0}
+
+.decision{margin:8px 12px;flex-shrink:0}
+.dec-card{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.6;opacity:0;transform:translateY(4px);transition:all .35s}
+.dec-card.show{opacity:1;transform:translateY(0)}
+.dec-card b{color:var(--orange)}
+
+/* Right panel */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-bar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.r-title{font-size:14px;font-weight:800;color:var(--text)}
+
+.mode-tabs{display:flex;gap:6px}
+.mode-tab{padding:6px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;font-weight:700;color:var(--sub);font-family:inherit;transition:all .15s}
+.mode-tab.active{border-color:var(--orange);background:rgba(234,88,12,.06);color:var(--orange)}
+
+.gantt-area{flex:1;padding:16px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+
+/* Gantt chart */
+.gantt-container{flex:1;display:flex;flex-direction:column;gap:12px}
+.gantt-header{display:flex;align-items:center;justify-content:space-between}
+.gantt-title{font-size:15px;font-weight:700;color:var(--text)}
+.gantt-total{padding:5px 14px;border-radius:8px;font-size:15px;font-weight:800}
+
+.gantt-timeline{position:relative;flex:1;display:flex;flex-direction:column;gap:6px}
+.gantt-axis{display:flex;align-items:center;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px}
+.gantt-axis-label{font-size:12px;color:var(--muted);font-weight:600;position:absolute}
+
+.gantt-row{display:flex;align-items:center;gap:12px;height:44px}
+.gantt-row-label{width:120px;flex-shrink:0;font-size:13px;font-weight:700;color:var(--text);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.gantt-row-label .emoji{font-size:16px}
+.gantt-row-track{flex:1;height:36px;position:relative;border-radius:8px;background:rgba(0,0,0,.02);border:1px solid var(--border)}
+.gantt-bar{position:absolute;top:4px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;opacity:0;transform:scaleX(0);transform-origin:left;transition:all .6s cubic-bezier(.4,0,.2,1)}
+.gantt-bar.show{opacity:1;transform:scaleX(1)}
+.gantt-bar-time{position:absolute;right:-40px;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+.batch-label{position:absolute;top:-18px;font-size:11px;font-weight:800;color:var(--orange);white-space:nowrap}
+
+/* Description cards below gantt */
+.desc-section{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.desc-card{padding:10px 14px;border-radius:10px;font-size:14px;line-height:1.6;color:var(--text);opacity:0;transform:translateY(6px);transition:all .4s}
+.desc-card.show{opacity:1;transform:translateY(0)}
+.desc-card b{color:var(--orange)}
+
+.compare-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex-shrink:0}
+.compare-card{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);text-align:center;opacity:0;transform:translateY(6px);transition:all .4s}
+.compare-card.show{opacity:1;transform:translateY(0)}
+.compare-card.highlight{border-color:rgba(22,163,74,.4);background:rgba(22,163,74,.04)}
+.cc-label{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.cc-value{font-size:22px;font-weight:800}
+.cc-sub{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* Ctrl */
+.ctrl{padding:8px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:7px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:13px;color:var(--muted)}
+
+.insight-bar{padding:8px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 1s ease infinite}
+</style>
+<meta name="description" content="多工具编排：并发还是串行？通过甘特图可视化对比串行、并发、智能分批三种工具编排策略的执行时间差异，帮助产品经理理解框架层面的关键设计决策。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-2c.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="多工具编排：并发还是串行？">
+<meta property="og:url" content="https://xueai.app/slides/7-2c.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工具调用 · 第 3 页</div>
+      <div class="hd-title">多工具编排：<em>并发还是串行？</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">同一轮返回 3 个工具调用，执行顺序怎么选？</div>
+  </div>
+
+  <div class="body">
+    <!-- Left: scenario -->
+    <div class="left">
+      <div class="l-label">用户场景</div>
+      <div class="user-req">
+        <b>用户说：</b><br>「帮我订明天北京到上海的机票，顺便查一下上海的天气和推荐酒店」
+      </div>
+      <div class="l-label">模型返回 3 个工具调用</div>
+      <div class="tool-list" id="toolList">
+        <div class="tool-chip" id="chip-flight">
+          <div class="tc-icon" style="background:rgba(124,58,237,.08)">✈️</div>
+          <div class="tc-info">
+            <div class="tc-name">search_flights</div>
+            <div class="tc-time">预计耗时 1.5 秒</div>
+          </div>
+          <span class="tc-badge" id="badge-flight" style="background:var(--surface2);color:var(--muted)">等待中</span>
+        </div>
+        <div class="tool-chip" id="chip-weather">
+          <div class="tc-icon" style="background:rgba(8,145,178,.08)">🌤️</div>
+          <div class="tc-info">
+            <div class="tc-name">get_weather</div>
+            <div class="tc-time">预计耗时 0.8 秒</div>
+          </div>
+          <span class="tc-badge" id="badge-weather" style="background:var(--surface2);color:var(--muted)">等待中</span>
+        </div>
+        <div class="tool-chip" id="chip-hotel">
+          <div class="tc-icon" style="background:rgba(22,163,74,.08)">🏨</div>
+          <div class="tc-info">
+            <div class="tc-name">search_hotels</div>
+            <div class="tc-time">预计耗时 1.2 秒</div>
+          </div>
+          <span class="tc-badge" id="badge-hotel" style="background:var(--surface2);color:var(--muted)">等待中</span>
+        </div>
+      </div>
+      <div class="decision" id="decArea"></div>
+    </div>
+
+    <!-- Right: gantt + mode switch -->
+    <div class="right">
+      <div class="r-bar">
+        <div class="r-title">执行时序对比</div>
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mode-tab active" onclick="pickMode(0)">串行执行</button>
+          <button class="mode-tab" onclick="pickMode(1)">并发执行</button>
+          <button class="mode-tab" onclick="pickMode(2)">智能分批</button>
+        </div>
+      </div>
+
+      <div class="gantt-area" id="ganttArea"></div>
+
+      <div class="ctrl">
+        <button class="btn btn-p" id="btnRun" onclick="runDemo()">▶ 开始演示</button>
+        <button class="btn btn-r" onclick="resetDemo()">重置</button>
+        <span class="ctrl-hint" id="hint">选择模式 → 点击演示 → 观察时间差异</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> 同一轮模型返回多个工具调用时，框架需要决定：全部串行（最安全）、全部并发（最快）、还是按安全性智能分批（Alice 的做法）。这个决定直接影响用户等待时间。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var TOOLS = [
+  {id:'flight', name:'search_flights', emoji:'✈️', color:'var(--purple)', bg:'rgba(124,58,237,.75)', time:1.5, safe:false},
+  {id:'weather', name:'get_weather', emoji:'🌤️', color:'var(--cyan)', bg:'rgba(8,145,178,.8)', time:0.8, safe:true},
+  {id:'hotel', name:'search_hotels', emoji:'🏨', color:'var(--green)', bg:'rgba(22,163,74,.75)', time:1.2, safe:true}
+];
+
+var MODES = [
+  {
+    key:'serial',
+    title:'串行执行',
+    subtitle:'一个接一个，最安全',
+    totalTime:3.5,
+    batches:[[0],[1],[2]],
+    decision:'<b>📌 设计决策：</b>串行 = 绝对安全，但用户等 3.5 秒。每个工具执行完才运行下一个，不会产生任何数据竞争。<br><b>代价：</b>如果工具之间其实没有依赖关系，白白浪费了并行的机会。',
+    descText:'每个工具依次执行：先查机票 → 再查天气 → 最后查酒店。总耗时 = 所有工具时间之和。'
+  },
+  {
+    key:'parallel',
+    title:'并发执行',
+    subtitle:'全部同时跑，最快',
+    totalTime:1.5,
+    batches:[[0,1,2]],
+    decision:'<b>📌 设计决策：</b>并发 = 最快体验，但有风险。如果机票预订会改变用户状态（比如扣款），而酒店搜索依赖机票结果（比如按航班到达时间筛选），同时运行可能产生<b>数据竞争</b>。<br><b>追问：</b>你的产品里，这 3 个工具之间有没有依赖？',
+    descText:'三个工具同时启动，总耗时 = 最慢的那个（1.5 秒）。速度提升 57%。'
+  },
+  {
+    key:'smart',
+    title:'智能分批（Alice 方案）',
+    subtitle:'按安全性自动分组',
+    totalTime:2.7,
+    batches:[[0],[1,2]],
+    decision:'<b>📌 设计决策：</b>框架给每个工具标记"是否可以并发"。机票搜索可能涉及状态变更 → 单独执行；天气和酒店是纯查询 → 安全合并。<br><b>关键：</b>产品经理需要告诉工程师每个工具的安全等级——这不是工程问题，而是业务判断。',
+    descText:'第 1 批：机票搜索（可能改状态，单独跑）→ 第 2 批：天气 + 酒店（纯查询，一起跑）。'
+  }
+];
+
+var curMode = 0;
+var running = false;
+var animTimers = [];
+
+function pickMode(i) {
+  if (running) return;
+  curMode = i;
+  var tabs = document.querySelectorAll('.mode-tab');
+  for (var t = 0; t < tabs.length; t++) tabs[t].classList.toggle('active', t === i);
+  resetDemo();
+}
+
+function buildGantt() {
+  var m = MODES[curMode];
+  var maxTime = 4.0;
+  var pxPerSec = 100;
+
+  var html = '';
+  html += '<div class="gantt-container">';
+  html += '<div class="gantt-header"><div class="gantt-title">' + m.title + '<span style="font-weight:400;color:var(--sub);font-size:13px;margin-left:8px">' + m.subtitle + '</span></div>';
+
+  var totalColor = m.totalTime <= 2 ? 'var(--green)' : m.totalTime <= 3 ? 'var(--amber)' : 'var(--red)';
+  html += '<div class="gantt-total" style="background:' + totalColor + '15;color:' + totalColor + '">总耗时 <span id="totalDisplay">—</span> 秒</div></div>';
+
+  html += '<div class="gantt-timeline" style="padding-left:132px">';
+
+  var axisHtml = '<div class="gantt-axis" style="position:relative;height:20px">';
+  for (var s = 0; s <= maxTime; s += 0.5) {
+    axisHtml += '<span class="gantt-axis-label" style="left:' + (s * pxPerSec) + 'px">' + s.toFixed(1) + 's</span>';
+  }
+  axisHtml += '</div>';
+  html += axisHtml;
+
+  var batchStartTimes = [];
+  var currentStart = 0;
+  for (var bi = 0; bi < m.batches.length; bi++) {
+    batchStartTimes.push(currentStart);
+    var batchMax = 0;
+    for (var bj = 0; bj < m.batches[bi].length; bj++) {
+      var toolTime = TOOLS[m.batches[bi][bj]].time;
+      if (toolTime > batchMax) batchMax = toolTime;
+    }
+    currentStart += batchMax;
+  }
+
+  for (var ti = 0; ti < TOOLS.length; ti++) {
+    var tool = TOOLS[ti];
+    var batchIdx = -1;
+    var posInBatch = -1;
+    for (var b = 0; b < m.batches.length; b++) {
+      for (var p = 0; p < m.batches[b].length; p++) {
+        if (m.batches[b][p] === ti) { batchIdx = b; posInBatch = p; }
+      }
+    }
+    var startSec = batchStartTimes[batchIdx];
+    var leftPx = startSec * pxPerSec;
+    var widthPx = tool.time * pxPerSec;
+
+    html += '<div class="gantt-row">';
+    html += '<div class="gantt-row-label" style="position:absolute;left:0;width:120px"><span class="emoji">' + tool.emoji + '</span>' + tool.name.replace('search_','').replace('get_','') + '</div>';
+    html += '<div class="gantt-row-track">';
+
+    if (m.key === 'smart' && posInBatch === 0 && m.batches[batchIdx].length > 0) {
+      var bLabel = m.batches[batchIdx].length > 1 ? '批次 ' + (batchIdx + 1) + '（并发）' : '批次 ' + (batchIdx + 1) + '（单独）';
+      html += '<span class="batch-label" style="left:' + leftPx + 'px" id="blabel-' + batchIdx + '">' + bLabel + '</span>';
+    }
+
+    html += '<div class="gantt-bar" id="bar-' + tool.id + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + tool.bg + '">' + tool.time + 's</div>';
+    html += '</div></div>';
+  }
+
+  html += '</div></div>';
+
+  html += '<div class="desc-section">';
+  html += '<div class="desc-card" id="descCard" style="background:rgba(234,88,12,.04);border:1.5px solid rgba(234,88,12,.15);border-radius:10px">' + m.descText + '</div>';
+  html += '</div>';
+
+  html += '<div class="compare-row" id="compareRow">';
+  for (var ci = 0; ci < MODES.length; ci++) {
+    var isActive = ci === curMode;
+    var cColor = MODES[ci].totalTime <= 2 ? 'var(--green)' : MODES[ci].totalTime <= 3 ? 'var(--amber)' : 'var(--red)';
+    html += '<div class="compare-card' + (isActive ? ' highlight' : '') + '" id="cc-' + ci + '">';
+    html += '<div class="cc-label">' + MODES[ci].title + '</div>';
+    html += '<div class="cc-value" style="color:' + cColor + '">' + MODES[ci].totalTime + 's</div>';
+    html += '<div class="cc-sub">' + (ci === 0 ? '最安全' : ci === 1 ? '最快' : '平衡方案') + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  document.getElementById('ganttArea').innerHTML = html;
+}
+
+function resetChips() {
+  for (var i = 0; i < TOOLS.length; i++) {
+    var chip = document.getElementById('chip-' + TOOLS[i].id);
+    var badge = document.getElementById('badge-' + TOOLS[i].id);
+    chip.className = 'tool-chip';
+    badge.style.background = 'var(--surface2)';
+    badge.style.color = 'var(--muted)';
+    badge.textContent = '等待中';
+  }
+}
+
+function setChipState(id, state) {
+  var chip = document.getElementById('chip-' + id);
+  var badge = document.getElementById('badge-' + id);
+  if (state === 'running') {
+    chip.className = 'tool-chip active';
+    badge.style.background = 'rgba(234,88,12,.1)';
+    badge.style.color = 'var(--orange)';
+    badge.textContent = '执行中';
+    badge.classList.add('pulse');
+  } else if (state === 'done') {
+    chip.className = 'tool-chip done';
+    badge.style.background = 'rgba(22,163,74,.1)';
+    badge.style.color = 'var(--green)';
+    badge.textContent = '完成 ✓';
+    badge.classList.remove('pulse');
+  }
+}
+
+function runDemo() {
+  if (running) return;
+  running = true;
+  document.getElementById('btnRun').disabled = true;
+  resetChips();
+  buildGantt();
+
+  var m = MODES[curMode];
+  var pxPerSec = 100;
+  var batchStartTimes = [];
+  var currentStart = 0;
+
+  for (var bi = 0; bi < m.batches.length; bi++) {
+    batchStartTimes.push(currentStart);
+    var batchMax = 0;
+    for (var bj = 0; bj < m.batches[bi].length; bj++) {
+      if (TOOLS[m.batches[bi][bj]].time > batchMax) batchMax = TOOLS[m.batches[bi][bj]].time;
+    }
+    currentStart += batchMax;
+  }
+
+  var speedFactor = 600;
+  var elapsed = 0;
+
+  for (var b = 0; b < m.batches.length; b++) {
+    (function(batchIdx) {
+      var batchStart = batchStartTimes[batchIdx];
+      var batchTools = m.batches[batchIdx];
+      var batchMaxTime = 0;
+
+      var startTimer = setTimeout(function() {
+        for (var t = 0; t < batchTools.length; t++) {
+          var tool = TOOLS[batchTools[t]];
+          setChipState(tool.id, 'running');
+          var bar = document.getElementById('bar-' + tool.id);
+          if (bar) {
+            bar.classList.add('show');
+          }
+          if (tool.time > batchMaxTime) batchMaxTime = tool.time;
+        }
+
+        for (var t2 = 0; t2 < batchTools.length; t2++) {
+          (function(toolIdx) {
+            var tool = TOOLS[toolIdx];
+            var doneTimer = setTimeout(function() {
+              setChipState(tool.id, 'done');
+            }, tool.time * speedFactor);
+            animTimers.push(doneTimer);
+          })(batchTools[t2]);
+        }
+      }, batchStart * speedFactor);
+      animTimers.push(startTimer);
+
+    })(b);
+  }
+
+  var totalTimer = setTimeout(function() {
+    document.getElementById('totalDisplay').textContent = m.totalTime;
+    var desc = document.getElementById('descCard');
+    if (desc) desc.classList.add('show');
+    var cards = document.querySelectorAll('.compare-card');
+    for (var c = 0; c < cards.length; c++) {
+      (function(card, delay) {
+        var t = setTimeout(function() { card.classList.add('show'); }, delay);
+        animTimers.push(t);
+      })(cards[c], c * 120);
+    }
+
+    var da = document.getElementById('decArea');
+    da.innerHTML = '<div class="dec-card">' + m.decision + '</div>';
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      var dc = da.querySelector('.dec-card');
+      if (dc) dc.classList.add('show');
+    })});
+
+    running = false;
+    document.getElementById('btnRun').disabled = true;
+    document.getElementById('btnRun').textContent = '✓ 演示完成';
+    document.getElementById('hint').textContent = '切换模式对比不同策略 → 点击重置可再次演示';
+  }, m.totalTime * speedFactor + 300);
+  animTimers.push(totalTimer);
+}
+
+function resetDemo() {
+  for (var i = 0; i < animTimers.length; i++) clearTimeout(animTimers[i]);
+  animTimers = [];
+  running = false;
+  resetChips();
+  buildGantt();
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnRun').textContent = '▶ 开始演示';
+  document.getElementById('hint').textContent = '选择模式 → 点击演示 → 观察时间差异';
+  document.getElementById('decArea').innerHTML = '';
+}
+
+buildGantt();
+</script>
+</body>
+</html>

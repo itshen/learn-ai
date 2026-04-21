@@ -34,9 +34,25 @@ const SLIDE_ORDER = [
   { file: 'prompt-defense.html',      title: 'Prompt 防御实战',         num: 26 },
   { file: '7-1.html',                  title: 'Agent 概念',              num: 27 },
   { file: '7-2.html',                  title: '工具调用',                num: 28 },
+  { file: '7-2a.html',                 title: '一次对话背后的5条消息',     num: 0  },
+  { file: '7-2b.html',                 title: '工具描述的学问',            num: 0  },
+  { file: '7-2c.html',                 title: '多工具编排',               num: 0  },
+  { file: '7-2d.html',                 title: 'MCP 协议',                num: 0  },
   { file: '7-3.html',                  title: 'ReAct 实战',              num: 29 },
+  { file: '7-3a.html',                 title: '上下文窗口',               num: 0  },
+  { file: '7-3b.html',                 title: '上下文压缩四层策略',        num: 0  },
+  { file: '7-3c.html',                 title: '长期记忆',                 num: 0  },
+  { file: '7-4a.html',                 title: 'ReAct 循环',              num: 0  },
+  { file: '7-4b.html',                 title: 'Agent 卡死的5种模式',      num: 0  },
+  { file: '7-4c.html',                 title: '权限与安全',               num: 0  },
   { file: '7-5.html',                  title: 'Skill 技能',              num: 30 },
+  { file: '7-5a.html',                 title: 'Skill 的本质',             num: 0  },
+  { file: '7-5b.html',                 title: '解剖一个真实 Skill',        num: 0  },
   { file: '7-4.html',                  title: '脚手架工程',              num: 31 },
+  { file: '7-6a.html',                 title: '5道工程护栏',              num: 0  },
+  { file: '7-6b.html',                 title: '多 Agent 协作',            num: 0  },
+  { file: '7-6c.html',                 title: '可观测性',                 num: 0  },
+  { file: '7-summary.html',            title: 'Agent 工程全景图',          num: 0  },
   { file: '8-1.html',                  title: '多轮对话成本',            num: 32 },
   { file: '8-2.html',                  title: 'KV Cache',                num: 33 },
   { file: '8-2b.html',                 title: '显式缓存',                num: 34 },
@@ -72,6 +88,7 @@ const SLIDE_ORDER = [
         padding: 0;
         z-index: 9999; font-family: -apple-system, "PingFang SC", sans-serif;
         overflow: hidden;
+        max-width: calc(100vw - 16px);
       }
       #nav-author-link {
         font-size: 12px; font-weight: 600; color: #6b6b70;
@@ -101,6 +118,11 @@ const SLIDE_ORDER = [
         white-space: nowrap;
       }
       #nav-github-link:hover { background: rgba(0,0,0,0.05); color: #1c1c1e; }
+      @media (max-width: 768px) {
+        #nav-top-bar { top: 8px; border-radius: 20px; }
+        #nav-author-link, #nav-pv-badge, #nav-github-link { padding: 6px 10px; font-size: 11px; }
+        .nav-pv-sep { margin: 0; }
+      }
     `;
     document.head.appendChild(style);
 
@@ -159,6 +181,7 @@ const SLIDE_ORDER = [
       opacity: 0;
       transition: opacity 0.25s ease, transform 0.25s ease;
       pointer-events: none;
+      max-width: calc(100vw - 16px);
     }
     #slide-nav.visible {
       opacity: 1;
@@ -175,6 +198,10 @@ const SLIDE_ORDER = [
       font-size: 13px; font-weight: 600; cursor: pointer;
       padding: 5px 12px; border-radius: 20px; transition: all 0.15s;
       display: flex; align-items: center; gap: 4px;
+      max-width: 34vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .snav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); color: white; }
     .snav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
@@ -189,6 +216,12 @@ const SLIDE_ORDER = [
       transition: all 0.15s;
     }
     .snav-home:hover { color: white; background: rgba(255,255,255,0.08); }
+    @media (max-width: 768px) {
+      #slide-nav { bottom: 10px; gap: 6px; padding: 6px 8px; }
+      .snav-btn { font-size: 12px; padding: 4px 8px; max-width: 30vw; }
+      .snav-info { min-width: 48px; padding: 0 4px; font-size: 11px; }
+      .snav-home { padding: 4px 8px; font-size: 11px; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -310,79 +343,188 @@ const SLIDE_ORDER = [
 
 })();
 
-// ── 移动端竖屏适配（全局，所有页面生效）────────────────────────
-(function initMobilePortrait() {
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (!isMobile) return;
+// ── 幻灯片适配：CSS 等比缩放 + 竖屏提示（可关闭，不强拦截）──────────
+(function initSlideAdapt() {
 
-  // 注入 meta viewport（防止部分页面缺失）
+  // 注入 meta viewport
   if (!document.querySelector('meta[name="viewport"]')) {
     const m = document.createElement('meta');
     m.name = 'viewport';
-    m.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+    m.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
     document.head.appendChild(m);
   }
 
-  // 注入遮罩层样式
+  // 纯 CSS 方案：避免 iOS Safari 的 vh / scale / autosize 陷阱
   const style = document.createElement('style');
   style.textContent = `
-    #mobile-portrait-mask {
+    html, body {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    :root {
+      --slide-pad-x: 8px;
+      --slide-pad-top: 40px;
+      --slide-pad-bottom: 56px;
+    }
+
+    /* 横屏：按 16:9 反推宽度，确保上下留白且不裁剪 */
+    @media (orientation: landscape) {
+      .slide {
+        width: min(94vw, calc((100vh - var(--slide-pad-top) - var(--slide-pad-bottom)) * 16 / 9)) !important;
+        max-width: 1440px !important;
+      }
+    }
+
+    /* 支持 dvh 的浏览器优先用 dvh（iOS 更稳定） */
+    @supports (height: 100dvh) {
+      @media (orientation: landscape) {
+        .slide {
+          width: min(94vw, calc((100dvh - var(--slide-pad-top) - var(--slide-pad-bottom)) * 16 / 9)) !important;
+        }
+      }
+    }
+
+    #slide-rotate-mask {
       display: none;
-      position: fixed; inset: 0; z-index: 99999;
-      background: #1c1c1e;
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(28, 28, 30, 0.9);
+      color: #fff;
       flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
       font-family: -apple-system, "PingFang SC", sans-serif;
+      padding: 20px;
+      text-align: center;
     }
-    #mobile-portrait-mask.show { display: flex; }
-    .mpm-icon {
-      font-size: 56px;
-      animation: mpm-rotate 1.6s ease-in-out infinite alternate;
+    #slide-rotate-mask .icon {
+      font-size: 34px;
+      line-height: 1;
     }
-    @keyframes mpm-rotate {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(90deg); }
+    #slide-rotate-mask .title {
+      font-size: 17px;
+      font-weight: 700;
     }
-    .mpm-title {
-      font-size: 18px; font-weight: 700; color: #fff;
+    #slide-rotate-mask .sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      text-align: center;
+      line-height: 1.6;
     }
-    .mpm-sub {
-      font-size: 13px; color: rgba(255,255,255,0.45);
-      text-align: center; line-height: 1.6; padding: 0 32px;
+    #slide-rotate-close {
+      margin-top: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 18px;
+      cursor: pointer;
     }
-    /* 竖屏时隐藏顶部栏，避免遮挡 */
-    body.mobile-portrait #nav-top-bar { display: none !important; }
+    #slide-rotate-close:active {
+      transform: scale(0.98);
+    }
+
+    /* 仅小屏竖屏显示遮罩，避免误伤桌面窄窗口 */
+    @media (orientation: portrait) and (max-width: 1024px) {
+      #slide-rotate-mask { display: flex; }
+      #slide-rotate-mask.dismissed { display: none; }
+    }
   `;
   document.head.appendChild(style);
 
-  // 注入遮罩 DOM
   const mask = document.createElement('div');
-  mask.id = 'mobile-portrait-mask';
-  mask.innerHTML = `
-    <div class="mpm-icon">📱</div>
-    <div class="mpm-title">请横屏观看</div>
-    <div class="mpm-sub">将手机旋转为横屏<br>即可获得最佳体验</div>
-  `;
+  mask.id = 'slide-rotate-mask';
+  mask.innerHTML = '<div class="icon">↻</div>' +
+    '<div class="title">请横屏观看</div>' +
+    '<div class="sub">横屏后内容会按比例完整显示<br/>竖屏可关闭后继续浏览</div>' +
+    '<button id="slide-rotate-close" type="button">继续竖屏浏览</button>';
   document.body.appendChild(mask);
 
-  function check() {
-    const isPortrait = window.innerHeight > window.innerWidth;
-    if (isPortrait) {
-      mask.classList.add('show');
-      document.body.classList.add('mobile-portrait');
+  const MASK_DISMISS_KEY = 'slide_rotate_mask_dismissed';
+  const closeBtn = document.getElementById('slide-rotate-close');
+
+  function updateMaskState() {
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    const isSmallScreen = window.matchMedia('(max-width: 1024px)').matches;
+    const dismissed = sessionStorage.getItem(MASK_DISMISS_KEY) === '1';
+    if (isPortrait && isSmallScreen && dismissed) {
+      mask.classList.add('dismissed');
     } else {
-      mask.classList.remove('show');
-      document.body.classList.remove('mobile-portrait');
+      mask.classList.remove('dismissed');
     }
   }
 
-  window.addEventListener('resize', check);
-  window.addEventListener('orientationchange', () => setTimeout(check, 300));
-  // 等 DOM 渲染完再首次检测
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', check);
-  } else {
-    check();
+  closeBtn?.addEventListener('click', () => {
+    sessionStorage.setItem(MASK_DISMISS_KEY, '1');
+    mask.classList.add('dismissed');
+  });
+
+  // ── 竖屏画布缩放：强制设定桌面分辨率后整体缩小 ──
+  function applyCanvasScale() {
+    const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+    const isSmallScreen = window.matchMedia('(max-width: 1024px)').matches;
+    
+    let styleEl = document.getElementById('mobile-canvas-scale');
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'mobile-canvas-scale';
+      document.head.appendChild(styleEl);
+    }
+
+    if (isPortrait && isSmallScreen) {
+      const vw = window.innerWidth;
+      
+      // 基准设计分辨率：宽 960px，高 540px
+      const designW = 960;
+      const designH = 540;
+      
+      // 缩放比例
+      const scale = vw / designW;
+      const topGap = 60; // 顶部导航栏空间
+      const leftOffset = (vw - designW * scale) / 2;
+      const bodyH = Math.round(designH * scale + topGap + 20);
+
+      styleEl.textContent = `
+        body {
+          height: ${bodyH}px !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          display: block !important;
+        }
+        .slide, .slide-container {
+          width: ${designW}px !important;
+          height: ${designH}px !important;
+          max-width: none !important;
+          max-height: none !important;
+          aspect-ratio: auto !important;
+          margin: 0 !important;
+          flex-shrink: 0 !important;
+          position: absolute !important;
+          left: ${leftOffset}px !important;
+          top: ${topGap}px !important;
+          transform-origin: top left !important;
+          transform: scale(${scale}) !important;
+        }
+      `;
+    } else {
+      styleEl.textContent = '';
+    }
   }
+
+  window.addEventListener('orientationchange', () => {
+    setTimeout(updateMaskState, 150);
+    setTimeout(applyCanvasScale, 150);
+  });
+  window.addEventListener('resize', () => {
+    updateMaskState();
+    applyCanvasScale();
+  });
+  
+  updateMaskState();
+  applyCanvasScale();
 })();

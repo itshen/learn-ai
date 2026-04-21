@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Prompt Injection：本质与原理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt Injection：注入攻击的本质与原理 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--purple:#7c3aed;--green:#16a34a;--red:#dc2626;--muted:#8e8e93;--orange:#ea580c;--cyan:#0891b2}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -86,6 +87,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 
 @keyframes flash-red{0%{background:rgba(220,38,38,.2)}100%{background:rgba(220,38,38,.04)}}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="Prompt 注入（Prompt Injection）是大模型应用面临的最严重安全威胁之一。深入解析注入攻击的原理：攻击者如何通过用户输入覆盖 System Prompt 的指令。">
+<meta name="keywords" content="Prompt Injection,提示词注入,AI安全,大模型安全,越狱攻击,Jailbreak">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/prompt-attack.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Prompt Injection：注入攻击的本质与原理">
+<meta property="og:description" content="Prompt 注入（Prompt Injection）是大模型应用面临的最严重安全威胁之一。深入解析注入攻击的原理：攻击者如何通过用户输入覆盖 System Prompt 的指令。">
+<meta property="og:url" content="https://xueai.app/slides/prompt-attack.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt Injection：注入攻击的本质与原理">
+<meta name="twitter:description" content="Prompt 注入（Prompt Injection）是大模型应用面临的最严重安全威胁之一。深入解析注入攻击的原理：攻击者如何通过用户输入覆盖 System Prompt 的指令。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -162,7 +185,7 @@ WHERE name = '</span><span class="inject">'; DROP TABLE users;--</span><span cla
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 let step=0;
 const blocks=['b0','b1','b2','b3','b4'];

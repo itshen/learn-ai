@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MCP 协议：工具的 USB 接口 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+
+/* comparison area */
+.compare{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0;overflow:hidden}
+.compare-col{display:flex;flex-direction:column;padding:16px 20px;overflow:hidden;position:relative}
+.compare-col:first-child{border-right:1px solid var(--border)}
+.compare-label{font-size:14px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.compare-label .badge{padding:3px 10px;border-radius:6px;font-size:12px;font-weight:800}
+
+/* diagram */
+.diagram{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+.diagram svg{width:100%;height:100%;max-height:100%}
+.node-box{rx:10;ry:10;stroke-width:1.5}
+.node-label{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.conn-line{stroke-width:2;fill:none;opacity:.7;stroke-linecap:round}
+.conn-line-mcp{stroke:var(--green);stroke-width:2.5;opacity:.9}
+
+/* stats row */
+.stats-row{display:flex;gap:12px;margin-top:8px;flex-shrink:0}
+.stat-chip{padding:5px 12px;border-radius:8px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+
+/* transport section */
+.transport-section{border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
+.transport-hd{padding:8px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.transport-title{font-size:14px;font-weight:800;color:var(--text)}
+.transport-sub{font-size:13px;color:var(--muted)}
+.transport-body{display:grid;grid-template-columns:280px 1fr;flex:1;min-height:0;overflow:hidden}
+
+/* transport cards */
+.t-cards{display:flex;flex-direction:column;gap:6px;padding:10px 14px;overflow-y:auto;border-right:1px solid var(--border)}
+.t-card{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;flex-shrink:0}
+.t-card:hover{border-color:rgba(234,88,12,.3);background:rgba(234,88,12,.02)}
+.t-card.active{border-color:var(--orange);background:rgba(234,88,12,.04);box-shadow:0 2px 8px rgba(234,88,12,.1)}
+.t-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.t-card-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.t-card-name{font-size:14px;font-weight:800;color:var(--text)}
+.t-card-tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:auto}
+.t-card-desc{font-size:12px;color:var(--sub);line-height:1.5}
+
+/* transport detail */
+.t-detail{padding:14px 20px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.t-detail-title{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.t-detail-quote{font-size:14px;color:var(--sub);line-height:1.6;padding:8px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)}
+
+/* flow animation */
+.flow-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;position:relative;overflow:hidden;min-height:80px}
+.flow-row{display:flex;align-items:center;gap:12px;position:relative;height:36px}
+.flow-node{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;flex-shrink:0;z-index:1}
+.flow-track{flex:1;height:4px;border-radius:2px;background:var(--surface2);position:relative;overflow:hidden}
+.flow-dot{width:10px;height:10px;border-radius:50%;position:absolute;top:-3px;opacity:0}
+@keyframes flowRight{0%{left:0;opacity:1}100%{left:calc(100% - 10px);opacity:1}}
+@keyframes flowLeft{0%{left:calc(100% - 10px);opacity:1}100%{left:0;opacity:1}}
+.flow-dot.go-right{animation:flowRight 1.2s ease-in-out infinite}
+.flow-dot.go-left{animation:flowLeft 1.2s ease-in-out .6s infinite}
+.flow-dot.go-left-2{animation:flowLeft 1.2s ease-in-out 1s infinite}
+.flow-dot.go-left-3{animation:flowLeft 1.2s ease-in-out 1.4s infinite}
+
+/* pros/cons */
+.pc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.pc-item{padding:6px 10px;border-radius:8px;font-size:13px;line-height:1.5;display:flex;align-items:flex-start;gap:6px}
+.pc-icon{flex-shrink:0;font-size:14px;margin-top:1px}
+
+/* decisions */
+.decisions{display:flex;flex-direction:column;gap:6px}
+.dec-card{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.5}
+.dec-card b{color:var(--orange)}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+/* MCP hub */
+.mcp-hub{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(8,145,178,.08));border:2px solid var(--green);font-size:14px;font-weight:800;color:var(--green);position:absolute}
+</style>
+<meta name="description" content="MCP（Model Context Protocol）就是 AI 工具的 USB 标准。工具开发者只写一次适配，就能接入所有 Agent。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-2d.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="MCP 协议：工具的 USB 接口">
+<meta property="og:url" content="https://xueai.app/slides/7-2d.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工具调用 · 第 4 页</div>
+      <div class="hd-title">MCP 协议：工具的 <em>USB 接口</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">USB 之前每台设备要专属数据线 ｜ MCP 之前每个 Agent 要专属对接代码</div>
+  </div>
+
+  <div class="body">
+    <!-- top: before/after comparison -->
+    <div class="compare" id="compareArea">
+      <!-- LEFT: before MCP -->
+      <div class="compare-col">
+        <div class="compare-label">
+          <span class="badge" style="background:rgba(220,38,38,.08);color:var(--red)">Before</span>
+          没有 MCP 的世界
+        </div>
+        <div class="diagram" id="diagramBefore">
+          <svg viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet">
+            <rect class="node-box" x="10" y="15" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="33" fill="var(--purple)">Cursor</text>
+            <rect class="node-box" x="10" y="82" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="100" fill="var(--purple)">Alice</text>
+            <rect class="node-box" x="10" y="150" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="168" fill="var(--purple)">Claude</text>
+
+            <rect class="node-box" x="320" y="15" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="33" fill="var(--cyan)">GitHub</text>
+            <rect class="node-box" x="320" y="82" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="100" fill="var(--cyan)">Slack</text>
+            <rect class="node-box" x="320" y="150" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="168" fill="var(--cyan)">Database</text>
+
+            <path class="conn-line" d="M100,33 C210,33 210,33 320,33" stroke="#dc2626"/>
+            <path class="conn-line" d="M100,33 C180,33 240,100 320,100" stroke="#d97706"/>
+            <path class="conn-line" d="M100,33 C180,45 240,155 320,168" stroke="#7c3aed"/>
+            <path class="conn-line" d="M100,100 C180,100 240,33 320,33" stroke="#0891b2"/>
+            <path class="conn-line" d="M100,100 C210,100 210,100 320,100" stroke="#16a34a"/>
+            <path class="conn-line" d="M100,100 C180,110 240,155 320,168" stroke="#ea580c"/>
+            <path class="conn-line" d="M100,168 C180,155 240,33 320,33" stroke="#8e8e93"/>
+            <path class="conn-line" d="M100,168 C180,168 240,100 320,100" stroke="#a855f7"/>
+            <path class="conn-line" d="M100,168 C210,168 210,168 320,168" stroke="#f59e0b"/>
+          </svg>
+        </div>
+        <div class="stats-row">
+          <div class="stat-chip" style="background:rgba(220,38,38,.06);color:var(--red)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            9 条专属对接
+          </div>
+          <div class="stat-chip" style="background:rgba(220,38,38,.06);color:var(--red)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v4m0 4h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            新增 1 个工具 → +3 条对接
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: with MCP -->
+      <div class="compare-col">
+        <div class="compare-label">
+          <span class="badge" style="background:rgba(22,163,74,.08);color:var(--green)">After</span>
+          有 MCP 的世界
+        </div>
+        <div class="diagram" id="diagramAfter">
+          <svg viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet">
+            <rect class="node-box" x="10" y="15" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="33" fill="var(--purple)">Cursor</text>
+            <rect class="node-box" x="10" y="82" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="100" fill="var(--purple)">Alice</text>
+            <rect class="node-box" x="10" y="150" width="90" height="36" fill="rgba(124,58,237,.06)" stroke="var(--purple)"/>
+            <text class="node-label" x="55" y="168" fill="var(--purple)">Claude</text>
+
+            <rect x="175" y="60" width="70" height="80" rx="12" ry="12" fill="rgba(22,163,74,.08)" stroke="var(--green)" stroke-width="2"/>
+            <text x="210" y="95" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="12" font-weight="800" fill="var(--green)" text-anchor="middle" dominant-baseline="central">MCP</text>
+            <text x="210" y="115" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="10" fill="var(--green)" text-anchor="middle" dominant-baseline="central" opacity=".7">标准协议</text>
+
+            <rect class="node-box" x="320" y="15" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="33" fill="var(--cyan)">GitHub</text>
+            <rect class="node-box" x="320" y="82" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="100" fill="var(--cyan)">Slack</text>
+            <rect class="node-box" x="320" y="150" width="90" height="36" fill="rgba(8,145,178,.06)" stroke="var(--cyan)"/>
+            <text class="node-label" x="365" y="168" fill="var(--cyan)">Database</text>
+
+            <line x1="100" y1="33" x2="175" y2="80" class="conn-line conn-line-mcp"/>
+            <line x1="100" y1="100" x2="175" y2="100" class="conn-line conn-line-mcp"/>
+            <line x1="100" y1="168" x2="175" y2="120" class="conn-line conn-line-mcp"/>
+            <line x1="245" y1="80" x2="320" y2="33" class="conn-line conn-line-mcp"/>
+            <line x1="245" y1="100" x2="320" y2="100" class="conn-line conn-line-mcp"/>
+            <line x1="245" y1="120" x2="320" y2="168" class="conn-line conn-line-mcp"/>
+          </svg>
+        </div>
+        <div class="stats-row">
+          <div class="stat-chip" style="background:rgba(22,163,74,.06);color:var(--green)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            6 条标准连接
+          </div>
+          <div class="stat-chip" style="background:rgba(22,163,74,.06);color:var(--green)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+            新增 1 个工具 → 只需 +1 条适配
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom: transport modes -->
+    <div class="transport-section" id="transportSection">
+      <div class="transport-hd">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="transport-title">三种传输方式</span>
+          <span class="transport-sub">点击查看数据流动方式</span>
+        </div>
+      </div>
+      <div class="transport-body">
+        <div class="t-cards" id="tCards">
+          <div class="t-card active" onclick="pickTransport(0)">
+            <div class="t-card-hd">
+              <div class="t-card-icon" style="background:rgba(124,58,237,.08);color:var(--purple)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              </div>
+              <span class="t-card-name">stdio</span>
+              <span class="t-card-tag" style="background:rgba(124,58,237,.08);color:var(--purple)">本地进程</span>
+            </div>
+            <div class="t-card-desc">Agent 启动一个本地程序，通过标准输入输出通信</div>
+          </div>
+          <div class="t-card" onclick="pickTransport(1)">
+            <div class="t-card-hd">
+              <div class="t-card-icon" style="background:rgba(8,145,178,.08);color:var(--cyan)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              </div>
+              <span class="t-card-name">SSE</span>
+              <span class="t-card-tag" style="background:rgba(8,145,178,.08);color:var(--cyan)">服务器推送</span>
+            </div>
+            <div class="t-card-desc">Agent 通过 HTTP 连接远程服务，服务器主动推送数据</div>
+          </div>
+          <div class="t-card" onclick="pickTransport(2)">
+            <div class="t-card-hd">
+              <div class="t-card-icon" style="background:rgba(22,163,74,.08);color:var(--green)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+              </div>
+              <span class="t-card-name">Streamable HTTP</span>
+              <span class="t-card-tag" style="background:rgba(22,163,74,.08);color:var(--green)">双向流</span>
+            </div>
+            <div class="t-card-desc">最新标准，支持双向流式通信</div>
+          </div>
+        </div>
+        <div class="t-detail" id="tDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> MCP 就是 AI 工具的 USB 标准：工具开发者只写一次适配，就能接入所有 Agent。没有 MCP 之前，每个 Agent 都要为每个工具写专属对接代码——就像每台设备都要专属数据线一样。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var TRANSPORTS = [
+  {
+    name: 'stdio',
+    color: 'var(--purple)',
+    bg: 'rgba(124,58,237,.06)',
+    title: 'stdio — 本地进程通信',
+    quote: 'Agent 在本地启动一个子进程（如 Python 脚本），通过 stdin/stdout 收发 JSON-RPC 消息。就像两个人面对面传纸条。',
+    agentLabel: 'Agent 进程',
+    agentColor: 'var(--purple)', agentBg: 'rgba(124,58,237,.1)',
+    toolLabel: 'MCP Server 进程',
+    toolColor: 'var(--cyan)', toolBg: 'rgba(8,145,178,.1)',
+    dotColor: 'var(--purple)',
+    sendLabel: 'stdin（请求）',
+    recvLabel: 'stdout（响应）',
+    pros: [
+      { icon: '✅', text: '最简单，不需要网络', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: '启动快，延迟极低', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: '安全——只走本地通道', bg: 'rgba(22,163,74,.04)' }
+    ],
+    cons: [
+      { icon: '⚠️', text: '只能本地运行', bg: 'rgba(215,119,6,.04)' },
+      { icon: '⚠️', text: '进程随 Agent 退出而终止', bg: 'rgba(215,119,6,.04)' }
+    ],
+    useCase: '开发工具（Cursor）、本地文件操作、数据库查询',
+    decision: '📌 开发阶段调试 MCP Server 时，首选 stdio——不需要配端口、不需要 HTTPS，跑起来就能测。'
+  },
+  {
+    name: 'SSE',
+    color: 'var(--cyan)',
+    bg: 'rgba(8,145,178,.06)',
+    title: 'SSE — 一去多回（Server-Sent Events）',
+    quote: 'Agent 发一次 HTTP 请求，MCP Server 保持连接不断开，通过同一个连接持续推送多条事件回来。就像你问了一个问题，对方通过对讲机一条一条地持续回答你，你只能听不能插嘴。典型的「一去多回」模式。',
+    agentLabel: 'Agent（客户端）',
+    agentColor: 'var(--cyan)', agentBg: 'rgba(8,145,178,.1)',
+    toolLabel: 'MCP Server（远程）',
+    toolColor: 'var(--green)', toolBg: 'rgba(22,163,74,.1)',
+    dotColor: 'var(--cyan)',
+    sendLabel: 'HTTP POST（一次请求）',
+    recvLabel: 'SSE 事件流（持续多条推送）',
+    pros: [
+      { icon: '✅', text: '支持远程部署', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: '服务器主动推送，适合流式结果', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: '兼容现有 HTTP 基础设施', bg: 'rgba(22,163,74,.04)' }
+    ],
+    cons: [
+      { icon: '⚠️', text: '客户端无法中途追加消息（单向推送）', bg: 'rgba(215,119,6,.04)' },
+      { icon: '⚠️', text: '长连接可能被代理/防火墙中断', bg: 'rgba(215,119,6,.04)' }
+    ],
+    useCase: '云端工具服务、实时数据订阅、共享 MCP Server',
+    decision: '📌 SSE 正在被 Streamable HTTP 逐步替代，但很多现有 MCP Server 仍使用 SSE。选型时注意向前兼容。'
+  },
+  {
+    name: 'Streamable HTTP',
+    color: 'var(--green)',
+    bg: 'rgba(22,163,74,.06)',
+    title: 'Streamable HTTP — 双向流式通信',
+    quote: '最新的 MCP 传输标准。Agent 和 Server 通过 HTTP 建立双向流式通道，两边都可以主动发消息。就像打电话——双方随时都能说话。',
+    agentLabel: 'Agent（客户端）',
+    agentColor: 'var(--green)', agentBg: 'rgba(22,163,74,.1)',
+    toolLabel: 'MCP Server（远程）',
+    toolColor: 'var(--orange)', toolBg: 'rgba(234,88,12,.1)',
+    dotColor: 'var(--green)',
+    sendLabel: 'HTTP 请求流（双向）',
+    recvLabel: 'HTTP 响应流（双向）',
+    pros: [
+      { icon: '✅', text: '最灵活，双向实时通信', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: '支持大数据分块传输', bg: 'rgba(22,163,74,.04)' },
+      { icon: '✅', text: 'MCP 官方推荐的标准方式', bg: 'rgba(22,163,74,.04)' }
+    ],
+    cons: [
+      { icon: '⚠️', text: '实现复杂度较高', bg: 'rgba(215,119,6,.04)' },
+      { icon: '⚠️', text: '部分老旧基础设施不兼容', bg: 'rgba(215,119,6,.04)' }
+    ],
+    useCase: '复杂交互场景、大数据传输、生产级云端部署',
+    decision: '📌 新项目建议直接用 Streamable HTTP。它是 MCP 官方推荐的标准，未来所有 Agent 都会优先支持。'
+  }
+];
+
+var curTransport = 0;
+
+function pickTransport(idx) {
+  curTransport = idx;
+  var cards = document.querySelectorAll('.t-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].className = 't-card' + (i === idx ? ' active' : '');
+  }
+  renderTransportDetail(idx);
+}
+
+function renderTransportDetail(idx) {
+  var t = TRANSPORTS[idx];
+  var h = '';
+
+  h += '<div class="t-detail-title"><span style="color:' + t.color + '">' + t.title + '</span></div>';
+  h += '<div class="t-detail-quote">' + t.quote + '</div>';
+
+  h += '<div class="flow-box">';
+  h += '<div class="flow-row">';
+  h += '<div class="flow-node" style="background:' + t.agentBg + ';color:' + t.agentColor + '">' + t.agentLabel + '</div>';
+  h += '<div style="flex:1;display:flex;flex-direction:column;gap:8px">';
+
+  h += '<div style="display:flex;align-items:center;gap:8px">';
+  h += '<span style="font-size:11px;color:var(--muted);min-width:140px;text-align:right">' + t.sendLabel + '</span>';
+  h += '<div class="flow-track"><div class="flow-dot go-right" style="background:' + t.dotColor + '"></div></div>';
+  h += '<span style="font-size:12px;color:var(--muted)">→</span>';
+  h += '</div>';
+
+  h += '<div style="display:flex;align-items:center;gap:8px">';
+  h += '<span style="font-size:11px;color:var(--muted);min-width:140px;text-align:right">' + t.recvLabel + '</span>';
+  h += '<div class="flow-track">';
+  h += '<div class="flow-dot go-left" style="background:' + t.toolColor + '"></div>';
+  if (idx === 1) {
+    h += '<div class="flow-dot go-left-2" style="background:' + t.toolColor + '"></div>';
+    h += '<div class="flow-dot go-left-3" style="background:' + t.toolColor + '"></div>';
+  }
+  h += '</div>';
+  h += '<span style="font-size:12px;color:var(--muted)">←</span>';
+  h += '</div>';
+
+  h += '</div>';
+  h += '<div class="flow-node" style="background:' + t.toolBg + ';color:' + t.toolColor + '">' + t.toolLabel + '</div>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '<div class="pc-grid">';
+  h += '<div style="display:flex;flex-direction:column;gap:4px">';
+  h += '<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px">优点</div>';
+  for (var i = 0; i < t.pros.length; i++) {
+    h += '<div class="pc-item" style="background:' + t.pros[i].bg + '"><span class="pc-icon">' + t.pros[i].icon + '</span><span>' + t.pros[i].text + '</span></div>';
+  }
+  h += '</div>';
+  h += '<div style="display:flex;flex-direction:column;gap:4px">';
+  h += '<div style="font-size:12px;font-weight:800;color:var(--amber);margin-bottom:2px">注意</div>';
+  for (var j = 0; j < t.cons.length; j++) {
+    h += '<div class="pc-item" style="background:' + t.cons[j].bg + '"><span class="pc-icon">' + t.cons[j].icon + '</span><span>' + t.cons[j].text + '</span></div>';
+  }
+  h += '</div>';
+  h += '<div style="display:flex;flex-direction:column;gap:4px">';
+  h += '<div style="font-size:12px;font-weight:800;color:var(--cyan);margin-bottom:2px">适合场景</div>';
+  h += '<div class="pc-item" style="background:rgba(8,145,178,.04)"><span>' + t.useCase + '</span></div>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '<div class="dec-card"><b>' + t.decision + '</b></div>';
+
+  document.getElementById('tDetail').innerHTML = h;
+}
+
+pickTransport(0);
+</script>
+</body>
+</html>

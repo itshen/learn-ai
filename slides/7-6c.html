@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>可观测性：Agent 在干什么、花了多少钱 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.hd-sub{font-size:15px;color:var(--muted)}
+.body{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0;overflow:hidden}
+
+/* ── 左栏：事件流 ── */
+.left{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.l-bar{padding:8px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.l-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px}
+.l-task{font-size:13px;color:var(--text);font-weight:600;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.event-area{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+
+.ev{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5;opacity:0;transform:translateY(6px);transition:all .3s ease;flex-shrink:0;background:var(--surface);border:1px solid var(--border)}
+.ev.show{opacity:1;transform:translateY(0)}
+.ev-time{font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:12px;color:var(--muted);font-weight:600;min-width:52px;padding-top:1px;flex-shrink:0}
+.ev-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.ev-body{flex:1;min-width:0}
+.ev-type{font-size:12px;font-weight:800;letter-spacing:.3px;padding:1px 6px;border-radius:4px;display:inline-block;margin-bottom:2px}
+.ev-desc{font-size:13px;color:var(--text);line-height:1.5}
+.ev-meta{font-size:12px;color:var(--muted);margin-top:2px}
+
+.ev-reasoning .ev-type{background:rgba(124,58,237,.1);color:var(--purple)}
+.ev-text .ev-type{background:rgba(8,145,178,.1);color:var(--cyan)}
+.ev-tool_start .ev-type{background:rgba(217,119,6,.1);color:var(--amber)}
+.ev-tool_end .ev-type{background:rgba(22,163,74,.1);color:var(--green)}
+.ev-usage .ev-type{background:rgba(234,88,12,.1);color:var(--orange)}
+.ev-compress .ev-type{background:rgba(142,142,147,.15);color:var(--muted)}
+.ev-error .ev-type{background:rgba(220,38,38,.1);color:var(--red)}
+.ev-done .ev-type{background:rgba(22,163,74,.15);color:var(--green)}
+.ev-subagent .ev-type{background:rgba(124,58,237,.08);color:var(--purple)}
+.ev-file .ev-type{background:rgba(8,145,178,.08);color:var(--cyan)}
+
+.ev-tool_start{border-left:3px solid var(--amber)}
+.ev-tool_end{border-left:3px solid var(--green)}
+.ev-error{border-left:3px solid var(--red)}
+.ev-done{border-left:3px solid var(--green);background:rgba(22,163,74,.04)}
+
+/* ── 右栏：统计面板 ── */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-bar{padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.r-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px}
+.stats-area{padding:12px 16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.stat-icon{font-size:20px;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-info{flex:1}
+.stat-label{font-size:12px;color:var(--muted);font-weight:600}
+.stat-val{font-size:20px;font-weight:800;color:var(--text);font-family:'SF Mono','Cascadia Code','Fira Code',monospace;transition:all .3s}
+.stat-unit{font-size:12px;font-weight:600;color:var(--muted);margin-left:2px}
+
+.si-time .stat-icon{background:rgba(8,145,178,.1)}
+.si-llm .stat-icon{background:rgba(124,58,237,.1)}
+.si-tool .stat-icon{background:rgba(217,119,6,.1)}
+.si-input .stat-icon{background:rgba(142,142,147,.1)}
+.si-output .stat-icon{background:rgba(22,163,74,.1)}
+.si-cost .stat-icon{background:rgba(234,88,12,.1)}
+.si-file .stat-icon{background:rgba(8,145,178,.1)}
+
+/* 决策卡片区 */
+.decisions{padding:12px 16px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);overflow-y:auto;flex:1}
+.dec-card{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);line-height:1.5}
+.dec-card b{color:var(--orange)}
+.dec-idx{font-size:11px;font-weight:800;color:var(--orange);display:block;margin-bottom:2px}
+
+/* ── 底栏 ── */
+.ctrl{padding:8px 24px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:7px 18px;border-radius:8px;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.btn-r:hover{background:var(--border)}
+.ctrl-status{font-size:13px;color:var(--muted);flex:1;text-align:right}
+.ctrl-progress{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.ctrl-progress.idle{background:var(--muted)}
+.ctrl-progress.running{background:var(--green);animation:pulse 1s infinite}
+.ctrl-progress.done{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+</style>
+<meta name="description" content="可观测性实战：通过事件流实时查看 Agent 在想什么、做什么、花了多少钱。产品经理必须掌握的运营基础设施。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-6c.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="可观测性：Agent 在干什么、花了多少钱">
+<meta property="og:url" content="https://xueai.app/slides/7-6c.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工程 · 第 3 页</div>
+      <div class="hd-title">可观测性：Agent <em>在干什么</em>、<em>花了多少钱</em></div>
+    </div>
+    <div class="hd-sub">事件流 + 统计面板 · 实时监控 Agent 全生命周期</div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：事件流 -->
+    <div class="left">
+      <div class="l-bar">
+        <div class="l-title">事件流 Event Stream</div>
+        <div class="l-task" id="taskLabel">等待任务启动…</div>
+      </div>
+      <div class="event-area" id="eventArea"></div>
+    </div>
+
+    <!-- 右栏：统计面板 -->
+    <div class="right">
+      <div class="r-bar">
+        <div class="r-title">统计面板 Stats</div>
+      </div>
+      <div class="stats-area">
+        <div class="stat-card si-time">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-info"><div class="stat-label">总耗时</div><div class="stat-val"><span id="sDur">—</span><span class="stat-unit">s</span></div></div>
+        </div>
+        <div class="stat-card si-llm">
+          <div class="stat-icon">🧠</div>
+          <div class="stat-info"><div class="stat-label">LLM 调用</div><div class="stat-val"><span id="sLlm">0</span><span class="stat-unit">次</span></div></div>
+        </div>
+        <div class="stat-card si-tool">
+          <div class="stat-icon">🔧</div>
+          <div class="stat-info"><div class="stat-label">工具调用</div><div class="stat-val"><span id="sTool">0</span><span class="stat-unit">次</span></div></div>
+        </div>
+        <div class="stat-card si-input">
+          <div class="stat-icon">📥</div>
+          <div class="stat-info"><div class="stat-label">输入 Token</div><div class="stat-val" id="sIn">0</div></div>
+        </div>
+        <div class="stat-card si-output">
+          <div class="stat-icon">📤</div>
+          <div class="stat-info"><div class="stat-label">输出 Token</div><div class="stat-val" id="sOut">0</div></div>
+        </div>
+        <div class="stat-card si-cost">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info"><div class="stat-label">预估费用</div><div class="stat-val">¥<span id="sCost">0.00</span></div></div>
+        </div>
+        <div class="stat-card si-file">
+          <div class="stat-icon">📁</div>
+          <div class="stat-info"><div class="stat-label">文件变更</div><div class="stat-val"><span id="sFile">0</span><span class="stat-unit">个</span></div></div>
+        </div>
+      </div>
+
+      <div class="decisions">
+        <div class="dec-card"><div class="dec-idx">📌 设计决策 1</div><b>没有可观测性 = 黑箱。</b>当用户问"Agent 怎么这么慢"或"这次怎么花了这么多钱"，你需要数据来回答。</div>
+        <div class="dec-card"><div class="dec-idx">📌 设计决策 2</div><b>每个事件类型都是一个产品决策点：</b>text 用于流式展示、tool_start/end 用于进度条、usage 用于计费、error 用于告警。</div>
+        <div class="dec-card"><div class="dec-idx">📌 设计决策 3</div><b>Alice 用 OpenTelemetry 标准</b>记录所有 spans：agent.turn、llm.request、tool.execution、context.compress。这让你可以用任何 APM 工具分析性能。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <button class="btn btn-p" id="btnRun" onclick="runTask()">▶ 模拟一次任务</button>
+    <button class="btn btn-r" onclick="resetAll()">重置</button>
+    <span class="ctrl-status" id="ctrlStatus"><span class="ctrl-progress idle"></span>就绪 · 点击按钮开始模拟</span>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> Agent 不是黑箱——通过事件流，你可以实时看到它在想什么、做什么、花了多少钱。可观测性不是锦上添花，而是产品运营的基础设施：没有它，你无法优化成本、排查故障、改善体验。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var EVENTS = [
+  {t:'00:00.0',icon:'🧠',type:'reasoning',label:'reasoning',desc:'分析用户需求：需要创建登录路由、用户模型和认证中间件…',meta:'内部思考 · 用户不可见'},
+  {t:'00:00.5',icon:'📝',type:'text',label:'text',desc:'好的，我来帮你创建用户登录 API。需要处理路由、数据模型和 JWT 认证…',meta:'流式输出给用户'},
+  {t:'00:01.2',icon:'🔧',type:'tool_start',label:'tool_start',desc:'read_file("src/app.ts")',meta:'读取项目入口文件，了解现有结构'},
+  {t:'00:01.8',icon:'✅',type:'tool_end',label:'tool_end',desc:'read_file 完成',meta:'耗时 0.6s · 返回 230 字符'},
+  {t:'00:02.0',icon:'🧠',type:'reasoning',label:'reasoning',desc:'入口文件使用 Express + TypeScript，已有 /api/users 路由，需要新增 /api/auth…',meta:'内部思考 · 规划文件结构'},
+  {t:'00:02.5',icon:'🔧',type:'tool_start',label:'tool_start',desc:'edit_file("src/models/User.ts")',meta:'创建用户数据模型'},
+  {t:'00:03.8',icon:'✅',type:'tool_end',label:'tool_end',desc:'edit_file 完成 · 创建 User 模型',meta:'耗时 1.3s · 写入 45 行'},
+  {t:'00:03.8',icon:'📁',type:'file',label:'file_changed',desc:'src/models/User.ts',meta:'新建文件'},
+  {t:'00:04.2',icon:'🔧',type:'tool_start',label:'tool_start',desc:'edit_file("src/routes/auth.ts")',meta:'创建认证路由'},
+  {t:'00:06.1',icon:'✅',type:'tool_end',label:'tool_end',desc:'edit_file 完成 · 创建登录 + 注册路由',meta:'耗时 1.9s · 写入 82 行'},
+  {t:'00:06.1',icon:'📁',type:'file',label:'file_changed',desc:'src/routes/auth.ts',meta:'新建文件'},
+  {t:'00:06.5',icon:'🔧',type:'tool_start',label:'tool_start',desc:'edit_file("src/middleware/auth.ts")',meta:'创建 JWT 认证中间件'},
+  {t:'00:07.8',icon:'✅',type:'tool_end',label:'tool_end',desc:'edit_file 完成 · JWT 验证中间件',meta:'耗时 1.3s · 写入 35 行'},
+  {t:'00:07.8',icon:'📁',type:'file',label:'file_changed',desc:'src/middleware/auth.ts',meta:'新建文件'},
+  {t:'00:08.2',icon:'🔧',type:'tool_start',label:'tool_start',desc:'edit_file("src/app.ts")',meta:'注册新路由到入口文件'},
+  {t:'00:09.0',icon:'✅',type:'tool_end',label:'tool_end',desc:'edit_file 完成 · 追加路由注册',meta:'耗时 0.8s · 修改 3 行'},
+  {t:'00:09.5',icon:'🔧',type:'tool_start',label:'tool_start',desc:'run_command("npm test")',meta:'运行测试确认无报错'},
+  {t:'00:12.0',icon:'✅',type:'tool_end',label:'tool_end',desc:'run_command 完成 · 全部测试通过',meta:'耗时 2.5s · 退出码 0'},
+  {t:'00:12.5',icon:'📝',type:'text',label:'text',desc:'登录 API 已创建完成。包含：用户模型、登录/注册路由、JWT 中间件，所有测试通过。',meta:'最终回复用户'},
+  {t:'00:13.0',icon:'📊',type:'usage',label:'usage',desc:'输入 3,200 Token · 输出 1,800 Token',meta:'本轮合计 5,000 Token · 预估 ¥0.03'},
+  {t:'00:13.0',icon:'🏁',type:'done',label:'done',desc:'任务完成',meta:'总耗时 13.0s · LLM 3 次 · 工具 7 次 · 文件 3 个'}
+];
+
+var STAT_SNAPSHOTS = [
+  {dur:'0.0',llm:0,tool:0,inp:0,out:0,cost:'0.00',file:0},
+  {dur:'0.5',llm:1,tool:0,inp:280,out:60,cost:'0.00',file:0},
+  {dur:'0.5',llm:1,tool:0,inp:280,out:120,cost:'0.00',file:0},
+  {dur:'1.2',llm:1,tool:1,inp:280,out:120,cost:'0.00',file:0},
+  {dur:'1.8',llm:1,tool:1,inp:510,out:120,cost:'0.01',file:0},
+  {dur:'2.0',llm:2,tool:1,inp:790,out:180,cost:'0.01',file:0},
+  {dur:'2.5',llm:2,tool:2,inp:790,out:180,cost:'0.01',file:0},
+  {dur:'3.8',llm:2,tool:2,inp:1040,out:360,cost:'0.01',file:0},
+  {dur:'3.8',llm:2,tool:2,inp:1040,out:360,cost:'0.01',file:1},
+  {dur:'4.2',llm:2,tool:3,inp:1040,out:360,cost:'0.01',file:1},
+  {dur:'6.1',llm:2,tool:3,inp:1460,out:640,cost:'0.02',file:1},
+  {dur:'6.1',llm:2,tool:3,inp:1460,out:640,cost:'0.02',file:2},
+  {dur:'6.5',llm:2,tool:4,inp:1460,out:640,cost:'0.02',file:2},
+  {dur:'7.8',llm:2,tool:4,inp:1780,out:820,cost:'0.02',file:2},
+  {dur:'7.8',llm:2,tool:4,inp:1780,out:820,cost:'0.02',file:3},
+  {dur:'8.2',llm:2,tool:5,inp:1780,out:820,cost:'0.02',file:3},
+  {dur:'9.0',llm:2,tool:5,inp:2050,out:960,cost:'0.02',file:3},
+  {dur:'9.5',llm:2,tool:6,inp:2050,out:960,cost:'0.02',file:3},
+  {dur:'12.0',llm:2,tool:6,inp:2450,out:1200,cost:'0.02',file:3},
+  {dur:'12.5',llm:3,tool:7,inp:2800,out:1500,cost:'0.03',file:3},
+  {dur:'13.0',llm:3,tool:7,inp:3200,out:1800,cost:'0.03',file:3},
+  {dur:'13.0',llm:3,tool:7,inp:3200,out:1800,cost:'0.03',file:3}
+];
+
+var isRunning = false;
+var eventIdx = 0;
+var timers = [];
+
+function addEvent(ev) {
+  var area = document.getElementById('eventArea');
+  var el = document.createElement('div');
+  el.className = 'ev ev-' + ev.type;
+  el.innerHTML =
+    '<div class="ev-time">' + ev.t + '</div>' +
+    '<div class="ev-icon">' + ev.icon + '</div>' +
+    '<div class="ev-body">' +
+      '<span class="ev-type">' + ev.label + '</span>' +
+      '<div class="ev-desc">' + ev.desc + '</div>' +
+      '<div class="ev-meta">' + ev.meta + '</div>' +
+    '</div>';
+  area.appendChild(el);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    el.classList.add('show');
+    area.scrollTop = area.scrollHeight;
+  })});
+}
+
+function updateStats(snap) {
+  document.getElementById('sDur').textContent = snap.dur;
+  document.getElementById('sLlm').textContent = snap.llm;
+  document.getElementById('sTool').textContent = snap.tool;
+  document.getElementById('sIn').textContent = snap.inp.toLocaleString();
+  document.getElementById('sOut').textContent = snap.out.toLocaleString();
+  document.getElementById('sCost').textContent = snap.cost;
+  document.getElementById('sFile').textContent = snap.file;
+}
+
+function setStatus(text, state) {
+  var el = document.getElementById('ctrlStatus');
+  el.innerHTML = '<span class="ctrl-progress ' + state + '"></span>' + text;
+}
+
+function runTask() {
+  if (isRunning) return;
+  isRunning = true;
+  eventIdx = 0;
+  document.getElementById('btnRun').disabled = true;
+  document.getElementById('taskLabel').textContent = '任务：帮我写一个用户登录 API';
+  setStatus('运行中…', 'running');
+
+  var baseDelay = 0;
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function(idx, delay) {
+      var tid = setTimeout(function() {
+        addEvent(EVENTS[idx]);
+        if (idx < STAT_SNAPSHOTS.length) updateStats(STAT_SNAPSHOTS[idx]);
+        if (idx === EVENTS.length - 1) {
+          isRunning = false;
+          document.getElementById('btnRun').disabled = true;
+          document.getElementById('btnRun').textContent = '✓ 模拟完成';
+          setStatus('已完成 · 共 ' + EVENTS.length + ' 个事件', 'done');
+        }
+      }, delay);
+      timers.push(tid);
+    })(i, baseDelay);
+
+    var ev = EVENTS[i];
+    if (ev.type === 'reasoning') baseDelay += 450;
+    else if (ev.type === 'text') baseDelay += 400;
+    else if (ev.type === 'tool_start') baseDelay += 350;
+    else if (ev.type === 'tool_end') baseDelay += 300;
+    else if (ev.type === 'file') baseDelay += 200;
+    else if (ev.type === 'usage') baseDelay += 350;
+    else if (ev.type === 'done') baseDelay += 400;
+    else baseDelay += 300;
+  }
+}
+
+function resetAll() {
+  for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+  timers = [];
+  isRunning = false;
+  eventIdx = 0;
+  document.getElementById('eventArea').innerHTML = '';
+  document.getElementById('taskLabel').textContent = '等待任务启动…';
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnRun').textContent = '▶ 模拟一次任务';
+  updateStats({dur:'—',llm:0,tool:0,inp:0,out:0,cost:'0.00',file:0});
+  setStatus('就绪 · 点击按钮开始模拟', 'idle');
+}
+</script>
+</body>
+</html>

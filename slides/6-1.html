@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Prompt Engineering：你说什么，它就变什么</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt Engineering：你说什么，模型就变什么 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--accent:#0066ff;--purple:#9333ea;--green:#16a34a;--red:#dc2626;--muted:#8e8e93}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36,6 +37,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 .insight-box b{color:var(--purple)}
 .section-lbl{font-size:15px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="Prompt 工程的核心原理：大模型没有理解力，只有模式匹配。如何通过角色设定、任务分解、少样本示例、约束条件来精确控制模型输出质量与风格。">
+<meta name="keywords" content="Prompt Engineering,提示词工程,角色扮演,Few-shot,Prompt设计,AI产品">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/6-1.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Prompt Engineering：你说什么，模型就变什么">
+<meta property="og:description" content="Prompt 工程的核心原理：大模型没有理解力，只有模式匹配。如何通过角色设定、任务分解、少样本示例、约束条件来精确控制模型输出质量与风格。">
+<meta property="og:url" content="https://xueai.app/slides/6-1.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt Engineering：你说什么，模型就变什么">
+<meta name="twitter:description" content="Prompt 工程的核心原理：大模型没有理解力，只有模式匹配。如何通过角色设定、任务分解、少样本示例、约束条件来精确控制模型输出质量与风格。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -93,7 +116,7 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 const ROLES = {
   writer:{

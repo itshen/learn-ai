@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>多轮对话为什么越来越贵？</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>多轮对话为什么越来越贵？Token 计费原理 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--orange:#ea580c;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -48,6 +49,28 @@ input[type=range]{width:100%;accent-color:var(--red);height:4px}
 .takeaway{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:10px 14px;font-size:15px;color:var(--text);display:flex;gap:8px;flex-shrink:0}
 .takeaway b{color:var(--red)}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="大模型 API 按 Token 计费，多轮对话中每轮都要发送完整历史，Token 消耗呈线性增长。用图示拆解多轮对话的 Token 计费逻辑，帮你理解成本爆炸的根本原因。">
+<meta name="keywords" content="大模型计费,Token计费,多轮对话成本,API成本,大模型省钱,上下文成本">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/8-1.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="多轮对话为什么越来越贵？Token 计费原理">
+<meta property="og:description" content="大模型 API 按 Token 计费，多轮对话中每轮都要发送完整历史，Token 消耗呈线性增长。用图示拆解多轮对话的 Token 计费逻辑，帮你理解成本爆炸的根本原因。">
+<meta property="og:url" content="https://xueai.app/slides/8-1.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="多轮对话为什么越来越贵？Token 计费原理">
+<meta name="twitter:description" content="大模型 API 按 Token 计费，多轮对话中每轮都要发送完整历史，Token 消耗呈线性增长。用图示拆解多轮对话的 Token 计费逻辑，帮你理解成本爆炸的根本原因。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -101,7 +124,7 @@ input[type=range]{width:100%;accent-color:var(--red);height:4px}
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 const SYS = 200, PER_USER = 80, PER_AI = 150;
 const PRICE = 0.004; // ¥ per 1K token

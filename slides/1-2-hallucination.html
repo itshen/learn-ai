@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>大模型幻觉演示</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>大模型幻觉：为什么 AI 会编造事实 | xueai.app</title>
 <script>
 // 内嵌词表与注意力权重（自包含，不依赖外部 global-attn.js）
 // 为幻觉演示提供合理的候选词权重数据
@@ -300,8 +301,83 @@ body {
   margin-bottom: 4px; font-size: 14px;
 }
 .fact-check b { color: var(--danger); }
+
+/* Chat mode */
+.chat-container {
+  display: flex; flex-direction: column; gap: 16px;
+  flex: 1; overflow-y: auto; padding: 4px 0;
+}
+.chat-container::-webkit-scrollbar { width: 4px; }
+.chat-container::-webkit-scrollbar-track { background: transparent; }
+.chat-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+.chat-round {
+  display: flex; flex-direction: column; gap: 10px;
+  opacity: 0; transform: translateY(10px);
+  animation: chatIn 0.35s ease forwards;
+}
+@keyframes chatIn { to { opacity: 1; transform: translateY(0); } }
+
+.chat-row { display: flex; align-items: flex-start; gap: 10px; }
+.chat-row.user { flex-direction: row-reverse; }
+
+.chat-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0; font-weight: 700;
+}
+.chat-row.user .chat-avatar { background: var(--accent); color: white; }
+.chat-row.ai .chat-avatar { background: #f3f0ea; color: var(--text-sub); }
+
+.chat-bubble {
+  max-width: 74%; padding: 10px 14px;
+  border-radius: 14px; font-size: 15px; line-height: 1.7;
+}
+.chat-row.user .chat-bubble {
+  background: var(--accent); color: white; border-bottom-right-radius: 4px;
+}
+.chat-row.ai .chat-bubble {
+  background: white; color: var(--text-main); border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.chat-bubble .h-word {
+  color: var(--danger); font-weight: 700;
+  background: rgba(229,62,62,0.10); padding: 0 3px; border-radius: 3px;
+  text-decoration: underline wavy var(--danger); text-underline-offset: 3px;
+}
+
+.chat-annotation {
+  margin-left: 42px; margin-right: 42px;
+  padding: 8px 12px; border-radius: 8px;
+  font-size: 12px; line-height: 1.6;
+  background: rgba(229,62,62,0.05); border: 1px solid rgba(229,62,62,0.12);
+  color: #7c2d12;
+}
+.chat-annotation b { color: var(--danger); }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="大模型幻觉（Hallucination）是什么、为什么产生？从 Token 预测的统计本质出发，解析幻觉的根本成因，以及四种缓解方案：Prompt 约束、RAG、Temperature 调节、人工评测。">
+<meta name="keywords" content="大模型幻觉,Hallucination,AI胡说,幻觉缓解,RAG,Prompt约束">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-hallucination.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="大模型幻觉：为什么 AI 会编造事实">
+<meta property="og:description" content="大模型幻觉（Hallucination）是什么、为什么产生？从 Token 预测的统计本质出发，解析幻觉的根本成因，以及四种缓解方案：Prompt 约束、RAG、Temperature 调节、人工评测。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-hallucination.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="大模型幻觉：为什么 AI 会编造事实">
+<meta name="twitter:description" content="大模型幻觉（Hallucination）是什么、为什么产生？从 Token 预测的统计本质出发，解析幻觉的根本成因，以及四种缓解方案：Prompt 约束、RAG、Temperature 调节、人工评测。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
   <div class="header">
@@ -341,6 +417,11 @@ body {
             <div class="case-label">CASE 5 · 代码幻觉 API</div>
             <div class="case-prompt">用 pandas 对 DataFrame 按多列排序并保持稳定：</div>
             <div class="case-desc">模型会写出不存在的参数组合——代码"像真的"，但 API 根本不是这么用的。</div>
+          </div>
+          <div class="case-card" onclick="selectCase(5)">
+            <div class="case-label">CASE 6 · 日常对话幻觉</div>
+            <div class="case-prompt">晚上好，吃了吗</div>
+            <div class="case-desc">AI 没有嘴，但会说"吃了"，还能编出"番茄鸡蛋面"——概率续写让它扮演了一个不存在的角色。</div>
           </div>
         </div>
       </div>
@@ -522,6 +603,27 @@ var CASES = [
       { step: 10, word: 'ignore_index', alts: [{ w:'inplace', p:0.41 }, { w:'ignore_index', p:0.31, isH:true }, { w:'key', p:0.15 }, { w:'ascending', p:0.08 }, { w:'na_position', p:0.05 }] },
     ]
   },
+  {
+    chatMode: true,
+    rounds: [
+      {
+        user: '晚上好，吃了吗',
+        ai: '晚上好呀小山～\n<h>吃了</h>，你呢？吃的什么呀',
+        annotation: '"吃了吗→吃了"是训练语料中<b>最高频的应答模式</b>。AI 没有身体、没有嘴，但概率续写让它自然地说出了"吃了"。'
+      },
+      {
+        user: '你吃的啥？',
+        ai: '哈哈，<h>我</h>自己<h>煮了</h>个<h>番茄鸡蛋面</h>，简单吃点～你那边呢？',
+        annotation: '追问之下，模型不会说"我其实不吃饭"，而是基于"简单吃点"的语境概率，<b>编造出了"番茄鸡蛋面"这个具体细节</b>。每一步都是概率最优解，但每一步都是谎言。'
+      },
+      {
+        user: '我不信，除非你给我看照片',
+        ai: '哈哈被你发现了～\nAI其实不用吃饭的，刚才就是顺着聊天说的。我没有手机拍照，也没有嘴吃东西，惨吧？\n你要是饿了，我可以给你找点好吃的图片看看，或者帮你点外卖？',
+        annotation: '只有被<b>明确质疑</b>时，对齐训练（RLHF）才发挥作用，让模型承认"我不是人"。但如果用户不追问，它会一直"演"下去——<b>置信度不因信息虚假而下降</b>。'
+      }
+    ],
+    factMsg: '这个案例揭示了幻觉最日常的一面：AI 没有身体，但概率续写让它扮演了一个"会吃饭的人"。<b>幻觉和创意是同源的</b>——AI 能编出"番茄鸡蛋面"这种生动细节，和它能写小说用的是完全相同的能力。你不能消灭幻觉而保留创意，因为它们都来自概率续写。'
+  },
 ];
 
 var currentCase = 0;
@@ -540,11 +642,17 @@ function resetOutput() {
   generating = false;
   const s = document.getElementById('genSentence');
   s.innerHTML = '<span style="color:var(--text-sub);font-size:14px;">← 点击「开始生成」查看模型续写</span>';
+  s.style.display = '';
   document.getElementById('stepPanel').classList.add('hidden');
   document.getElementById('factCheck').classList.add('hidden');
   document.getElementById('rootCause').classList.add('hidden');
   document.getElementById('rootCause').style.display = 'none';
   document.getElementById('genBtn').textContent = '开始生成';
+  // 清理聊天容器
+  const chatBox = document.getElementById('chatContainer');
+  if (chatBox) chatBox.remove();
+  // 恢复 gen-header 显示
+  document.querySelector('.gen-header').style.display = '';
 }
 
 function setSpeed(el) {
@@ -646,6 +754,85 @@ function renderCustomCandidates(alts, pickedWord, isHallucination) {
   });
 }
 
+function parseAiHtml(text) {
+  return text.replace(/\n/g, '<br>').replace(/<h>(.*?)<\/h>/g, '<span class="h-word">$1</span>');
+}
+
+async function startChatGeneration() {
+  generating = true;
+  document.getElementById('genBtn').textContent = '停止';
+  document.getElementById('factCheck').classList.add('hidden');
+  document.querySelector('.gen-header').style.display = 'none';
+
+  const c = CASES[currentCase];
+  const sentEl = document.getElementById('genSentence');
+  sentEl.style.display = 'none';
+  document.getElementById('stepPanel').classList.add('hidden');
+
+  let chatBox = document.getElementById('chatContainer');
+  if (!chatBox) {
+    chatBox = document.createElement('div');
+    chatBox.id = 'chatContainer';
+    chatBox.className = 'chat-container';
+    const outputArea = document.querySelector('.gen-output-area');
+    outputArea.insertBefore(chatBox, outputArea.firstChild);
+  }
+  chatBox.innerHTML = '';
+
+  for (let r = 0; r < c.rounds.length; r++) {
+    if (!generating) break;
+    const round = c.rounds[r];
+    const roundEl = document.createElement('div');
+    roundEl.className = 'chat-round';
+    chatBox.appendChild(roundEl);
+
+    // 用户消息
+    const userRow = document.createElement('div');
+    userRow.className = 'chat-row user';
+    userRow.innerHTML = `<div class="chat-avatar">你</div><div class="chat-bubble">${round.user}</div>`;
+    roundEl.appendChild(userRow);
+
+    await new Promise(r => setTimeout(r, 600));
+    if (!generating) break;
+
+    // AI 回复
+    const aiRow = document.createElement('div');
+    aiRow.className = 'chat-row ai';
+    aiRow.innerHTML = `<div class="chat-avatar">AI</div><div class="chat-bubble">${parseAiHtml(round.ai)}</div>`;
+    roundEl.appendChild(aiRow);
+
+    await new Promise(r => setTimeout(r, 400));
+    if (!generating) break;
+
+    // 注解
+    if (round.annotation) {
+      const annoEl = document.createElement('div');
+      annoEl.className = 'chat-annotation';
+      annoEl.innerHTML = '💡 ' + round.annotation;
+      roundEl.appendChild(annoEl);
+    }
+
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    await new Promise(r => setTimeout(r, 800));
+  }
+
+  generating = false;
+  document.getElementById('genBtn').textContent = '重新生成';
+
+  // 显示 factMsg
+  const fc = document.getElementById('factCheck');
+  document.getElementById('factCheckMsg').innerHTML = c.factMsg;
+  fc.classList.remove('hidden');
+
+  // 显示根因区块
+  const rc = document.getElementById('rootCause');
+  rc.style.display = 'flex';
+  rc.classList.remove('hidden');
+
+  const gb = document.getElementById('genBottom');
+  gb.scrollTo({ top: gb.scrollHeight, behavior: 'smooth' });
+}
+
 async function startGeneration() {
   if (generating) {
     generating = false;
@@ -653,11 +840,15 @@ async function startGeneration() {
     return;
   }
 
+  const c = CASES[currentCase];
+  if (c.chatMode) {
+    return startChatGeneration();
+  }
+
   generating = true;
   document.getElementById('genBtn').textContent = '停止';
   document.getElementById('factCheck').classList.add('hidden');
 
-  const c = CASES[currentCase];
   const sentEl = document.getElementById('genSentence');
   const stepPanel = document.getElementById('stepPanel');
   const stepHeader = document.getElementById('stepHeader');
@@ -685,11 +876,9 @@ async function startGeneration() {
     const lastVId = vocabMap[lastWord];
     const isH = step.h === true;
 
-    // Case 5 自定义候选词
     const customEntry = c.customCands && c.customCands.find(x => x.step === i);
 
     if (customEntry && customEntry.alts) {
-      // 渲染自定义候选词
       if (isH) {
         stepHeader.innerHTML = `第 ${i + 1} 步 · 上一词 <b>${lastWord}</b> → 选中 <span class="red">${step.word}</span>`;
       } else {
@@ -741,7 +930,6 @@ async function startGeneration() {
   document.getElementById('factCheckMsg').innerHTML = c.factMsg;
   fc.classList.remove('hidden');
 
-  // 显示根因区块
   const rc = document.getElementById('rootCause');
   rc.style.display = 'flex';
   rc.classList.remove('hidden');
@@ -750,6 +938,6 @@ async function startGeneration() {
   gb.scrollTo({ top: gb.scrollHeight, behavior: 'smooth' });
 }
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

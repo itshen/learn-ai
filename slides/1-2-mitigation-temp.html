@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>参数调优：Temperature 与 Top-P</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Temperature 与 Top-P：控制大模型的创意度 | xueai.app</title>
 <style>
 :root {
   --bg-color: #f7f5f0;
@@ -198,7 +199,29 @@ input[type=range]::-webkit-slider-thumb {
 .why-insight-text .key { color: var(--purple); font-weight: 700; }
 .why-insight-text .key-g { color: var(--success); font-weight: 700; }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="Temperature 和 Top-P 是控制大模型输出随机性的核心参数。通过直观演示解释：Temperature=0 让模型更确定，越高越发散；Top-P 限制候选 Token 池的范围。">
+<meta name="keywords" content="Temperature,Top-P,大模型参数调节,采样策略,随机性控制">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-mitigation-temp.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Temperature 与 Top-P：控制大模型的创意度">
+<meta property="og:description" content="Temperature 和 Top-P 是控制大模型输出随机性的核心参数。通过直观演示解释：Temperature=0 让模型更确定，越高越发散；Top-P 限制候选 Token 池的范围。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-mitigation-temp.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Temperature 与 Top-P：控制大模型的创意度">
+<meta name="twitter:description" content="Temperature 和 Top-P 是控制大模型输出随机性的核心参数。通过直观演示解释：Temperature=0 让模型更确定，越高越发散；Top-P 限制候选 Token 池的范围。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
   <div class="header">
@@ -602,6 +625,6 @@ function getDistDesc(t, p) {
 
 onParamChange();
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>RAG 的代价与优化策略</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RAG 的代价与优化：不是免费的午餐 | xueai.app</title>
 <style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
 <style>
 :root {
@@ -186,6 +187,28 @@ body {
 .conclusion-bar.show { opacity: 1; transform: translateY(0); }
 .conclusion-bar b { color: var(--danger); }
 </style>
+<!-- SEO Start -->
+<meta name="description" content="RAG 虽然能减少幻觉，但有显著代价：延迟增加、Token 消耗翻倍、检索质量影响答案准确性。深入分析 RAG 的优化策略：分块、重排序、混合检索。">
+<meta name="keywords" content="RAG优化,检索增强生成代价,向量检索,重排序,Hybrid Search,RAG延迟">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/rag-advanced.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="RAG 的代价与优化：不是免费的午餐">
+<meta property="og:description" content="RAG 虽然能减少幻觉，但有显著代价：延迟增加、Token 消耗翻倍、检索质量影响答案准确性。深入分析 RAG 的优化策略：分块、重排序、混合检索。">
+<meta property="og:url" content="https://xueai.app/slides/rag-advanced.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RAG 的代价与优化：不是免费的午餐">
+<meta name="twitter:description" content="RAG 虽然能减少幻觉，但有显著代价：延迟增加、Token 消耗翻倍、检索质量影响答案准确性。深入分析 RAG 的优化策略：分块、重排序、混合检索。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -365,6 +388,6 @@ function toggleStrat(i) {
 // 初始：第一步自动触发，让用户进入感觉
 nextStep();
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

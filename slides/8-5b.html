@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>图片 Token：按任务匹配分辨率</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>图片分辨率策略：按任务匹配，不做无谓消耗 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--orange:#ea580c;--cyan:#0891b2;--purple:#5b4fcf;--accent:#0066ff;--muted:#8e8e93;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -73,6 +74,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 @keyframes slide-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .animate-in{animation:slide-in .3s ease}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="不同任务对图片分辨率的需求差异巨大：OCR 需要高清，情感分析用低分辨率就够。根据任务类型选择合适的图片分辨率，避免为不必要的像素买单。">
+<meta name="keywords" content="图片分辨率优化,多模态成本,Vision模型优化,图片Token优化,AI图像处理">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/8-5b.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="图片分辨率策略：按任务匹配，不做无谓消耗">
+<meta property="og:description" content="不同任务对图片分辨率的需求差异巨大：OCR 需要高清，情感分析用低分辨率就够。根据任务类型选择合适的图片分辨率，避免为不必要的像素买单。">
+<meta property="og:url" content="https://xueai.app/slides/8-5b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="图片分辨率策略：按任务匹配，不做无谓消耗">
+<meta name="twitter:description" content="不同任务对图片分辨率的需求差异巨大：OCR 需要高清，情感分析用低分辨率就够。根据任务类型选择合适的图片分辨率，避免为不必要的像素买单。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -142,7 +165,7 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 const TASKS = [
   {

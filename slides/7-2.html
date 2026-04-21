@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>工具调用的秘密</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>工具调用：Function Calling 的本质是什么 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -81,6 +82,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 @keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
 .pop{animation:pop .3s ease}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="Function Calling（工具调用）是 Agent 的核心能力。深入解析 OpenAI Function Calling 的协议格式、工具描述的写法、模型如何决定调用哪个工具，以及工具返回结果的处理。">
+<meta name="keywords" content="Function Calling,工具调用,Agent工具,OpenAI工具调用,Tool Use">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-2.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="工具调用：Function Calling 的本质是什么">
+<meta property="og:description" content="Function Calling（工具调用）是 Agent 的核心能力。深入解析 OpenAI Function Calling 的协议格式、工具描述的写法、模型如何决定调用哪个工具，以及工具返回结果的处理。">
+<meta property="og:url" content="https://xueai.app/slides/7-2.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="工具调用：Function Calling 的本质是什么">
+<meta name="twitter:description" content="Function Calling（工具调用）是 Agent 的核心能力。深入解析 OpenAI Function Calling 的协议格式、工具描述的写法、模型如何决定调用哪个工具，以及工具返回结果的处理。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -179,7 +202,7 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 const STEPS = [
   {

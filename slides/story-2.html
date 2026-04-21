@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>第二篇章 · AI 工程化</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>第二篇章：AI 工程化 · 从原理到产品落地 | xueai.app</title>
 <style>
 :root {
   --bg: #f7f5f0;
@@ -137,6 +138,28 @@ body {
 .page-arrow { color: #ccc; font-size: 16px; flex-shrink: 0; transition: color 0.15s; }
 .page-row:hover .page-arrow { color: var(--purple); }
 </style>
+<!-- SEO Start -->
+<meta name="description" content="第二篇章从上下文工程出发，讲解 Prompt 进阶技巧、Prompt 注入攻防、Agent 设计与工具调用、ReAct 框架，以及五层 AI 成本优化体系，面向工程化落地。">
+<meta name="keywords" content="AI工程化,Prompt工程,Agent设计,AI成本优化,ReAct,工具调用">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/story-2.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="第二篇章：AI 工程化 · 从原理到产品落地">
+<meta property="og:description" content="第二篇章从上下文工程出发，讲解 Prompt 进阶技巧、Prompt 注入攻防、Agent 设计与工具调用、ReAct 框架，以及五层 AI 成本优化体系，面向工程化落地。">
+<meta property="og:url" content="https://xueai.app/slides/story-2.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="第二篇章：AI 工程化 · 从原理到产品落地">
+<meta name="twitter:description" content="第二篇章从上下文工程出发，讲解 Prompt 进阶技巧、Prompt 注入攻防、Agent 设计与工具调用、ReAct 框架，以及五层 AI 成本优化体系，面向工程化落地。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -399,8 +422,18 @@ body {
         <span class="page-arrow">›</span>
       </a>
 
-      <a class="page-row" href="8-3.html">
+      <a class="page-row" href="8-2b.html">
         <div class="page-num">34</div>
+        <div class="page-info">
+          <div class="page-title">显式缓存：Anthropic / Qwen 实战对比</div>
+          <div class="page-desc">cache_control 写法、缓存命中判断、价格折扣对比，真实省钱效果演示</div>
+        </div>
+        <div class="page-badges"><span class="badge" style="background:#dcfce7;color:#15803d;">交互</span></div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="8-3.html">
+        <div class="page-num">35</div>
         <div class="page-info">
           <div class="page-title">动态时间戳：最贵的 System Prompt 设计</div>
           <div class="page-desc">错误设计 vs 正确设计，三种时间处理方案对比切换</div>
@@ -410,7 +443,7 @@ body {
       </a>
 
       <a class="page-row" href="8-4.html">
-        <div class="page-num">35</div>
+        <div class="page-num">36</div>
         <div class="page-info">
           <div class="page-title">综合成本优化：从系统角度省钱</div>
           <div class="page-desc">5 层优化策略，成本构成可视化，节省 70-90% 的系统设计</div>
@@ -420,7 +453,7 @@ body {
       </a>
 
       <a class="page-row" href="8-5.html">
-        <div class="page-num">36</div>
+        <div class="page-num">37</div>
         <div class="page-info">
           <div class="page-title">图片 Token：像素也在烧钱</div>
           <div class="page-desc">图片计费公式、缩放机制、分辨率陷阱、按任务分级策略</div>
@@ -429,8 +462,18 @@ body {
         <span class="page-arrow">›</span>
       </a>
 
+      <a class="page-row" href="8-5b.html">
+        <div class="page-num">38</div>
+        <div class="page-info">
+          <div class="page-title">按任务匹配分辨率：图片成本的精细化控制</div>
+          <div class="page-desc">高/中/低三档分辨率策略，不同场景的 Token 消耗对比与选型建议</div>
+        </div>
+        <div class="page-badges"><span class="badge" style="background:#fef3c7;color:#92400e;">多模态</span></div>
+        <span class="page-arrow">›</span>
+      </a>
+
       <a class="page-row" href="8-6.html">
-        <div class="page-num">37</div>
+        <div class="page-num">39</div>
         <div class="page-info">
           <div class="page-title">语法层优化：写给机器的提示词</div>
           <div class="page-desc">YAML vs JSON、CSV vs 数组、压缩 JSON 输出，格式性 Token 省 10-30%</div>
@@ -440,7 +483,7 @@ body {
       </a>
 
       <a class="page-row" href="8-7.html">
-        <div class="page-num">38</div>
+        <div class="page-num">40</div>
         <div class="page-info">
           <div class="page-title">语义层优化：不要把上下文当垃圾桶</div>
           <div class="page-desc">动态 Few-Shot、LLMLingua-2 压缩、拖拽排序注意力，提升信息密度</div>
@@ -450,12 +493,22 @@ body {
       </a>
 
       <a class="page-row" href="8-8.html">
-        <div class="page-num">39</div>
+        <div class="page-num">41</div>
         <div class="page-info">
           <div class="page-title">输出层 + KV Cache 进阶</div>
           <div class="page-desc">负向约束、Diff 润色、停止序列；KV Cache 的工具陷阱与滑动窗口问题</div>
         </div>
         <div class="page-badges"><span class="badge" style="background:#dcfce7;color:#166534;">架构</span></div>
+        <span class="page-arrow">›</span>
+      </a>
+
+      <a class="page-row" href="cost-eval.html">
+        <div class="page-num">42</div>
+        <div class="page-info">
+          <div class="page-title">模型选型：能力 vs 成本的权衡与决策框架</div>
+          <div class="page-desc">主流模型能力/成本矩阵、选型决策树、不同场景的模型匹配策略</div>
+        </div>
+        <div class="page-badges"><span class="badge" style="background:#fef3c7;color:#d97706;">选型</span></div>
         <span class="page-arrow">›</span>
       </a>
 
@@ -492,5 +545,6 @@ body {
     </div><!-- /pages-area -->
   </div><!-- /body -->
 </div>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

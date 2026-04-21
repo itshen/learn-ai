@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>5 道工程护栏 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:300px 1fr;min-height:0;overflow:hidden}
+
+/* 左栏：护栏列表 */
+.left{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.l-label{padding:8px 16px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.g-list{flex:1;overflow-y:auto;padding:8px}
+.g-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;transition:all .2s;border:1.5px solid transparent;margin-bottom:4px}
+.g-item:hover{background:rgba(234,88,12,.03);border-color:rgba(234,88,12,.1)}
+.g-item.active{background:rgba(234,88,12,.06);border-color:var(--orange)}
+.g-item-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--muted);background:var(--surface2);flex-shrink:0;transition:all .2s}
+.g-item.active .g-item-num{background:var(--orange);color:white}
+.g-item-info{flex:1;min-width:0}
+.g-item-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.g-item-desc{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-item-val{font-size:12px;font-weight:700;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:4px;flex-shrink:0;font-family:'SF Mono','Fira Code',monospace}
+.g-item.active .g-item-val{background:rgba(234,88,12,.1);color:var(--orange)}
+
+/* 右栏：详情 */
+.right{display:flex;flex-direction:column;overflow:hidden}
+.r-bar{padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface)}
+.r-bar-name{font-size:16px;font-weight:800;color:var(--text)}
+.r-bar-badge{font-size:12px;font-weight:700;padding:2px 10px;border-radius:5px;background:rgba(234,88,12,.08);color:var(--orange)}
+.r-hint{margin-left:auto;font-size:13px;color:var(--muted)}
+.detail-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+
+.d-section{border:1.5px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;opacity:0;transform:translateY(8px);animation:fadeUp .35s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.d-head{padding:10px 16px;font-size:14px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);background:rgba(0,0,0,.015);display:flex;align-items:center;gap:8px}
+.d-body{padding:12px 16px;font-size:14px;line-height:1.7;color:var(--text)}
+
+/* 场景对比 */
+.d-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px}
+.d-cmp{border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.65}
+.d-cmp-bad{background:rgba(220,38,38,.04);border:1.5px solid rgba(220,38,38,.15)}
+.d-cmp-good{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.15)}
+.d-cmp-label{font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.d-cmp-bad .d-cmp-label{color:var(--red)}
+.d-cmp-good .d-cmp-label{color:var(--green)}
+.d-cmp-text{color:var(--text)}
+
+/* 设计决策 */
+.d-decision{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--text);line-height:1.6}
+.d-decision b{color:var(--orange)}
+
+/* 空状态 */
+.empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:15px}
+.empty-arrow{font-size:24px}
+
+.insight-bar{padding:8px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+</style>
+<meta name="description" content="Agent 的核心能力来自 LLM，但稳定性来自工程护栏。迭代上限、输出截断、超时控制、中断恢复、上下文急救——5 道护栏让 Agent 从能用变好用。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-6a.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="5 道工程护栏">
+<meta property="og:url" content="https://xueai.app/slides/7-6a.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工程 · 第 1 页</div>
+      <div class="hd-title">让 Agent 不翻车的 <em>5 道护栏</em></div>
+    </div>
+    <div style="font-size:15px;color:var(--muted)">没有护栏的 Agent = 没有刹车的跑车</div>
+  </div>
+  <div class="body">
+    <div class="left">
+      <div class="l-label">点击查看每道护栏</div>
+      <div class="g-list" id="gList"></div>
+    </div>
+    <div class="right">
+      <div class="r-bar" id="rBar">
+        <span class="r-bar-name" id="rName">选择一道护栏</span>
+        <span class="r-hint" id="rHint">← 点击左边任意一项</span>
+      </div>
+      <div class="detail-area" id="detailArea">
+        <div class="empty"><span class="empty-arrow">←</span>点击左侧护栏查看详情</div>
+      </div>
+    </div>
+  </div>
+  <div class="insight-bar">
+    <b>Takeaway</b> Agent 的核心能力来自 LLM，但稳定性来自工程护栏。这 5 道防线决定了你的 Agent 是「能用」还是「好用」——迭代上限防死循环、输出截断防撑爆、超时控制防卡死、中断恢复防损坏、上下文急救防崩溃。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var GUARDS = [
+  {
+    name: '迭代上限', val: '50 轮', desc: '防止无限 ReAct 循环',
+    scenario: '用户让 Agent 删除项目中所有 console.log 并跑测试。Agent 进入 ReAct 循环：搜索→编辑→测试→发现新问题→再搜索…',
+    bad: 'Agent 陷入"修了 A 坏了 B，修了 B 坏了 C"的循环，反复调用同一工具数百次。一次任务消耗 10 万 Token（约 ¥0.6），用户等了 5 分钟还没结束，只能强制关闭。',
+    good: '到第 50 轮自动停止，返回已完成的部分："已处理 12 个文件中的 47 个 console.log，但有 2 个测试仍未通过。是否继续？"用户可以选择继续或手动处理。',
+    decision: '<b>📌 设计决策：</b>50 轮是实践中的平衡点——能覆盖 95% 的复杂任务，又不会让单次任务失控。你的产品要根据场景调整：客服 Bot 可能只需 10 轮，代码助手可能需要 80 轮。'
+  },
+  {
+    name: '输出截断', val: '20 万字', desc: '防止单个工具吃满上下文',
+    scenario: 'Agent 需要分析一个日志文件，调用 read_file 读取了一个 5MB 的 error.log。',
+    bad: '5MB 文本 ≈ 500 万字符 ≈ 250 万 Token。直接塞进上下文后，128K 的窗口瞬间爆满，后续对话全部报错 context_length_exceeded。整个会话作废。',
+    good: '输出被截断到 20 万字符（保留头尾各 10 万字），并附注"[已截断，原文 500 万字符]"。Agent 看到足够多的信息来分析问题，上下文还有大量空间继续工作。',
+    decision: '<b>📌 设计决策：</b>截断不是丢数据——而是保护工作空间。类比：你不会把整个图书馆搬到办公桌上，你只拿需要的那几本。产品可以配置截断策略：保留头尾、保留关键行、或先摘要再截断。'
+  },
+  {
+    name: '超时控制', val: '5s + 重试', desc: '防止卡死的调用阻塞全局',
+    scenario: 'Agent 调用外部天气 API，但该 API 服务器今天响应特别慢。',
+    bad: 'Agent 发出请求后无限等待。用户看到"思考中…"转了 60 秒还没反应。整个会话被一个挂起的 HTTP 请求阻塞，其他工具也无法执行。',
+    good: '5 秒后超时，自动重试一次。仍然超时后，返回错误给模型："天气 API 超时，请换一种方式获取信息。"模型自动切换到 web_search 工具搜索天气。总耗时 12 秒，任务完成。',
+    decision: '<b>📌 设计决策：</b>外部 API 不可靠是常态，不是例外。"5 秒超时 + 2 次重试"的总等待是 15 秒，远优于"60 秒超时 + 不重试"。更重要的是，超时后把控制权交回模型，让它自己想备选方案。'
+  },
+  {
+    name: '中断恢复', val: 'AbortSignal', desc: '用户随时可以按停止',
+    scenario: 'Agent 正在批量编辑 20 个文件，已经改了 8 个。用户发现方向不对，按下「停止」按钮。',
+    bad: '中断后，消息列表里有 8 个 tool_call 但只有 5 个 tool_result（3 个正在执行的被杀掉了）。消息格式不合法，下次发给模型 API 直接返回 400 错误。整个会话报废，用户被迫新建对话。',
+    good: '中断信号通过 AbortSignal 逐层传播：正在执行的 3 个工具被安全终止，框架自动为它们补充 "[Interrupted by user]" 结果。消息格式完整，用户可以继续对话："好，不改了，帮我把改过的 8 个文件恢复。"',
+    decision: '<b>📌 设计决策：</b>"停止"是用户最高频的操作之一。框架必须保证：中断后消息链完整（每个 tool_call 都有对应的 tool result），否则后续所有对话都会报错。这是工程细节，但影响巨大。'
+  },
+  {
+    name: '上下文急救', val: '紧急压缩', desc: '最后一道防线',
+    scenario: '经过 30 轮深度对话，上下文已经 95% 满了。四层常规压缩（裁剪/微压缩/折叠/自动压缩）都已触发。模型再调一次工具，API 返回 context_length_exceeded。',
+    bad: '会话直接崩溃，弹出用户看不懂的错误信息"Error: context_length_exceeded"。30 轮对话的所有进度丢失，用户只能从头开始。',
+    good: '框架捕获错误，触发紧急压缩：丢弃所有中间轮次的工具原始输出，只保留关键结论和最近 3 轮对话。上下文占用从 95% 降到 40%，会话继续存活。可能丢失一些历史细节，但远好于全部丢失。',
+    decision: '<b>📌 设计决策：</b>这是最后的防线——前 4 层压缩全部失败后的兜底方案。设计原则：<b>残缺的记忆好过完全失忆</b>。保留最近的对话和关键结论，牺牲中间过程的细节。'
+  }
+];
+
+var activeIdx = -1;
+var listEl = document.getElementById('gList');
+
+function renderList() {
+  listEl.innerHTML = '';
+  GUARDS.forEach(function(g, i) {
+    var el = document.createElement('div');
+    el.className = 'g-item' + (i === activeIdx ? ' active' : '');
+    el.innerHTML =
+      '<div class="g-item-num">' + (i + 1) + '</div>' +
+      '<div class="g-item-info">' +
+        '<div class="g-item-name">' + g.name + '</div>' +
+        '<div class="g-item-desc">' + g.desc + '</div>' +
+      '</div>' +
+      '<span class="g-item-val">' + g.val + '</span>';
+    el.onclick = function() { selectGuard(i); };
+    listEl.appendChild(el);
+  });
+}
+
+function selectGuard(i) {
+  activeIdx = i;
+  renderList();
+  var g = GUARDS[i];
+  document.getElementById('rName').textContent = '护栏 ' + (i + 1) + '：' + g.name;
+  document.getElementById('rHint').textContent = g.val;
+  var da = document.getElementById('detailArea');
+  da.innerHTML =
+    '<div class="d-section" style="animation-delay:0s">' +
+      '<div class="d-head">场景还原</div>' +
+      '<div class="d-body">' + g.scenario + '</div>' +
+    '</div>' +
+    '<div class="d-section" style="animation-delay:.1s">' +
+      '<div class="d-head">对比：有护栏 vs 没有护栏</div>' +
+      '<div class="d-compare">' +
+        '<div class="d-cmp d-cmp-bad">' +
+          '<div class="d-cmp-label">没有这道护栏</div>' +
+          '<div class="d-cmp-text">' + g.bad + '</div>' +
+        '</div>' +
+        '<div class="d-cmp d-cmp-good">' +
+          '<div class="d-cmp-label">有这道护栏</div>' +
+          '<div class="d-cmp-text">' + g.good + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="d-decision d-section" style="animation-delay:.2s">' + g.decision + '</div>';
+}
+
+renderList();
+</script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>上下文压缩：四层防线 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706;--l1:#16a34a;--l2:#d97706;--l3:#ea580c;--l4:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:10px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:grid;grid-template-columns:340px 1fr;min-height:0;overflow:hidden}
+
+/* ── 左栏：水箱 ── */
+.tank-col{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow:hidden}
+.tank-info{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;font-size:13px;line-height:1.7}
+.tank-info b{font-weight:800}
+.tank-info .model-max{color:var(--red)}
+.tank-info .safe-val{color:var(--green)}
+.tank-area{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 16px;min-height:0}
+.tank-vis{display:flex;align-items:stretch;gap:10px;height:100%;max-height:360px}
+
+.tank-outer{width:120px;position:relative;border-radius:12px;border:2px solid #ccc;background:#eae7df;overflow:visible;flex-shrink:0}
+.tank-fill{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 10px 10px;transition:height .5s cubic-bezier(.4,0,.2,1);background:linear-gradient(180deg,rgba(8,145,178,.25),rgba(8,145,178,.5))}
+.tank-fill-shine{position:absolute;top:0;left:0;right:0;height:6px;background:rgba(255,255,255,.3);filter:blur(3px)}
+
+/* 阈值线 */
+.tl{position:absolute;left:-6px;right:-6px;height:0;border-top:2px dashed;z-index:3;pointer-events:none}
+.tl-label{position:absolute;left:calc(100% + 8px);top:-9px;font-size:11px;font-weight:800;white-space:nowrap;padding:1px 6px;border-radius:4px}
+.tl1{border-color:var(--l1)}.tl1 .tl-label{color:var(--l1);background:rgba(22,163,74,.08)}
+.tl2{border-color:var(--l2)}.tl2 .tl-label{color:var(--l2);background:rgba(217,119,6,.08)}
+.tl3{border-color:var(--l3)}.tl3 .tl-label{color:var(--l3);background:rgba(234,88,12,.08)}
+.tl4{border-color:var(--l4)}.tl4 .tl-label{color:var(--l4);background:rgba(220,38,38,.08)}
+.tl-safe{border-color:var(--red);border-top-style:solid}
+.tl-safe .tl-label{color:white;background:var(--red);font-size:12px}
+/* 危险区域 */
+.danger-zone{position:absolute;left:0;right:0;top:0;background:repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(220,38,38,.05) 3px,rgba(220,38,38,.05) 6px);z-index:1;border-radius:10px 10px 0 0;pointer-events:none}
+
+/* 压缩闪光 */
+.compress-flash{position:absolute;left:50%;transform:translateX(-50%);padding:4px 10px;border-radius:6px;font-size:13px;font-weight:800;white-space:nowrap;opacity:0;z-index:10;pointer-events:none;transition:opacity .3s}
+.compress-flash.show{opacity:1;animation:flashPop .8s ease}
+@keyframes flashPop{0%{transform:translateX(-50%) scale(.8)}30%{transform:translateX(-50%) scale(1.15)}100%{transform:translateX(-50%) scale(1)}}
+
+/* 统计 */
+.tank-stats{padding:8px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;border-top:1px solid var(--border)}
+.ts-row{display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.ts-label{color:var(--sub)}
+.ts-val{font-weight:800;font-size:15px;font-family:'SF Mono','Fira Code',monospace}
+.ts-val.total{color:var(--cyan)}
+.ts-val.current{color:var(--text)}
+.ts-val.saved{color:var(--green)}
+.ts-bar{height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}
+.ts-bar-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* 滑块 */
+.slider-area{padding:8px 16px 6px;flex-shrink:0;border-top:1px solid var(--border)}
+.slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:2px}
+.tank-slider{width:100%;accent-color:var(--cyan);cursor:pointer;height:18px}
+.ctrl-row{display:flex;gap:6px;padding:4px 16px 10px;flex-shrink:0}
+.btn{padding:6px 14px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+
+/* ── 右栏：四层详情 ── */
+.layers-col{display:flex;flex-direction:column;overflow:hidden}
+.layers-top{padding:8px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--surface)}
+.layers-title{font-size:14px;font-weight:800;color:var(--text)}
+.status-badge{padding:3px 10px;border-radius:6px;font-size:13px;font-weight:800;margin-left:auto;transition:all .3s}
+.layers-scroll{flex:1;overflow-y:auto;padding:10px 18px;display:flex;flex-direction:column;gap:8px}
+
+.layer-card{border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:all .35s;opacity:.4;transform:scale(.98)}
+.layer-card.active{opacity:1;transform:scale(1)}
+.layer-card.firing{animation:fireGlow .8s ease}
+@keyframes fireGlow{0%{box-shadow:0 0 0 0 rgba(234,88,12,.3)}50%{box-shadow:0 0 20px 6px rgba(234,88,12,.2)}100%{box-shadow:none}}
+
+.lc-hd{padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;transition:background .3s}
+.lc-name{flex:1}
+.lc-trigger{font-size:13px;font-weight:800;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.lc-saved{font-size:12px;font-weight:800;margin-left:6px;padding:2px 8px;border-radius:5px;opacity:0;transition:opacity .3s}
+.layer-card.active .lc-saved{opacity:1}
+
+.lc-body{padding:0 14px;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease}
+.layer-card.active .lc-body{max-height:200px;padding:6px 14px 10px}
+
+.lc-desc{font-size:13px;line-height:1.6;color:var(--sub);margin-bottom:6px}
+.lc-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:start}
+.lc-cmp-box{border-radius:8px;padding:6px 10px;font-size:12px;line-height:1.5}
+.lc-cmp-label{font-size:11px;font-weight:800;margin-bottom:2px;letter-spacing:.3px}
+.lc-cmp-arrow{align-self:center;font-size:16px;color:var(--muted);font-weight:700}
+
+/* 底部 */
+.dec-area{padding:6px 18px 8px;flex-shrink:0;border-top:1px solid var(--border)}
+.dec-card{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.55;transition:all .3s}
+.dec-card b{color:var(--orange)}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}50%{box-shadow:0 0 16px 4px rgba(220,38,38,.25)}}
+.tank-outer.danger{animation:pulse-red 1.2s ease infinite;border-color:var(--red)}
+</style>
+<meta name="description" content="上下文压缩四层防线：60% 裁剪、75% 微压缩、85% 折叠、95% 紧急压缩。">
+<meta name="author" content="洛小山">
+<link rel="canonical" href="https://xueai.app/slides/7-3b.html">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 记忆 · 第 2 页</div>
+      <div class="hd-title">上下文压缩：<em>四层防线</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">拖动滑块模拟对话增长 → 观察压缩如何延长上下文寿命</div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：水箱 -->
+    <div class="tank-col">
+      <div class="tank-info">
+        模型上下文窗口 = <b class="model-max">256K</b> Token<br>
+        安全空间 = <b class="safe-val">200K</b>（预留 56K 给模型回复）
+      </div>
+      <div class="tank-area">
+        <div class="tank-vis">
+          <div class="tank-outer" id="tankOuter">
+            <div class="danger-zone" id="dangerZone"></div>
+            <div class="tank-fill" id="tankFill"><div class="tank-fill-shine"></div></div>
+
+            <div class="tl tl1" id="line1"><span class="tl-label">60% 裁剪</span></div>
+            <div class="tl tl2" id="line2"><span class="tl-label">75% 微压缩</span></div>
+            <div class="tl tl3" id="line3"><span class="tl-label">85% 折叠</span></div>
+            <div class="tl tl4" id="line4"><span class="tl-label">95% 紧急</span></div>
+            <div class="tl tl-safe" id="lineSafe"><span class="tl-label">安全上限</span></div>
+
+            <div class="compress-flash" id="compFlash"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tank-stats">
+        <div class="ts-row">
+          <span class="ts-label">累计产出</span>
+          <span class="ts-val total" id="vTotal">0K</span>
+        </div>
+        <div class="ts-row">
+          <span class="ts-label">当前上下文</span>
+          <span class="ts-val current" id="vCurrent">0K / 200K</span>
+        </div>
+        <div class="ts-bar"><div class="ts-bar-fill" id="tsBar" style="width:0;background:var(--cyan)"></div></div>
+        <div class="ts-row">
+          <span class="ts-label">已压缩节省</span>
+          <span class="ts-val saved" id="vSaved">0K</span>
+        </div>
+      </div>
+      <div class="slider-area">
+        <div class="slider-label"><span>对话开始</span><span>持续对话 →</span></div>
+        <input type="range" min="0" max="500" value="0" class="tank-slider" id="slider" oninput="onSlider(+this.value)">
+      </div>
+      <div class="ctrl-row">
+        <button class="btn btn-p" onclick="autoPlay()" id="autoBtn">▶ 自动演示</button>
+        <button class="btn btn-r" onclick="resetAll()">重置</button>
+      </div>
+    </div>
+
+    <!-- 右栏：四层 -->
+    <div class="layers-col">
+      <div class="layers-top">
+        <span class="layers-title">四层压缩策略</span>
+        <span class="status-badge" id="statusBadge" style="background:rgba(8,145,178,.08);color:var(--cyan)">安全区间</span>
+      </div>
+      <div class="layers-scroll" id="layersScroll">
+        <div class="layer-card" id="lc0">
+          <div class="lc-hd" style="background:rgba(22,163,74,.04)">
+            <span class="lc-name" style="color:var(--l1)">第一层 · 裁剪 Snip</span>
+            <span class="lc-trigger" style="background:rgba(22,163,74,.1);color:var(--l1)">120K（60%）</span>
+            <span class="lc-saved" style="background:rgba(22,163,74,.1);color:var(--l1)">-36K</span>
+          </div>
+          <div class="lc-body">
+            <div class="lc-desc">删掉早期工具返回的超长原始数据，只保留摘要。用户<b>完全无感</b>。</div>
+            <div class="lc-compare">
+              <div class="lc-cmp-box" style="background:rgba(220,38,38,.04)">
+                <div class="lc-cmp-label" style="color:var(--red)">压缩前</div>
+                天气 API 返回 1200 Token 的 JSON：未来 7 天逐小时预报……
+              </div>
+              <div class="lc-cmp-arrow">→</div>
+              <div class="lc-cmp-box" style="background:rgba(22,163,74,.04)">
+                <div class="lc-cmp-label" style="color:var(--l1)">压缩后</div>
+                工具摘要：北京明日多云 12-20°C（80 Token）
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer-card" id="lc1">
+          <div class="lc-hd" style="background:rgba(217,119,6,.04)">
+            <span class="lc-name" style="color:var(--l2)">第二层 · 微压缩 MicroCompact</span>
+            <span class="lc-trigger" style="background:rgba(217,119,6,.1);color:var(--l2)">150K（75%）</span>
+            <span class="lc-saved" style="background:rgba(217,119,6,.1);color:var(--l2)">-50K</span>
+          </div>
+          <div class="lc-body">
+            <div class="lc-desc">把早期的长对话生成简短摘要替换。<b>轻微信息损失</b>，关键信息保留。</div>
+            <div class="lc-compare">
+              <div class="lc-cmp-box" style="background:rgba(220,38,38,.04)">
+                <div class="lc-cmp-label" style="color:var(--red)">压缩前</div>
+                第 3 轮："那个文件不是 PDF 格式的，我需要 Word 版本，标题改成……"
+              </div>
+              <div class="lc-cmp-arrow">→</div>
+              <div class="lc-cmp-box" style="background:rgba(217,119,6,.04)">
+                <div class="lc-cmp-label" style="color:var(--l2)">压缩后</div>
+                摘要：用户要求 Word 格式、改标题、调配色
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer-card" id="lc2">
+          <div class="lc-hd" style="background:rgba(234,88,12,.04)">
+            <span class="lc-name" style="color:var(--l3)">第三层 · 折叠 Collapse</span>
+            <span class="lc-trigger" style="background:rgba(234,88,12,.1);color:var(--l3)">170K（85%）</span>
+            <span class="lc-saved" style="background:rgba(234,88,12,.1);color:var(--l3)">-80K</span>
+          </div>
+          <div class="lc-body">
+            <div class="lc-desc">将多轮早期对话折叠成一条摘要消息。<b>细节丢失</b>，但主线保留。</div>
+            <div class="lc-compare">
+              <div class="lc-cmp-box" style="background:rgba(220,38,38,.04)">
+                <div class="lc-cmp-label" style="color:var(--red)">压缩前</div>
+                第 1-8 轮（12 条消息，4200 Token）：讨论需求、确认方案、修改三次……
+              </div>
+              <div class="lc-cmp-arrow">→</div>
+              <div class="lc-cmp-box" style="background:rgba(234,88,12,.04)">
+                <div class="lc-cmp-label" style="color:var(--l3)">压缩后</div>
+                会话摘要：React + TS 项目，当前修改报表页（350 Token）
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layer-card" id="lc3">
+          <div class="lc-hd" style="background:rgba(220,38,38,.04)">
+            <span class="lc-name" style="color:var(--l4)">第四层 · 紧急压缩 AutoCompact</span>
+            <span class="lc-trigger" style="background:rgba(220,38,38,.1);color:var(--l4)">190K（95%）</span>
+            <span class="lc-saved" style="background:rgba(220,38,38,.1);color:var(--l4)">-110K</span>
+          </div>
+          <div class="lc-body">
+            <div class="lc-desc">全面压缩：只保留 system + 全局摘要 + 最近 3 轮。<b>明显信息损失</b>，但避免崩溃。</div>
+            <div class="lc-compare">
+              <div class="lc-cmp-box" style="background:rgba(220,38,38,.04)">
+                <div class="lc-cmp-label" style="color:var(--red)">压缩前</div>
+                20 轮完整对话（38 条消息，18000 Token）
+              </div>
+              <div class="lc-cmp-arrow">→</div>
+              <div class="lc-cmp-box" style="background:rgba(220,38,38,.04)">
+                <div class="lc-cmp-label" style="color:var(--l4)">压缩后</div>
+                system + 摘要 + 最近 3 轮（2500 Token）
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dec-area" id="decArea">
+        <div class="dec-card" id="decCard">
+          <b>📌 设计决策：</b>拖动滑块观察：没有压缩的话，200K 的上下文只够一次长对话。有了四层压缩，同样的窗口可以支撑 5 倍以上的对话量。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> 模型窗口 256K，安全空间 200K。四层压缩像防洪堤——每次快满时自动泄洪降水位，让同一个窗口承载远超 200K 的对话量。直到真的删无可删，才会超限。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var SAFE = 200, MAX_CTX = 256;
+
+var KF = [
+  [0,   0],
+  [100, 120],
+  [101, 84],
+  [200, 150],
+  [201, 100],
+  [310, 170],
+  [311, 90],
+  [420, 190],
+  [421, 80],
+  [500, 260]
+];
+
+var COMP_POINTS = [
+  {at:100, layer:0, from:120, to:84,  label:'裁剪! -36K',  color:'var(--l1)'},
+  {at:200, layer:1, from:150, to:100, label:'微压缩! -50K', color:'var(--l2)'},
+  {at:310, layer:2, from:170, to:90,  label:'折叠! -80K',  color:'var(--l3)'},
+  {at:420, layer:3, from:190, to:80,  label:'紧急! -110K', color:'var(--l4)'}
+];
+
+var DECISIONS = [
+  '<b>📌 设计决策：</b>上下文低于 60%，一切安全。但每轮对话都在消耗 Token——产品经理需要预判：用户平均对话多长？什么时候触碰第一道防线？',
+  '<b>📌 设计决策：</b>裁剪只删工具返回的冗余数据，用户完全无感。需要决定：哪些工具输出可以摘要？哪些必须保留（比如代码执行结果）？',
+  '<b>📌 设计决策：</b>微压缩开始精简早期对话。为什么不一开始就压缩？因为模型需要完整上下文理解用户意图，过早压缩会导致"失忆"。',
+  '<b>📌 设计决策：</b>折叠把多轮对话变成一段摘要。摘要由谁写？让模型自己总结？还是用专门的压缩 Prompt？摘要质量直接影响后续准确性。',
+  '<b>📌 设计决策：</b>紧急压缩是最后一道防线，信息损失明显，但对话不会中断。Alice 的四层策略 vs 简单的"满了就报错"——哪种体验更好？',
+  '<b>📌 ⚠️ 超限！</b>四层压缩全部用尽，上下文已超过安全空间。如果继续增长超过 256K 模型上限，API 将返回 context_length_exceeded 错误。这就是为什么还需要"上下文急救"作为最终兜底。'
+];
+
+function lerp(val) {
+  if (val <= 0) return 0;
+  for (var i = 0; i < KF.length - 1; i++) {
+    if (val >= KF[i][0] && val <= KF[i + 1][0]) {
+      var r = KF[i + 1][0] - KF[i][0];
+      if (r === 0) return KF[i][1];
+      var t = (val - KF[i][0]) / r;
+      return KF[i][1] + t * (KF[i + 1][1] - KF[i][1]);
+    }
+  }
+  return KF[KF.length - 1][1];
+}
+
+function getActiveLayer(val) {
+  if (val >= 420) return 3;
+  if (val >= 310) return 2;
+  if (val >= 200) return 1;
+  if (val >= 100) return 0;
+  return -1;
+}
+
+function positionLines() {
+  var pcts = [120, 150, 170, 190, 200];
+  var ids = ['line1','line2','line3','line4','lineSafe'];
+  for (var i = 0; i < ids.length; i++) {
+    document.getElementById(ids[i]).style.bottom = ((pcts[i] / MAX_CTX) * 100) + '%';
+  }
+  document.getElementById('dangerZone').style.height = ((1 - SAFE / MAX_CTX) * 100) + '%';
+}
+
+function update(val) {
+  var ctxK = lerp(val);
+  var fillPct = Math.min((ctxK / MAX_CTX) * 100, 100);
+  var safePct = (ctxK / SAFE) * 100;
+
+  var fill = document.getElementById('tankFill');
+  fill.style.height = fillPct + '%';
+
+  if (ctxK > SAFE) {
+    fill.style.background = 'linear-gradient(180deg,rgba(220,38,38,.35),rgba(220,38,38,.65))';
+    document.getElementById('tankOuter').classList.add('danger');
+  } else if (safePct > 95) {
+    fill.style.background = 'linear-gradient(180deg,rgba(220,38,38,.25),rgba(220,38,38,.5))';
+    document.getElementById('tankOuter').classList.remove('danger');
+  } else if (safePct > 85) {
+    fill.style.background = 'linear-gradient(180deg,rgba(234,88,12,.25),rgba(234,88,12,.5))';
+    document.getElementById('tankOuter').classList.remove('danger');
+  } else if (safePct > 75) {
+    fill.style.background = 'linear-gradient(180deg,rgba(217,119,6,.25),rgba(217,119,6,.5))';
+    document.getElementById('tankOuter').classList.remove('danger');
+  } else if (safePct > 60) {
+    fill.style.background = 'linear-gradient(180deg,rgba(22,163,74,.2),rgba(22,163,74,.45))';
+    document.getElementById('tankOuter').classList.remove('danger');
+  } else {
+    fill.style.background = 'linear-gradient(180deg,rgba(8,145,178,.25),rgba(8,145,178,.5))';
+    document.getElementById('tankOuter').classList.remove('danger');
+  }
+
+  var totalK = Math.round(val * 0.6);
+  var curK = Math.round(ctxK);
+  var savedK = Math.max(0, totalK - curK);
+  document.getElementById('vTotal').textContent = totalK + 'K';
+  document.getElementById('vCurrent').textContent = curK + 'K / ' + SAFE + 'K';
+  document.getElementById('vSaved').textContent = savedK + 'K';
+  document.getElementById('tsBar').style.width = Math.min(safePct, 130) + '%';
+  var bar = document.getElementById('tsBar');
+  bar.style.background = ctxK > SAFE ? 'var(--red)' : safePct > 85 ? 'var(--orange)' : safePct > 60 ? 'var(--amber)' : 'var(--cyan)';
+
+  var active = getActiveLayer(val);
+  for (var i = 0; i < 4; i++) {
+    var card = document.getElementById('lc' + i);
+    var on = i <= active;
+    card.classList.toggle('active', on);
+    card.style.borderColor = on ? ['var(--l1)','var(--l2)','var(--l3)','var(--l4)'][i] : '';
+  }
+
+  var badge = document.getElementById('statusBadge');
+  if (ctxK > SAFE) {
+    badge.textContent = '⚠️ 超过安全上限！';
+    badge.style.color = 'var(--red)';
+    badge.style.background = 'rgba(220,38,38,.1)';
+  } else if (active === 3) {
+    badge.textContent = '紧急压缩中';
+    badge.style.color = 'var(--l4)';
+    badge.style.background = 'rgba(220,38,38,.08)';
+  } else if (active === 2) {
+    badge.textContent = '折叠中';
+    badge.style.color = 'var(--l3)';
+    badge.style.background = 'rgba(234,88,12,.08)';
+  } else if (active === 1) {
+    badge.textContent = '微压缩中';
+    badge.style.color = 'var(--l2)';
+    badge.style.background = 'rgba(217,119,6,.08)';
+  } else if (active === 0) {
+    badge.textContent = '裁剪中';
+    badge.style.color = 'var(--l1)';
+    badge.style.background = 'rgba(22,163,74,.08)';
+  } else {
+    badge.textContent = '安全区间';
+    badge.style.color = 'var(--cyan)';
+    badge.style.background = 'rgba(8,145,178,.08)';
+  }
+
+  var di = ctxK > SAFE ? 5 : active >= 0 ? active + 1 : 0;
+  document.getElementById('decCard').innerHTML = DECISIONS[di];
+
+  if (active >= 0) {
+    var target = document.getElementById('lc' + active);
+    var container = document.getElementById('layersScroll');
+    var scrollTo = target.offsetTop - container.offsetTop - 6;
+    container.scrollTo({top: scrollTo, behavior: 'smooth'});
+  }
+
+  document.getElementById('slider').value = val;
+}
+
+function showFlash(cp) {
+  var fl = document.getElementById('compFlash');
+  var pct = (cp.from / MAX_CTX) * 100;
+  fl.style.bottom = pct + '%';
+  fl.style.background = cp.color;
+  fl.style.color = 'white';
+  fl.textContent = cp.label;
+  fl.classList.remove('show');
+  void fl.offsetWidth;
+  fl.classList.add('show');
+  setTimeout(function() { fl.classList.remove('show'); }, 1200);
+}
+
+function fireCard(idx) {
+  var card = document.getElementById('lc' + idx);
+  card.classList.remove('firing');
+  void card.offsetWidth;
+  card.classList.add('firing');
+}
+
+function onSlider(val) {
+  if (autoId) { cancelAnimationFrame(autoId); autoId = null; document.getElementById('autoBtn').textContent = '▶ 自动演示'; }
+  update(val);
+}
+
+var autoId = null;
+function autoPlay() {
+  if (autoId) { cancelAnimationFrame(autoId); autoId = null; document.getElementById('autoBtn').textContent = '▶ 自动演示'; return; }
+  document.getElementById('autoBtn').textContent = '⏸ 暂停';
+  var v = 0;
+  var compIdx = 0;
+  var pauseUntil = 0;
+  var speed = 0.8;
+
+  function step(ts) {
+    if (ts < pauseUntil) { autoId = requestAnimationFrame(step); return; }
+
+    if (compIdx < COMP_POINTS.length && v >= COMP_POINTS[compIdx].at && v < COMP_POINTS[compIdx].at + 2) {
+      showFlash(COMP_POINTS[compIdx]);
+      fireCard(COMP_POINTS[compIdx].layer);
+      pauseUntil = ts + 1200;
+      compIdx++;
+      v = v + 1;
+      update(v);
+      autoId = requestAnimationFrame(step);
+      return;
+    }
+
+    v += speed;
+    if (v > 500) {
+      v = 500;
+      update(v);
+      autoId = null;
+      document.getElementById('autoBtn').textContent = '▶ 重播';
+      return;
+    }
+    update(v);
+    autoId = requestAnimationFrame(step);
+  }
+  update(0);
+  autoId = requestAnimationFrame(step);
+}
+
+function resetAll() {
+  if (autoId) { cancelAnimationFrame(autoId); autoId = null; }
+  document.getElementById('autoBtn').textContent = '▶ 自动演示';
+  update(0);
+}
+
+positionLines();
+update(0);
+</script>
+</body>
+</html>

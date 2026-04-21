@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>伪造聊天记录 · OpenAI 的最初实验</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>伪造聊天记录：OpenAI 最初如何让模型学会对话 | xueai.app</title>
 <script src="../global-attn.js"></script>
 <style>
 :root {
@@ -160,7 +161,29 @@ body {
 .next-prompt-box .rt-user { color: var(--accent); font-weight: 700; }
 .next-prompt-box .incomplete { color: var(--danger); font-style: italic; }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="OpenAI 最初是如何让 GPT 从补全机器变成会对话的助手的？通过伪造聊天记录格式，让模型学会角色扮演——这就是指令对齐技术的起点。">
+<meta name="keywords" content="指令微调,SFT,聊天格式,RLHF,ChatGPT原理,对话模型">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-fake-chat.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="伪造聊天记录：OpenAI 最初如何让模型学会对话">
+<meta property="og:description" content="OpenAI 最初是如何让 GPT 从补全机器变成会对话的助手的？通过伪造聊天记录格式，让模型学会角色扮演——这就是指令对齐技术的起点。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-fake-chat.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="伪造聊天记录：OpenAI 最初如何让模型学会对话">
+<meta name="twitter:description" content="OpenAI 最初是如何让 GPT 从补全机器变成会对话的助手的？通过伪造聊天记录格式，让模型学会角色扮演——这就是指令对齐技术的起点。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
 
@@ -323,6 +346,6 @@ function nextStep() {
   }
 }
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

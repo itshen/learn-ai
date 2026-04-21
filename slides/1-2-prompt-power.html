@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>提示词为什么够用？上下文窗口是关键</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>上下文窗口是关键：为什么提示词这么重要 | xueai.app</title>
 <script src="../global-attn.js"></script>
 <style>
 :root {
@@ -181,7 +182,29 @@ input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
   transition: all 0.3s;
 }
 </style>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style></head>
+<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style><!-- SEO Start -->
+<meta name="description" content="大模型的每次推理只能看到上下文窗口内的内容。理解上下文窗口的工作机制，才能理解为什么好的 Prompt 能让模型表现天差地别。">
+<meta name="keywords" content="上下文窗口,Context Window,Prompt工程,大模型注意力,KV Cache">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/1-2-prompt-power.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="上下文窗口是关键：为什么提示词这么重要">
+<meta property="og:description" content="大模型的每次推理只能看到上下文窗口内的内容。理解上下文窗口的工作机制，才能理解为什么好的 Prompt 能让模型表现天差地别。">
+<meta property="og:url" content="https://xueai.app/slides/1-2-prompt-power.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="上下文窗口是关键：为什么提示词这么重要">
+<meta name="twitter:description" content="大模型的每次推理只能看到上下文窗口内的内容。理解上下文窗口的工作机制，才能理解为什么好的 Prompt 能让模型表现天差地别。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
+</head>
 <body>
 <div class="slide-container">
 
@@ -497,6 +520,6 @@ function replayAll() {
 // 初始渲染
 render(1);
 </script>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 </body>
 </html>

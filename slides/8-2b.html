@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>显式缓存：一行代码保证命中</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>显式 KV Cache：一行代码保证缓存命中 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93;--purple:#5b4fcf;--orange:#ea580c}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -98,6 +99,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 .takeaway{background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.18);border-radius:9px;padding:9px 14px;font-size:14px;color:var(--text);flex-shrink:0;line-height:1.55}
 .takeaway b{color:var(--green)}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="Anthropic 的 Prompt Caching 和 OpenAI 的显式缓存 API 如何使用？通过固定 System Prompt 前缀、正确排列消息顺序，保证每次请求都能命中 KV Cache。">
+<meta name="keywords" content="Prompt Caching,显式缓存,KV Cache命中,Anthropic缓存,OpenAI缓存,AI成本优化">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/8-2b.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="显式 KV Cache：一行代码保证缓存命中">
+<meta property="og:description" content="Anthropic 的 Prompt Caching 和 OpenAI 的显式缓存 API 如何使用？通过固定 System Prompt 前缀、正确排列消息顺序，保证每次请求都能命中 KV Cache。">
+<meta property="og:url" content="https://xueai.app/slides/8-2b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="显式 KV Cache：一行代码保证缓存命中">
+<meta name="twitter:description" content="Anthropic 的 Prompt Caching 和 OpenAI 的显式缓存 API 如何使用？通过固定 System Prompt 前缀、正确排列消息顺序，保证每次请求都能命中 KV Cache。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -203,7 +226,7 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 // ── 平台代码 ──
 const PLATFORMS = {

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>解剖一个真实 Skill：Alice 发版助手 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0;overflow:hidden}
+
+/* ── 左区：Skill 解剖卡 ── */
+.main-col{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.main-scroll{flex:1;overflow-y:auto;padding:14px 20px 10px;display:flex;flex-direction:column;gap:8px}
+
+.sk-section{border:1.5px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;transition:border-color .2s;flex-shrink:0}
+.sk-section:hover{border-color:rgba(234,88,12,.3)}
+.sk-section.active{border-color:var(--orange)}
+.sk-head{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;transition:background .15s}
+.sk-head:hover{background:rgba(0,0,0,.015)}
+.sk-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;flex-shrink:0}
+.sk-head-text{flex:1}
+.sk-head-title{font-size:15px;font-weight:800;color:var(--text)}
+.sk-head-sub{font-size:13px;color:var(--muted);margin-top:1px}
+.sk-arrow{font-size:13px;color:var(--muted);transition:transform .25s;flex-shrink:0}
+.sk-section.active .sk-arrow{transform:rotate(90deg)}
+
+.sk-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.sk-section.active .sk-body{max-height:600px}
+.sk-inner{padding:0 14px 12px}
+
+/* 元信息内部 */
+.meta-grid{display:grid;grid-template-columns:80px 1fr;gap:4px 10px;font-size:14px}
+.meta-label{font-weight:700;color:var(--muted)}
+.meta-val{color:var(--text);font-weight:600}
+.trigger-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.trigger-chip{padding:3px 10px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(234,88,12,.08);color:var(--orange);border:1px solid rgba(234,88,12,.15)}
+
+/* 决策树 */
+.flow-row{display:flex;align-items:center;gap:0;font-size:13px;flex-wrap:wrap;padding:4px 0}
+.flow-node{padding:5px 12px;border-radius:8px;font-weight:700;white-space:nowrap}
+.flow-q{background:rgba(124,58,237,.06);color:var(--purple);border:1px solid rgba(124,58,237,.15)}
+.flow-yes{background:rgba(22,163,74,.06);color:var(--green);border:1px solid rgba(22,163,74,.15);font-size:12px}
+.flow-no{background:rgba(220,38,38,.06);color:var(--red);border:1px solid rgba(220,38,38,.15);font-size:12px}
+.flow-end{padding:5px 12px;border-radius:8px;font-weight:700;white-space:nowrap}
+.flow-end-ok{background:rgba(22,163,74,.08);color:var(--green);border:1px solid rgba(22,163,74,.15)}
+.flow-end-skip{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.flow-arrow{font-size:14px;color:var(--muted);padding:0 3px;flex-shrink:0}
+
+/* 执行管线 */
+.pipeline{display:flex;align-items:center;gap:0;overflow-x:auto;padding:6px 0}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;flex-shrink:0}
+.pipe-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--surface2);border:1.5px solid var(--border);transition:all .3s}
+.pipe-label{font-size:12px;font-weight:700;color:var(--sub);text-align:center;white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis}
+.pipe-arrow{font-size:13px;color:var(--muted);flex-shrink:0;padding:0 2px;align-self:center;margin-bottom:16px}
+.pipe-step.done .pipe-icon{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.3);color:var(--green)}
+.pipe-step.current .pipe-icon{background:rgba(234,88,12,.08);border-color:var(--orange);color:var(--orange);transform:scale(1.08)}
+
+/* 工具 chips */
+.tool-chips{display:flex;flex-wrap:wrap;gap:5px}
+.tool-chip{padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700}
+.tool-chip-on{background:rgba(22,163,74,.06);color:var(--green);border:1px solid rgba(22,163,74,.15)}
+.tool-chip-off{background:var(--surface2);color:var(--muted);border:1px solid var(--border);text-decoration:line-through;opacity:.6}
+
+/* 约束列表 */
+.constraint-list{display:flex;flex-direction:column;gap:5px}
+.constraint-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(220,38,38,.03);border:1px solid rgba(220,38,38,.1);font-size:13px;font-weight:600;color:var(--text)}
+.constraint-icon{flex-shrink:0;font-size:14px}
+
+/* ── 右区：示例 Skills + 产品决策 ── */
+.side-col{display:flex;flex-direction:column;overflow:hidden}
+.side-label{padding:8px 14px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.4px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.side-scroll{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+
+/* 示例 Skill 小卡片 */
+.ex-card{border:1.5px solid var(--border);border-radius:10px;background:var(--surface);padding:10px 12px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.ex-card:hover{border-color:rgba(234,88,12,.3);background:rgba(234,88,12,.015)}
+.ex-card.active{border-color:var(--orange);background:rgba(234,88,12,.03)}
+.ex-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ex-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ex-name{font-size:14px;font-weight:800;color:var(--text)}
+.ex-desc{font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:6px}
+.ex-pipeline{display:flex;align-items:center;gap:0;font-size:12px;flex-wrap:wrap}
+.ex-pipe-step{padding:3px 8px;border-radius:5px;background:var(--surface2);color:var(--sub);font-weight:700;white-space:nowrap}
+.ex-pipe-arrow{color:var(--muted);padding:0 2px;flex-shrink:0}
+.ex-detail{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.ex-card.active .ex-detail{max-height:200px}
+.ex-detail-inner{padding-top:8px;border-top:1px solid var(--border);margin-top:6px;font-size:13px;color:var(--text);line-height:1.6}
+
+/* 产品决策 */
+.decision-card{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);line-height:1.55;flex-shrink:0}
+.decision-card b{color:var(--orange)}
+
+/* 控制栏 */
+.ctrl{padding:8px 18px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+
+/* 底部 takeaway */
+.insight-bar{padding:8px 24px;border-top:1px solid var(--border);font-size:14px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+/* 动画辅助 */
+.anim-enter{opacity:0;transform:translateY(6px);transition:all .3s ease}
+.anim-enter.show{opacity:1;transform:translateY(0)}
+
+/* 管线播放态 */
+.pipeline-play .pipe-step .pipe-icon{transition:all .4s ease}
+</style>
+<meta name="description" content="解剖 Alice 发版助手 Skill：元信息、触发条件、执行步骤、工具权限、安全约束——理解 Skill 就是给 Agent 写 SOP。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-5b.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="解剖一个真实 Skill：Alice 发版助手">
+<meta property="og:url" content="https://xueai.app/slides/7-5b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 技能 · 第 2 页</div>
+      <div class="hd-title">解剖一个真实 <em>Skill</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">点击每个区域展开详情 · 看 Agent 如何读取并执行一个 Skill</div>
+  </div>
+
+  <div class="body">
+    <!-- 左区：Skill 解剖 -->
+    <div class="main-col">
+      <div class="main-scroll" id="mainScroll">
+        <!-- Skill 文件标题栏 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:4px 0;flex-shrink:0">
+          <div style="padding:5px 12px;border-radius:8px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);font-size:13px;font-weight:800;color:var(--purple)">SKILL.md</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">alice-release</div>
+          <div style="font-size:13px;color:var(--muted);margin-left:auto">Alice 项目发版助手</div>
+        </div>
+
+        <!-- Section 1: 元信息 -->
+        <div class="sk-section active" data-section="0">
+          <div class="sk-head" onclick="toggleSection(this)">
+            <div class="sk-num" style="background:var(--orange)">1</div>
+            <div class="sk-head-text">
+              <div class="sk-head-title">元信息</div>
+              <div class="sk-head-sub">技能名称、功能描述、触发词</div>
+            </div>
+            <div class="sk-arrow">▶</div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-inner">
+              <div class="meta-grid">
+                <div class="meta-label">技能名称</div>
+                <div class="meta-val">alice-release</div>
+                <div class="meta-label">描述</div>
+                <div class="meta-val" style="font-weight:400;font-size:13px">Alice 项目发版助手。负责打包、更新 RELEASE_NOTES、上传 COS、同步落地页的完整发版流程。</div>
+                <div class="meta-label">触发词</div>
+                <div>
+                  <div class="trigger-chips">
+                    <span class="trigger-chip">打个包</span>
+                    <span class="trigger-chip">发版</span>
+                    <span class="trigger-chip">release</span>
+                    <span class="trigger-chip">上传发布</span>
+                    <span class="trigger-chip">同步落地页</span>
+                  </div>
+                </div>
+              </div>
+              <div class="decision-card" style="margin-top:8px">
+                <b>📌 设计决策：</b>触发词的覆盖度决定了 Skill 的召回率。写得太少→用户说了该触发但没触发；写得太泛→不该触发时误触。好的触发词 = 穷举用户可能的自然表达。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: 适用条件 -->
+        <div class="sk-section" data-section="1">
+          <div class="sk-head" onclick="toggleSection(this)">
+            <div class="sk-num" style="background:var(--purple)">2</div>
+            <div class="sk-head-text">
+              <div class="sk-head-title">适用条件</div>
+              <div class="sk-head-sub">Agent 判断是否触发此 Skill 的决策链</div>
+            </div>
+            <div class="sk-arrow">▶</div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-inner">
+              <div class="flow-row">
+                <span class="flow-node flow-q">用户说了触发词？</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node flow-yes">YES</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node flow-q">当前在 Alice 项目目录？</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node flow-yes">YES</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-end flow-end-ok">触发 Skill</span>
+              </div>
+              <div class="flow-row" style="padding-left:0;margin-top:4px">
+                <span style="width:135px;display:inline-block"></span>
+                <span class="flow-arrow" style="writing-mode:vertical-rl;padding:2px 0;transform:rotate(180deg)">↓</span>
+              </div>
+              <div class="flow-row" style="padding-left:95px">
+                <span class="flow-node flow-no">NO</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-end flow-end-skip">使用通用能力处理</span>
+              </div>
+              <div style="font-size:13px;color:var(--sub);margin-top:8px;line-height:1.5;padding:6px 10px;border-radius:8px;background:var(--surface2)">
+                同理，第二个判断节点如果为 NO（不在 Alice 目录），也走「通用能力处理」。<br>条件不满足时 Skill 静默退出，不会干扰正常对话。
+              </div>
+              <div class="decision-card" style="margin-top:8px">
+                <b>📌 设计决策：</b>适用条件 = 防止误触的"保险"。没有适用条件，用户在任何项目里说"发版"都会触发 Alice 的发版流程——这是灾难级 Bug。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: 执行步骤 -->
+        <div class="sk-section" data-section="2">
+          <div class="sk-head" onclick="toggleSection(this)">
+            <div class="sk-num" style="background:var(--cyan)">3</div>
+            <div class="sk-head-text">
+              <div class="sk-head-title">执行步骤</div>
+              <div class="sk-head-sub">7 步管线：从 Git 检查到落地页同步</div>
+            </div>
+            <div class="sk-arrow">▶</div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-inner">
+              <div class="pipeline" id="pipeline">
+                <div class="pipe-step" data-pipe="0"><div class="pipe-icon">🔍</div><div class="pipe-label">检查 Git</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="1"><div class="pipe-icon">🧪</div><div class="pipe-label">运行测试</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="2"><div class="pipe-icon">📦</div><div class="pipe-label">打包应用</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="3"><div class="pipe-icon">🏷️</div><div class="pipe-label">更新版本</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="4"><div class="pipe-icon">📝</div><div class="pipe-label">写发布日志</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="5"><div class="pipe-icon">☁️</div><div class="pipe-label">上传 COS</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step" data-pipe="6"><div class="pipe-icon">🌐</div><div class="pipe-label">同步落地页</div></div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <button class="btn btn-p" style="padding:5px 14px;font-size:13px" id="btnPipe" onclick="playPipeline()">▶ 模拟执行</button>
+                <button class="btn btn-r" style="padding:5px 12px;font-size:13px" onclick="resetPipeline()">重置</button>
+                <span style="font-size:13px;color:var(--muted);display:flex;align-items:center" id="pipeHint">点击模拟 Agent 按步骤执行</span>
+              </div>
+              <div class="decision-card" style="margin-top:8px">
+                <b>📌 设计决策：</b>步骤的顺序至关重要——"先测试再打包"还是"先打包再测试"？Skill 里的步骤顺序 = 你认为正确的 SOP 流程。Agent 会严格按顺序执行。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: 允许工具 -->
+        <div class="sk-section" data-section="3">
+          <div class="sk-head" onclick="toggleSection(this)">
+            <div class="sk-num" style="background:var(--green)">4</div>
+            <div class="sk-head-text">
+              <div class="sk-head-title">允许工具</div>
+              <div class="sk-head-sub">Skill 执行期间 Agent 能使用的"武器库"</div>
+            </div>
+            <div class="sk-arrow">▶</div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-inner">
+              <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">可以使用</div>
+              <div class="tool-chips" style="margin-bottom:10px">
+                <span class="tool-chip tool-chip-on">run_command</span>
+                <span class="tool-chip tool-chip-on">edit_file</span>
+                <span class="tool-chip tool-chip-on">read_file</span>
+                <span class="tool-chip tool-chip-on">git</span>
+                <span class="tool-chip tool-chip-on">web_search</span>
+              </div>
+              <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">禁止使用</div>
+              <div class="tool-chips">
+                <span class="tool-chip tool-chip-off">delete_file</span>
+                <span class="tool-chip tool-chip-off">agent（不可启动子 Agent）</span>
+              </div>
+              <div class="decision-card" style="margin-top:10px">
+                <b>📌 设计决策：</b>允许工具 = 安全边界。限制了 Agent 在执行这个 Skill 时能用的武器。禁止 delete_file 就是防止发版过程中误删文件；禁止子 Agent 是为了控制执行链的可预测性。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: 安全约束 -->
+        <div class="sk-section" data-section="4">
+          <div class="sk-head" onclick="toggleSection(this)">
+            <div class="sk-num" style="background:var(--red)">5</div>
+            <div class="sk-head-text">
+              <div class="sk-head-title">安全约束</div>
+              <div class="sk-head-sub">不可逾越的红线——Agent 的"交通规则"</div>
+            </div>
+            <div class="sk-arrow">▶</div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-inner">
+              <div class="constraint-list">
+                <div class="constraint-item">
+                  <span class="constraint-icon" style="color:var(--red)">⛔</span>
+                  <span>不允许 force push —— 防止覆盖他人的代码提交</span>
+                </div>
+                <div class="constraint-item">
+                  <span class="constraint-icon" style="color:var(--red)">⛔</span>
+                  <span>不允许跳过测试 —— 无论多紧急，测试不通过就不发版</span>
+                </div>
+                <div class="constraint-item">
+                  <span class="constraint-icon" style="color:var(--red)">⛔</span>
+                  <span>失败时停止并报告，不自行重试 —— 把控制权交还人类</span>
+                </div>
+              </div>
+              <div class="decision-card" style="margin-top:10px">
+                <b>📌 设计决策：</b>约束条款是 Skill 里最重要的部分。步骤写错了 Agent 只是做错事，约束缺失了 Agent 可能做"危险"的事。好的约束 = 明确的禁令 + 失败时的降级策略。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右区：示例 Skills + 设计决策 -->
+    <div class="side-col">
+      <div class="side-label">更多 Skill 示例</div>
+      <div class="side-scroll">
+        <!-- 示例 1: content-creator -->
+        <div class="ex-card" onclick="toggleExample(this, 0)">
+          <div class="ex-hd">
+            <div class="ex-icon" style="background:rgba(234,88,12,.08)">✍️</div>
+            <div class="ex-name">content-creator</div>
+          </div>
+          <div class="ex-desc">内容创作起点：从风格分析到成稿交付的完整写作流程</div>
+          <div class="ex-pipeline">
+            <span class="ex-pipe-step">风格画像</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">需求确认</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">大纲设计</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">深度研究</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">文章创作</span>
+          </div>
+          <div class="ex-detail">
+            <div class="ex-detail-inner">
+              <b>触发词：</b>帮我写、我想写、准备写、写公众号、写小红书<br>
+              <b>关键设计：</b>先分析写作风格再动笔——而不是直接生成。这确保了每次产出都匹配用户个人风格，而非通用 AI 味道。<br>
+              <b>工具权限：</b>允许 web_search（深度研究需要联网），禁止直接发布（需人工审核）。
+            </div>
+          </div>
+        </div>
+
+        <!-- 示例 2: web-importer -->
+        <div class="ex-card" onclick="toggleExample(this, 1)">
+          <div class="ex-hd">
+            <div class="ex-icon" style="background:rgba(8,145,178,.08)">🌐</div>
+            <div class="ex-name">web-importer</div>
+          </div>
+          <div class="ex-desc">网页导入：将网页内容高质量保存到 WPS 笔记</div>
+          <div class="ex-pipeline">
+            <span class="ex-pipe-step">URL 识别</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">内容抓取</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">格式转换</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">写入笔记</span>
+          </div>
+          <div class="ex-detail">
+            <div class="ex-detail-inner">
+              <b>触发词：</b>把这个网页存到笔记、导入这篇文章、网页转笔记<br>
+              <b>关键设计：</b>自动识别公众号、Twitter、通用网页三种类型，走不同抓取逻辑。对用户来说只是"存到笔记"一句话，背后是三套策略。<br>
+              <b>安全约束：</b>不保存需要登录才能访问的页面（避免隐私泄露）。
+            </div>
+          </div>
+        </div>
+
+        <!-- 示例 3: tag-organize -->
+        <div class="ex-card" onclick="toggleExample(this, 2)">
+          <div class="ex-hd">
+            <div class="ex-icon" style="background:rgba(124,58,237,.08)">🏷️</div>
+            <div class="ex-name">tag-organize</div>
+          </div>
+          <div class="ex-desc">标签整理：扫描全部标签，发现重复和混乱，智能合并</div>
+          <div class="ex-pipeline">
+            <span class="ex-pipe-step">扫描标签</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">分析重复</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">合并建议</span><span class="ex-pipe-arrow">→</span>
+            <span class="ex-pipe-step">执行整理</span>
+          </div>
+          <div class="ex-detail">
+            <div class="ex-detail-inner">
+              <b>触发词：</b>整理笔记标签、清理标签、标签太乱、标签太多<br>
+              <b>关键设计：</b>合并前先给出建议、等用户确认后再执行——绝不自动合并。这体现了"人在回路"的设计原则。<br>
+              <b>安全约束：</b>不删除任何标签，只做合并；执行前必须获得用户确认。
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:2px">
+          <div class="decision-card">
+            <b>📌 核心认知：</b>好的 Skill = 好的 SOP。写 Skill 的人是领域专家，使用 Skill 的人是 Agent。Skill 的颗粒度最佳点是"一个完整的工作流"——太粗没有指导意义，太细不值得封装。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar">
+    <b>Takeaway</b> 一个 Skill 就是一份给 Agent 的 SOP：什么时候触发、按什么步骤执行、能用哪些工具、有什么安全约束。写 Skill 的本质是把人类专家的经验编码成 Agent 能执行的流程。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+function toggleSection(headEl) {
+  var sec = headEl.parentElement;
+  if (sec.classList.contains('active')) {
+    sec.classList.remove('active');
+  } else {
+    sec.classList.add('active');
+  }
+}
+
+function toggleExample(cardEl, idx) {
+  var wasActive = cardEl.classList.contains('active');
+  var cards = document.querySelectorAll('.ex-card');
+  for (var i = 0; i < cards.length; i++) cards[i].classList.remove('active');
+  if (!wasActive) cardEl.classList.add('active');
+}
+
+var pipeRunning = false;
+var pipeTimer = null;
+
+function playPipeline() {
+  if (pipeRunning) return;
+  pipeRunning = true;
+  var steps = document.querySelectorAll('#pipeline .pipe-step');
+  var cur = 0;
+  document.getElementById('btnPipe').disabled = true;
+
+  function tick() {
+    for (var i = 0; i < steps.length; i++) {
+      steps[i].classList.remove('current', 'done');
+    }
+    for (var j = 0; j < cur; j++) {
+      steps[j].classList.add('done');
+    }
+    if (cur < steps.length) {
+      steps[cur].classList.add('current');
+      var label = steps[cur].querySelector('.pipe-label').textContent;
+      document.getElementById('pipeHint').textContent = '正在执行：' + label + '（' + (cur + 1) + '/' + steps.length + '）';
+      cur++;
+      pipeTimer = setTimeout(tick, 700);
+    } else {
+      steps[steps.length - 1].classList.remove('current');
+      steps[steps.length - 1].classList.add('done');
+      document.getElementById('pipeHint').innerHTML = '<span style="color:var(--green);font-weight:700">全部完成</span> · 7 步管线按顺序执行';
+      pipeRunning = false;
+      document.getElementById('btnPipe').disabled = true;
+      document.getElementById('btnPipe').textContent = '✓ 完成';
+    }
+  }
+  tick();
+}
+
+function resetPipeline() {
+  if (pipeTimer) clearTimeout(pipeTimer);
+  pipeRunning = false;
+  var steps = document.querySelectorAll('#pipeline .pipe-step');
+  for (var i = 0; i < steps.length; i++) {
+    steps[i].classList.remove('current', 'done');
+  }
+  document.getElementById('btnPipe').disabled = false;
+  document.getElementById('btnPipe').textContent = '▶ 模拟执行';
+  document.getElementById('pipeHint').textContent = '点击模拟 Agent 按步骤执行';
+}
+</script>
+</body>
+</html>

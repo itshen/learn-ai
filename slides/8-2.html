@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>KV Cache：用空间换时间（和钱）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KV Cache：用空间换时间，顺便省下真金白银 | xueai.app</title>
 <style>
 :root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.08);--surface:white;--surface2:#f0ede6;--red:#dc2626;--green:#16a34a;--accent:#0066ff;--muted:#8e8e93;--purple:#5b4fcf;--orange:#ea580c}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -91,6 +92,28 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
 .r-tab{padding:6px 16px;border:none;background:transparent;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:all .15s}
 .r-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 </style>
+<!-- SEO Start -->
+<meta name="description" content="KV Cache 是大模型推理加速的核心技术。解析 KV Cache 的工作原理：如何缓存 Attention 的键值对，避免对已有 Token 的重复计算，从而同时降低延迟和成本。">
+<meta name="keywords" content="KV Cache,大模型缓存,推理加速,Attention Cache,大模型性能优化">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/8-2.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="KV Cache：用空间换时间，顺便省下真金白银">
+<meta property="og:description" content="KV Cache 是大模型推理加速的核心技术。解析 KV Cache 的工作原理：如何缓存 Attention 的键值对，避免对已有 Token 的重复计算，从而同时降低延迟和成本。">
+<meta property="og:url" content="https://xueai.app/slides/8-2.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KV Cache：用空间换时间，顺便省下真金白银">
+<meta name="twitter:description" content="KV Cache 是大模型推理加速的核心技术。解析 KV Cache 的工作原理：如何缓存 Attention 的键值对，避免对已有 Token 的重复计算，从而同时降低延迟和成本。">
+<meta name="twitter:image" content="https://xueai.app/og-cover.jpg">
+<!-- SEO End -->
 </head>
 <body>
 <div class="slide">
@@ -185,7 +208,7 @@ body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang S
     </div>
   </div>
 </div>
-<script src="nav-inject.js"></script>
+<script src="nav-inject.js?v=20260412dd"></script>
 <script>
 // 对话内容（用于标题展示）
 const TURNS = [

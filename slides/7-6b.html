@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>多 Agent 协作：一个人干不完，就派团队 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body{flex:1;display:grid;grid-template-columns:260px 1fr 260px;min-height:0;overflow:hidden}
+
+/* left: scenario */
+.left{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.l-label{padding:8px 14px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.l-body{flex:1;padding:10px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+
+.scenario-card{background:var(--surface);border:1.5px solid rgba(8,145,178,.2);border-radius:10px;padding:10px 12px}
+.sc-label{font-size:11px;font-weight:800;color:var(--cyan);letter-spacing:.4px;margin-bottom:4px}
+.sc-text{font-size:14px;color:var(--text);line-height:1.6}
+
+.agent-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;transition:all .35s}
+.agent-card.active{border-color:var(--orange);box-shadow:0 0 0 2px rgba(234,88,12,.12)}
+.agent-card.done{border-color:var(--green);background:rgba(22,163,74,.02)}
+.ac-hd{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.ac-icon{font-size:16px}
+.ac-name{font-size:14px;font-weight:800;color:var(--text)}
+.ac-role{font-size:12px;color:var(--muted);font-weight:600}
+.ac-task{font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:5px}
+.ac-tools{display:flex;flex-wrap:wrap;gap:3px}
+.ac-tool{padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--sub)}
+.ac-status{margin-top:5px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+.typing-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--orange);animation:blink 1.4s infinite both}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+/* center: flow */
+.center{display:flex;flex-direction:column;overflow:hidden}
+.c-bar{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.c-title{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px}
+.c-stats{display:flex;gap:12px}
+.c-stat{font-size:13px;color:var(--muted);font-weight:600}
+.c-stat span{font-weight:800;color:var(--text)}
+.flow-area{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+
+.flow-item{border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(6px);transition:all .35s;flex-shrink:0}
+.flow-item.show{opacity:1;transform:translateY(0)}
+
+.fi-coordinator{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18)}
+.fi-researcher{background:rgba(8,145,178,.04);border:1.5px solid rgba(8,145,178,.18)}
+.fi-developer{background:rgba(124,58,237,.04);border:1.5px solid rgba(124,58,237,.15)}
+.fi-tester{background:rgba(22,163,74,.04);border:1.5px solid rgba(22,163,74,.15)}
+.fi-event{background:var(--surface);border:1.5px dashed var(--border)}
+
+.fi-label{font-size:11px;font-weight:800;letter-spacing:.4px;margin-bottom:3px}
+.fi-text{color:var(--text)}
+.fi-detail{color:var(--sub);font-size:12px;margin-top:2px}
+.fi-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;margin-top:4px}
+
+.ctrl{padding:8px 16px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:12px;color:var(--muted)}
+
+/* right: decisions */
+.right{display:flex;flex-direction:column;border-left:1px solid var(--border);overflow:hidden}
+.r-label{padding:8px 14px;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.r-body{flex:1;padding:10px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+
+.dec-card{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);line-height:1.55;opacity:0;transform:translateY(4px);transition:all .35s}
+.dec-card.show{opacity:1;transform:translateY(0)}
+.dec-card b{color:var(--orange)}
+
+.concept-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);line-height:1.55}
+.concept-card b{color:var(--purple)}
+
+.insight-bar{padding:7px 24px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+/* org chart */
+.org{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0}
+.org-node{padding:5px 10px;border-radius:8px;font-size:13px;font-weight:700;text-align:center;position:relative}
+.org-coord{background:rgba(234,88,12,.1);color:var(--orange);border:1.5px solid rgba(234,88,12,.3)}
+.org-line{width:1px;height:10px;background:var(--border)}
+.org-branches{display:flex;gap:6px;position:relative}
+.org-branches::before{content:'';position:absolute;top:0;left:16%;right:16%;height:1px;background:var(--border)}
+.org-branch{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.org-branch-line{width:1px;height:8px;background:var(--border)}
+.org-sub{padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-align:center;white-space:nowrap}
+.org-sub-r{background:rgba(8,145,178,.08);color:var(--cyan);border:1px solid rgba(8,145,178,.2)}
+.org-sub-d{background:rgba(124,58,237,.06);color:var(--purple);border:1px solid rgba(124,58,237,.2)}
+.org-sub-t{background:rgba(22,163,74,.06);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+
+.parallel-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:rgba(8,145,178,.08);color:var(--cyan)}
+.sequential-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:rgba(234,88,12,.08);color:var(--orange)}
+</style>
+<meta name="description" content="多 Agent 协作：当任务太复杂，一个 Agent 干不完时，就派一个团队。主 Agent 拆解任务、分派子 Agent、汇总结果。只读并行、写入串行。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-6b.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="多 Agent 协作：一个人干不完，就派团队">
+<meta property="og:url" content="https://xueai.app/slides/7-6b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工程 · 第 2 页</div>
+      <div class="hd-title">多 Agent 协作：一个人干不完，就派<em>团队</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">主 Agent 拆任务 → 子 Agent 各司其职 → 汇总交付</div>
+  </div>
+
+  <div class="body">
+    <!-- 左栏：场景 + Agent 角色 -->
+    <div class="left">
+      <div class="l-label">场景 · Agent 团队</div>
+      <div class="l-body">
+        <div class="scenario-card">
+          <div class="sc-label">用户指令</div>
+          <div class="sc-text">"帮我重构这个项目的用户认证模块"</div>
+        </div>
+
+        <div class="org">
+          <div class="org-node org-coord">主 Agent · 协调员</div>
+          <div class="org-line"></div>
+          <div class="org-branches">
+            <div class="org-branch"><div class="org-branch-line"></div><div class="org-sub org-sub-r">🔍 调研员</div></div>
+            <div class="org-branch"><div class="org-branch-line"></div><div class="org-sub org-sub-d">💻 开发者</div></div>
+            <div class="org-branch"><div class="org-branch-line"></div><div class="org-sub org-sub-t">🧪 测试员</div></div>
+          </div>
+        </div>
+
+        <div class="agent-card" id="agentResearcher">
+          <div class="ac-hd"><span class="ac-icon">🔍</span><span class="ac-name">调研员</span><span class="ac-role">只读</span></div>
+          <div class="ac-task">分析当前认证模块的代码结构和依赖</div>
+          <div class="ac-tools"><span class="ac-tool">read_file</span><span class="ac-tool">search_files</span><span class="ac-tool">grep</span></div>
+          <div class="ac-status" id="statusResearcher" style="color:var(--muted)">待分配</div>
+        </div>
+
+        <div class="agent-card" id="agentDeveloper">
+          <div class="ac-hd"><span class="ac-icon">💻</span><span class="ac-name">开发者</span><span class="ac-role">可读写</span></div>
+          <div class="ac-task">重写认证中间件，改用 JWT</div>
+          <div class="ac-tools"><span class="ac-tool">read_file</span><span class="ac-tool">edit_file</span><span class="ac-tool">run_command</span></div>
+          <div class="ac-status" id="statusDeveloper" style="color:var(--muted)">待分配</div>
+        </div>
+
+        <div class="agent-card" id="agentTester">
+          <div class="ac-hd"><span class="ac-icon">🧪</span><span class="ac-name">测试员</span><span class="ac-role">可读 + 运行</span></div>
+          <div class="ac-task">编写并运行认证模块的单元测试</div>
+          <div class="ac-tools"><span class="ac-tool">read_file</span><span class="ac-tool">edit_file</span><span class="ac-tool">run_command</span></div>
+          <div class="ac-status" id="statusTester" style="color:var(--muted)">待分配</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中间：执行流程 -->
+    <div class="center">
+      <div class="c-bar">
+        <div class="c-title">执行流程</div>
+        <div class="c-stats">
+          <div class="c-stat">子 Agent <span id="agentCount">0</span>/3</div>
+          <div class="c-stat">事件 <span id="eventCount">0</span></div>
+        </div>
+      </div>
+      <div class="flow-area" id="flowArea"></div>
+      <div class="ctrl">
+        <button class="btn btn-p" id="btnNext" onclick="next()">▶ 下一步</button>
+        <button class="btn btn-r" onclick="reset()">重置</button>
+        <span class="ctrl-hint" id="hint">共 8 步 · 看主 Agent 如何调度团队</span>
+      </div>
+    </div>
+
+    <!-- 右栏：产品决策 + 核心概念 -->
+    <div class="right">
+      <div class="r-label">产品决策 · 核心概念</div>
+      <div class="r-body" id="decArea">
+        <div class="concept-card">
+          <b>类比理解</b><br>
+          单 Agent = 一个人干所有事<br>
+          多 Agent = 一个团队，各有专长
+        </div>
+        <div class="concept-card">
+          <b>技术原理</b><br>
+          子 Agent 运行在独立 Worker Thread<br>
+          隔离内存，互不干扰<br>
+          父级可随时中止子级
+        </div>
+        <div class="concept-card">
+          <b>事件通信</b><br>
+          subagent_start → 子 Agent 启动<br>
+          subagent_chunk → 流式返回中<br>
+          subagent_end → 子 Agent 完成
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-bar" id="insightBar">
+    <b>Takeaway</b> 复杂任务不靠一个 Agent 硬撑，而是拆成多个专职子 Agent：调研员负责读代码、开发者负责改代码、测试员负责验证。只读任务并行加速，写入任务串行保安全。这就是 Agent 世界的团队协作。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var STEPS = [
+  {
+    hint: '1/8 · 主 Agent 接到任务，开始拆解',
+    agents: 0, events: 1,
+    agentStates: {researcher:'待分配',developer:'待分配',tester:'待分配'},
+    agentActive: [],
+    flow: [
+      {type:'coordinator',label:'主 Agent · 协调员',color:'var(--orange)',
+       text:'收到任务："重构用户认证模块"。分析后拆解为 3 个子任务 →',
+       detail:'① 分析现有代码结构  ② 重写认证中间件  ③ 编写单元测试'}
+    ],
+    decision: '<b>📌 什么时候需要多 Agent？</b><br>当任务可以拆解成独立子任务，且子任务需要不同能力（只读 / 读写 / 运行命令）时。如果一个 Agent 就能搞定，就别派团队——每个子 Agent 都要带自己的 system prompt + 上下文 = 额外 Token 成本。'
+  },
+  {
+    hint: '2/8 · 调研员启动，只读模式并行安全',
+    agents: 1, events: 2,
+    agentStates: {researcher:'running',developer:'待分配',tester:'待分配'},
+    agentActive: ['researcher'],
+    flow: [
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_start → 调研员（Worker Thread #1）',
+       detail:'只读子 Agent，不会修改任何文件'},
+      {type:'researcher',label:'🔍 调研员',color:'var(--cyan)',
+       text:'正在分析认证模块…扫描 auth/ 目录、追踪依赖链、识别 session 存储逻辑',
+       badge:{text:'只读 · 可并行',class:'parallel-badge'}}
+    ],
+    decision: '<b>📌 只读子 Agent 的优势</b><br>调研员只能读不能写，所以可以和其他只读任务并行运行（Promise.all）。这就像多人同时翻资料——互不影响。'
+  },
+  {
+    hint: '3/8 · 调研员完成，返回发现给协调员',
+    agents: 1, events: 3,
+    agentStates: {researcher:'done',developer:'待分配',tester:'待分配'},
+    agentActive: [],
+    flow: [
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_end → 调研员完成',detail:''},
+      {type:'researcher',label:'🔍 调研员 · 报告',color:'var(--cyan)',
+       text:'发现：当前使用 express-session + Redis 存储，auth 中间件 3 处、路由守卫 5 处、密码用 bcrypt 哈希。建议迁移到 JWT 后可移除 Redis 依赖。',
+       detail:'结果通过 postMessage 返回给主 Agent'}
+    ],
+    decision: '<b>📌 子 Agent 隔离的意义</b><br>调研员在独立 Worker Thread 运行，有自己的内存空间。即使出错崩溃，也不会影响主 Agent 和其他子 Agent。主 Agent 可以 postMessage → 等 2 秒 → 强制 terminate。'
+  },
+  {
+    hint: '4/8 · 开发者启动，需要调研员的发现作为上下文',
+    agents: 2, events: 4,
+    agentStates: {researcher:'done',developer:'running',tester:'待分配'},
+    agentActive: ['developer'],
+    flow: [
+      {type:'coordinator',label:'主 Agent · 协调员',color:'var(--orange)',
+       text:'将调研报告注入开发者的上下文 → 启动开发者子 Agent',
+       detail:'开发者需要知道现有代码结构，才能安全重构'},
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_start → 开发者（Worker Thread #2）',detail:''},
+      {type:'developer',label:'💻 开发者',color:'var(--purple)',
+       text:'正在重构认证中间件…移除 session 逻辑、实现 JWT 签发 / 验证、更新路由守卫…',
+       badge:{text:'可读写 · 必须串行',class:'sequential-badge'}}
+    ],
+    decision: '<b>📌 并行 vs 串行的核心原则</b><br>开发者要改文件，如果同时有两个写入 Agent，可能互相覆盖代码。所以<b>只读任务可以并行（快），写入任务必须串行（安全）</b>。这是多 Agent 系统最关键的调度决策。'
+  },
+  {
+    hint: '5/8 · 开发者完成，代码已修改',
+    agents: 2, events: 5,
+    agentStates: {researcher:'done',developer:'done',tester:'待分配'},
+    agentActive: [],
+    flow: [
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_end → 开发者完成',detail:''},
+      {type:'developer',label:'💻 开发者 · 交付',color:'var(--purple)',
+       text:'完成：已移除 express-session，新增 jwt.middleware.ts，更新 5 处路由守卫，添加 token 刷新逻辑。修改了 8 个文件。',
+       detail:''}
+    ],
+    decision: '<b>📌 子 Agent 的 Token 成本</b><br>每个子 Agent 都有独立的 system prompt + 完整上下文。3 个子 Agent ≈ 3 倍 Token 消耗。所以只有当任务确实需要不同能力、且拆解后效率更高时，才值得启动多 Agent。'
+  },
+  {
+    hint: '6/8 · 测试员启动，需要开发者的代码变更',
+    agents: 3, events: 6,
+    agentStates: {researcher:'done',developer:'done',tester:'running'},
+    agentActive: ['tester'],
+    flow: [
+      {type:'coordinator',label:'主 Agent · 协调员',color:'var(--orange)',
+       text:'将开发者的变更文件列表注入测试员上下文 → 启动测试员',
+       detail:'测试员需要知道改了哪些文件，才能针对性编写测试'},
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_start → 测试员（Worker Thread #3）',detail:''},
+      {type:'tester',label:'🧪 测试员',color:'var(--green)',
+       text:'正在编写测试…JWT 签发测试、过期 Token 测试、路由守卫鉴权测试、Token 刷新测试…',
+       badge:{text:'可读写 · 必须串行',class:'sequential-badge'}}
+    ],
+    decision: '<b>📌 串行依赖链</b><br>调研员 → 开发者 → 测试员，后一个依赖前一个的输出。这就像真实团队的工作流程：先调研、再开发、最后测试。主 Agent 负责在中间传递上下文。'
+  },
+  {
+    hint: '7/8 · 测试员完成，测试全部通过',
+    agents: 3, events: 7,
+    agentStates: {researcher:'done',developer:'done',tester:'done'},
+    agentActive: [],
+    flow: [
+      {type:'event',label:'事件',color:'var(--muted)',
+       text:'subagent_end → 测试员完成',detail:''},
+      {type:'tester',label:'🧪 测试员 · 报告',color:'var(--green)',
+       text:'测试结果：12 个测试用例全部通过。覆盖场景：正常登录、Token 过期、非法 Token、刷新机制、路由保护。',
+       detail:''}
+    ],
+    decision: '<b>📌 终止与容错</b><br>如果测试员发现严重 Bug，主 Agent 可以决定：① 把 Bug 信息交给开发者重新修复  ② 终止流程并向用户报告。父级通过 postMessage 通知子 Agent 停止 → 等 2 秒宽限期 → 强制 terminate。'
+  },
+  {
+    hint: '8/8 · 主 Agent 汇总所有结果，交付给用户',
+    agents: 3, events: 8,
+    agentStates: {researcher:'done',developer:'done',tester:'done'},
+    agentActive: [],
+    flow: [
+      {type:'coordinator',label:'主 Agent · 汇总交付',color:'var(--orange)',
+       text:'认证模块重构完成。调研员分析了代码结构，开发者将 session 改为 JWT（修改 8 个文件），测试员验证了 12 个用例全部通过。Redis 依赖已移除，新增 Token 刷新机制。',
+       detail:'用户只看到这一条最终回答——背后是 3 个子 Agent 的协作成果'}
+    ],
+    decision: '<b>📌 用户感知 vs 实际过程</b><br>用户发了一句话，收到一段完整汇报。但背后跑了 3 个子 Agent、3 个 Worker Thread、8 个事件。产品经理要决定：中间过程要不要透出给用户？（Cursor 选择了透出，让用户看到每个子 Agent 的实时状态。）'
+  }
+];
+
+var cur = 0;
+
+function setAgentState(id, state) {
+  var card = document.getElementById('agent' + id);
+  var status = document.getElementById('status' + id);
+  card.classList.remove('active','done');
+  if (state === 'running') {
+    card.classList.add('active');
+    status.innerHTML = '<span style="color:var(--orange)">执行中 </span><span class="typing-dots"><span></span><span></span><span></span></span>';
+  } else if (state === 'done') {
+    card.classList.add('done');
+    status.innerHTML = '<span style="color:var(--green)">✓ 已完成</span>';
+  } else {
+    status.innerHTML = '<span style="color:var(--muted)">' + state + '</span>';
+  }
+}
+
+function addFlow(item) {
+  var area = document.getElementById('flowArea');
+  var el = document.createElement('div');
+  var cls = 'flow-item';
+  if (item.type === 'coordinator') cls += ' fi-coordinator';
+  else if (item.type === 'researcher') cls += ' fi-researcher';
+  else if (item.type === 'developer') cls += ' fi-developer';
+  else if (item.type === 'tester') cls += ' fi-tester';
+  else cls += ' fi-event';
+
+  el.className = cls;
+  var html = '<div class="fi-label" style="color:' + item.color + '">' + item.label + '</div>';
+  html += '<div class="fi-text">' + item.text + '</div>';
+  if (item.detail) html += '<div class="fi-detail">' + item.detail + '</div>';
+  if (item.badge) html += '<div class="' + item.badge.class + '" style="margin-top:4px">' + item.badge.text + '</div>';
+  el.innerHTML = html;
+  area.appendChild(el);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    el.classList.add('show');
+    area.scrollTop = area.scrollHeight;
+  })});
+}
+
+function next() {
+  if (cur >= STEPS.length) return;
+  var s = STEPS[cur];
+
+  document.getElementById('agentCount').textContent = s.agents;
+  document.getElementById('eventCount').textContent = s.events;
+  document.getElementById('hint').textContent = s.hint;
+
+  var states = s.agentStates;
+  setAgentState('Researcher', states.researcher);
+  setAgentState('Developer', states.developer);
+  setAgentState('Tester', states.tester);
+
+  for (var i = 0; i < s.flow.length; i++) {
+    (function(item, delay){
+      setTimeout(function(){ addFlow(item); }, delay);
+    })(s.flow[i], i * 200);
+  }
+
+  var da = document.getElementById('decArea');
+  var dec = document.createElement('div');
+  dec.className = 'dec-card';
+  dec.innerHTML = s.decision;
+  da.innerHTML = '';
+  da.appendChild(dec);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    dec.classList.add('show');
+  })});
+
+  cur++;
+  if (cur >= STEPS.length) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnNext').textContent = '✓ 完成';
+  }
+}
+
+function reset() {
+  cur = 0;
+  document.getElementById('flowArea').innerHTML = '';
+  document.getElementById('agentCount').textContent = '0';
+  document.getElementById('eventCount').textContent = '0';
+  document.getElementById('hint').textContent = '共 8 步 · 看主 Agent 如何调度团队';
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnNext').textContent = '▶ 下一步';
+
+  setAgentState('Researcher','待分配');
+  setAgentState('Developer','待分配');
+  setAgentState('Tester','待分配');
+
+  var da = document.getElementById('decArea');
+  da.innerHTML =
+    '<div class="concept-card"><b>类比理解</b><br>单 Agent = 一个人干所有事<br>多 Agent = 一个团队，各有专长</div>' +
+    '<div class="concept-card"><b>技术原理</b><br>子 Agent 运行在独立 Worker Thread<br>隔离内存，互不干扰<br>父级可随时中止子级</div>' +
+    '<div class="concept-card"><b>事件通信</b><br>subagent_start → 子 Agent 启动<br>subagent_chunk → 流式返回中<br>subagent_end → 子 Agent 完成</div>';
+}
+</script>
+</body>
+</html>

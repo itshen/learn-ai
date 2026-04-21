@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skill：给 Agent 装上「操作手册」 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,.07);--surface:#fff;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:10px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:15px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:26px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+
+.body-wrap{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.compare{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;overflow:hidden}
+.col{display:flex;flex-direction:column;overflow:hidden}
+.col:first-child{border-right:1px solid var(--border)}
+.col-hd{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.col-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.col-badge{padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800}
+.col-stats{display:flex;gap:10px;align-items:center}
+.stat{font-size:13px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:3px}
+.stat b{font-weight:800;color:var(--text);min-width:20px;text-align:right}
+.stat.err b{color:var(--red)}
+.col-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:5px}
+.col-ctrl{padding:7px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-run{background:var(--orange);color:white}
+.btn-run:hover{filter:brightness(1.1)}
+.btn-run:disabled{opacity:.3;cursor:not-allowed}
+.btn-run-g{background:var(--green);color:white}
+.btn-run-g:hover{filter:brightness(1.1)}
+.btn-run-g:disabled{opacity:.3;cursor:not-allowed}
+.btn-rst{background:var(--surface2);color:var(--sub);border:1px solid var(--border);font-size:13px;padding:5px 12px}
+.ctrl-hint{font-size:12px;color:var(--muted);margin-left:auto}
+
+.step-item{border-radius:8px;padding:8px 11px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(5px);transition:all .3s;flex-shrink:0}
+.step-item.show{opacity:1;transform:translateY(0)}
+.step-role{font-size:11px;font-weight:800;letter-spacing:.3px;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.step-text{white-space:pre-line}
+
+.task-bar{padding:7px 16px;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(8,145,178,.04)}
+.task-bar b{color:var(--cyan)}
+
+.bottom{display:flex;gap:12px;padding:8px 20px;border-top:1px solid var(--border);flex-shrink:0;align-items:stretch}
+
+.skill-card{flex:1;background:var(--surface);border:1.5px solid rgba(124,58,237,.18);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.sk-hd{display:flex;align-items:center;gap:8px}
+.sk-icon{width:28px;height:28px;border-radius:7px;background:rgba(124,58,237,.08);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sk-name{font-size:14px;font-weight:800;color:var(--purple)}
+.sk-sub{font-size:11px;color:var(--muted);font-weight:600}
+.sk-row{display:flex;gap:8px;font-size:12px;align-items:flex-start}
+.sk-label{color:var(--muted);font-weight:700;min-width:64px;flex-shrink:0}
+.sk-val{color:var(--text);line-height:1.5}
+.sk-chips{display:flex;flex-wrap:wrap;gap:4px}
+.sk-chip{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--sub)}
+.sk-steps{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.sk-step-num{width:20px;height:20px;border-radius:5px;background:rgba(124,58,237,.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--purple)}
+.sk-arrow{color:var(--muted);font-size:10px}
+.sk-step-text{font-size:11px;color:var(--text);font-weight:600}
+.sk-path{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px}
+
+.decisions{flex:1.15;display:flex;flex-direction:column;gap:6px}
+.dec-card{background:rgba(234,88,12,.05);border:1.5px solid rgba(234,88,12,.18);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--text);line-height:1.55}
+.dec-card b{color:var(--orange)}
+
+.insight-bar{padding:6px 24px;border-top:1px solid var(--border);font-size:13px;color:var(--text);line-height:1.5;flex-shrink:0;display:flex;align-items:center;gap:8px}
+.insight-bar b{color:var(--orange)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+.shake{animation:shake .4s ease}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.2)}50%{box-shadow:0 0 0 4px rgba(220,38,38,.08)}}
+</style>
+<meta name="description" content="Skill 把 Agent 的'摸索'变成'执行'——对比有 Skill 和没有 Skill 时 Agent 执行同一任务的效率差距。产品经理需要决定：为哪些操作预装 Skill。">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-5a.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="Skill：给 Agent 装上「操作手册」">
+<meta property="og:url" content="https://xueai.app/slides/7-5a.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 技能 · 第 1 页</div>
+      <div class="hd-title">Skill：给 Agent 装上<em>「操作手册」</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">没有 Skill 的 Agent 像新员工摸索，有 Skill 的 Agent 像老手照章执行</div>
+  </div>
+
+  <div class="task-bar">
+    <b>用户指令：</b>「帮我发版」— 同一个任务，左右两个 Agent 的执行过程截然不同
+  </div>
+
+  <div class="body-wrap">
+    <div class="compare">
+      <!-- 左栏：没有 Skill -->
+      <div class="col">
+        <div class="col-hd">
+          <div>
+            <div class="col-title">
+              <span class="col-badge" style="background:rgba(220,38,38,.08);color:var(--red)">低效</span>
+              没有 Skill 的 Agent
+            </div>
+          </div>
+          <div class="col-stats">
+            <div class="stat">轮次 <b id="leftIter">0</b></div>
+            <div class="stat">Token <b id="leftToken">0</b></div>
+            <div class="stat err">错误 <b id="leftErr">0</b></div>
+          </div>
+        </div>
+        <div class="col-body" id="leftBody"></div>
+        <div class="col-ctrl">
+          <button class="btn btn-run" id="btnLeft" onclick="runLeft()">▶ 模拟</button>
+          <button class="btn btn-rst" onclick="resetLeft()">重置</button>
+          <span class="ctrl-hint">每一步靠通用能力"摸索"</span>
+        </div>
+      </div>
+
+      <!-- 右栏：有 Skill -->
+      <div class="col">
+        <div class="col-hd">
+          <div>
+            <div class="col-title">
+              <span class="col-badge" style="background:rgba(22,163,74,.08);color:var(--green)">高效</span>
+              有 Skill 的 Agent
+            </div>
+          </div>
+          <div class="col-stats">
+            <div class="stat">轮次 <b id="rightIter">0</b></div>
+            <div class="stat">Token <b id="rightToken">0</b></div>
+            <div class="stat err">错误 <b id="rightErr">0</b></div>
+          </div>
+        </div>
+        <div class="col-body" id="rightBody"></div>
+        <div class="col-ctrl">
+          <button class="btn btn-run-g" id="btnRight" onclick="runRight()">▶ 模拟</button>
+          <button class="btn btn-rst" onclick="resetRight()">重置</button>
+          <span class="ctrl-hint">按 Skill 手册逐步"执行"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部：Skill 定义卡 + 产品决策 -->
+  <div class="bottom">
+    <div class="skill-card">
+      <div class="sk-hd">
+        <div class="sk-icon">📋</div>
+        <div>
+          <div class="sk-name">Skill 定义卡</div>
+          <div class="sk-sub">一份 SKILL.md 文件 = 一项技能</div>
+        </div>
+      </div>
+      <div class="sk-row">
+        <span class="sk-label">技能名称</span>
+        <span class="sk-val" style="font-weight:700;color:var(--purple)">release</span>
+      </div>
+      <div class="sk-row">
+        <span class="sk-label">触发条件</span>
+        <div class="sk-chips">
+          <span class="sk-chip">发版</span>
+          <span class="sk-chip">打包</span>
+          <span class="sk-chip">release</span>
+          <span class="sk-chip">上线</span>
+        </div>
+      </div>
+      <div class="sk-row">
+        <span class="sk-label">执行步骤</span>
+        <div class="sk-steps">
+          <span class="sk-step-num">1</span><span class="sk-step-text">跑测试</span>
+          <span class="sk-arrow">→</span>
+          <span class="sk-step-num">2</span><span class="sk-step-text">构建</span>
+          <span class="sk-arrow">→</span>
+          <span class="sk-step-num">3</span><span class="sk-step-text">更新版本</span>
+          <span class="sk-arrow">→</span>
+          <span class="sk-step-num">4</span><span class="sk-step-text">打 Tag</span>
+          <span class="sk-arrow">→</span>
+          <span class="sk-step-num">5</span><span class="sk-step-text">推送远端</span>
+        </div>
+      </div>
+      <div class="sk-row">
+        <span class="sk-label">允许工具</span>
+        <div class="sk-chips">
+          <span class="sk-chip">run_command</span>
+          <span class="sk-chip">edit_file</span>
+          <span class="sk-chip">git</span>
+        </div>
+      </div>
+      <div class="sk-path">存储路径：~/.alice/skills/release/SKILL.md 或 {项目}/.alice/skills/</div>
+    </div>
+
+    <div class="decisions">
+      <div class="dec-card"><b>📌 Skill 本质是"经验封装"</b>——把高级工程师的操作流程写成 Agent 能理解的手册。Agent 不再每次从零摸索，而是站在前人肩膀上执行。</div>
+      <div class="dec-card"><b>📌 效率差距可达 3 倍以上</b>——没有 Skill 时 Agent 靠通用能力"摸索"，有 Skill 时按最佳实践"执行"。Token 消耗差 3.75 倍，错误从 3 个变 0 个。</div>
+      <div class="dec-card"><b>📌 产品经理要回答的问题</b>——为哪些高频操作预装 Skill？允许用户自建 Skill 吗？Skill 之间冲突了怎么办？谁来维护和更新 Skill？</div>
+    </div>
+  </div>
+
+  <div class="insight-bar" id="insightBar">
+    <b>Takeaway</b> Skill 把「摸索」变成「执行」——同一个发版任务，没有 Skill 时 Agent 试错 12 轮花 1.5 万 Token 还出 3 个错；有 Skill 时 5 轮搞定只花 4000 Token 零错误。Skill 是 Agent 的经验传承机制。
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var LEFT_STEPS = [
+  {icon:'📨',role:'接收指令',color:'var(--cyan)',bg:'rgba(8,145,178,.06)',text:'收到用户指令：「帮我发版」',iter:1,token:800,err:0},
+  {icon:'🧠',role:'思考',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'发版……我大概需要打包吧？先试试 npm build？',iter:2,token:1200,err:0},
+  {icon:'🔧',role:'尝试执行',color:'var(--amber)',bg:'rgba(215,119,6,.04)',text:'运行命令：npm build\n→ 命令不存在，执行失败',iter:3,token:1800,err:1,shake:true},
+  {icon:'🧠',role:'再想想',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'不对，也许是 npm run build？再试一次……',iter:4,token:2500,err:1},
+  {icon:'🔧',role:'重试',color:'var(--green)',bg:'rgba(22,163,74,.04)',text:'运行命令：npm run build\n→ 构建成功！',iter:5,token:3200,err:1},
+  {icon:'🧠',role:'继续想',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'好像还需要更新版本号……怎么改来着？',iter:6,token:4000,err:1},
+  {icon:'🔧',role:'尝试改版本',color:'var(--amber)',bg:'rgba(215,119,6,.04)',text:'编辑 package.json，手动把 version 改成 1.0.1\n→ 但忘了用 npm version 命令',iter:7,token:5200,err:1},
+  {icon:'🧠',role:'突然想起来',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'等等……是不是应该先跑测试？',iter:8,token:6000,err:1},
+  {icon:'🔧',role:'补跑测试',color:'var(--red)',bg:'rgba(220,38,38,.04)',text:'运行命令：npm test\n→ 2 个测试失败！刚才的构建产物有问题',iter:9,token:7500,err:2,shake:true},
+  {icon:'🧠',role:'重新来过',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'测试没过就打包了……得回退重新构建',iter:10,token:9000,err:2},
+  {icon:'🔧',role:'修复并重建',color:'var(--amber)',bg:'rgba(215,119,6,.04)',text:'修复测试 → 重新 npm run build\n→ 这次通过了，但忘了打 git tag',iter:11,token:12000,err:2},
+  {icon:'🔧',role:'补打 Tag',color:'var(--red)',bg:'rgba(220,38,38,.04)',text:'git tag v1.0.1 && git push\n→ 报错：远端已有同名 tag（之前手动测试遗留的）',iter:12,token:15000,err:3,shake:true}
+];
+
+var RIGHT_STEPS = [
+  {icon:'📨',role:'接收指令',color:'var(--cyan)',bg:'rgba(8,145,178,.06)',text:'收到用户指令：「帮我发版」\n→ 匹配到 Skill：release',iter:1,token:600,err:0},
+  {icon:'📋',role:'Skill 步骤 1',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'Step 1：运行测试\n执行 npm test → 全部通过 ✓',iter:2,token:1200,err:0},
+  {icon:'📋',role:'Skill 步骤 2',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'Step 2：构建项目\n执行 npm run build → 构建成功 ✓',iter:3,token:2000,err:0},
+  {icon:'📋',role:'Skill 步骤 3 & 4',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'Step 3：更新版本号\n执行 npm version patch → v1.0.1 ✓\nStep 4：创建 git tag → v1.0.1 ✓',iter:4,token:3000,err:0},
+  {icon:'✅',role:'Skill 步骤 5',color:'var(--green)',bg:'rgba(22,163,74,.06)',text:'Step 5：推送到远端\n执行 git push --follow-tags → 推送成功 ✓\n\n发版完成！v1.0.1 已发布。',iter:5,token:4000,err:0}
+];
+
+var leftIdx=0,rightIdx=0,leftRunning=false,rightRunning=false;
+
+function addStep(containerId,step){
+  var el=document.createElement('div');
+  el.className='step-item';
+  el.style.background=step.bg;
+  el.style.border='1px solid rgba(0,0,0,.06)';
+  el.innerHTML='<div class="step-role" style="color:'+step.color+'"><span>'+step.icon+'</span> '+step.role+'</div><div class="step-text">'+step.text+'</div>';
+  document.getElementById(containerId).appendChild(el);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    el.classList.add('show');
+    if(step.shake)setTimeout(function(){el.classList.add('shake')},300);
+    el.parentElement.scrollTop=el.parentElement.scrollHeight;
+  })});
+}
+
+function animateNum(el,from,to,dur){
+  var start=performance.now();
+  function tick(now){
+    var p=Math.min((now-start)/dur,1);
+    p=1-Math.pow(1-p,3);
+    el.textContent=Math.round(from+(to-from)*p).toLocaleString();
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function runLeft(){
+  if(leftRunning||leftIdx>=LEFT_STEPS.length)return;
+  leftRunning=true;
+  document.getElementById('btnLeft').disabled=true;
+  var i=leftIdx;
+  function tick(){
+    if(i>=LEFT_STEPS.length){
+      leftRunning=false;
+      document.getElementById('btnLeft').textContent='✓ 完成';
+      return;
+    }
+    var s=LEFT_STEPS[i];
+    addStep('leftBody',s);
+    var prevToken=i>0?LEFT_STEPS[i-1].token:0;
+    animateNum(document.getElementById('leftIter'),i,s.iter,300);
+    animateNum(document.getElementById('leftToken'),prevToken,s.token,400);
+    document.getElementById('leftErr').textContent=s.err;
+    if(s.err>0)document.getElementById('leftErr').style.color='var(--red)';
+    leftIdx=i+1;
+    i++;
+    setTimeout(tick,700);
+  }
+  tick();
+}
+
+function runRight(){
+  if(rightRunning||rightIdx>=RIGHT_STEPS.length)return;
+  rightRunning=true;
+  document.getElementById('btnRight').disabled=true;
+  var i=rightIdx;
+  function tick(){
+    if(i>=RIGHT_STEPS.length){
+      rightRunning=false;
+      document.getElementById('btnRight').textContent='✓ 完成';
+      return;
+    }
+    var s=RIGHT_STEPS[i];
+    addStep('rightBody',s);
+    var prevToken=i>0?RIGHT_STEPS[i-1].token:0;
+    animateNum(document.getElementById('rightIter'),i,s.iter,300);
+    animateNum(document.getElementById('rightToken'),prevToken,s.token,400);
+    document.getElementById('rightErr').textContent=s.err;
+    rightIdx=i+1;
+    i++;
+    setTimeout(tick,900);
+  }
+  tick();
+}
+
+function resetLeft(){
+  leftIdx=0;leftRunning=false;
+  document.getElementById('leftBody').innerHTML='';
+  document.getElementById('leftIter').textContent='0';
+  document.getElementById('leftToken').textContent='0';
+  document.getElementById('leftErr').textContent='0';
+  document.getElementById('leftErr').style.color='';
+  document.getElementById('btnLeft').disabled=false;
+  document.getElementById('btnLeft').textContent='▶ 模拟';
+}
+
+function resetRight(){
+  rightIdx=0;rightRunning=false;
+  document.getElementById('rightBody').innerHTML='';
+  document.getElementById('rightIter').textContent='0';
+  document.getElementById('rightToken').textContent='0';
+  document.getElementById('rightErr').textContent='0';
+  document.getElementById('btnRight').disabled=false;
+  document.getElementById('btnRight').textContent='▶ 模拟';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>工具描述的学问：一字之差，调用天壤之别 | xueai.app</title>
+<style>
+:root{--bg:#f7f5f0;--text:#1c1c1e;--sub:#6b6b70;--border:rgba(0,0,0,0.07);--surface:white;--surface2:#f0ede6;--orange:#ea580c;--green:#16a34a;--red:#dc2626;--cyan:#0891b2;--purple:#7c3aed;--muted:#8e8e93;--amber:#d97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e2da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:si .15s ease .08s forwards;-webkit-font-smoothing:antialiased}
+@keyframes si{to{opacity:1}}
+.slide{width:94vw;max-width:1440px;aspect-ratio:16/9;background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+.hd{padding:12px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
+.hd-tag{font-size:14px;font-weight:800;color:var(--orange)}
+.hd-title{font-size:24px;font-weight:800;color:var(--text)}
+.hd-title em{font-style:normal;color:var(--orange)}
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0;overflow:hidden}
+
+.col{display:flex;flex-direction:column;overflow:hidden}
+.col:first-child{border-right:1px solid var(--border)}
+.col-hd{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.col-badge{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800}
+.col-title{font-size:14px;font-weight:700;color:var(--text)}
+.col-body{flex:1;padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+
+.tool-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;flex-shrink:0}
+.tc-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.tc-name{font-size:15px;font-weight:800;color:var(--text)}
+.tc-desc{font-size:13px;color:var(--sub);line-height:1.6;padding:8px 10px;border-radius:8px;margin-bottom:6px}
+.tc-params{display:flex;flex-direction:column;gap:3px}
+.tc-param{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 8px;border-radius:6px;background:var(--surface2)}
+.tc-param-name{font-weight:700;color:var(--text);min-width:60px}
+.tc-param-type{color:var(--muted);font-weight:600}
+.tc-param-hint{color:var(--sub);margin-left:auto;font-size:11px}
+
+.sim-area{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.sim-hd{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.sim-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.sim-msg{border-radius:8px;padding:8px 11px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(5px);transition:all .3s}
+.sim-msg.show{opacity:1;transform:translateY(0)}
+.sim-msg-role{font-size:10px;font-weight:800;letter-spacing:.4px;margin-bottom:3px}
+
+.ctrl-bar{padding:8px 18px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-p{background:var(--orange);color:white}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed}
+.btn-r{background:var(--surface2);color:var(--sub);border:1px solid var(--border)}
+.ctrl-hint{font-size:12px;color:var(--muted)}
+
+.result-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800}
+
+.insight{background:rgba(234,88,12,.06);border:1.5px solid rgba(234,88,12,.2);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;flex-shrink:0}
+.insight b{color:var(--orange)}
+
+.debate{background:rgba(124,58,237,.04);border:1.5px solid rgba(124,58,237,.15);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.55;flex-shrink:0}
+.debate b{color:var(--purple)}
+
+.exp-tabs{display:flex;gap:4px;flex-shrink:0}
+.exp-tab{padding:5px 12px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-weight:700;color:var(--sub);font-family:inherit;transition:all .15s}
+.exp-tab.active{border-color:var(--orange);background:rgba(234,88,12,.06);color:var(--orange)}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+.shake{animation:shake .4s ease}
+</style>
+<meta name="description" content="工具描述质量直接决定 AI 调用成功率。通过对比实验，展示好描述与坏描述导致的天壤之别。产品经理应该参与工具描述的设计。">
+<meta name="keywords" content="工具描述,Function Calling,工具设计,AI产品经理,Agent工具">
+<meta name="author" content="洛小山">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.app/slides/7-2b.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+<meta property="og:title" content="工具描述的学问：一字之差，调用天壤之别">
+<meta property="og:url" content="https://xueai.app/slides/7-2b.html">
+<meta property="og:image" content="https://xueai.app/og-cover.jpg">
+<meta property="og:locale" content="zh_CN">
+</head>
+<body>
+<div class="slide">
+  <div class="hd">
+    <div>
+      <div class="hd-tag">模块七 · 工具调用 · 第 2 页</div>
+      <div class="hd-title">工具描述的<em>学问</em></div>
+    </div>
+    <div style="font-size:14px;color:var(--muted)">同一个任务，左边失败，右边成功——差别只在描述</div>
+  </div>
+
+  <div style="padding:6px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)">
+    <div class="exp-tabs" id="expTabs"></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-p" id="btnRun" onclick="runExperiment()" style="padding:5px 14px;font-size:13px">▶ 运行实验</button>
+      <button class="btn btn-r" onclick="resetExp()" style="padding:5px 12px;font-size:13px">重置</button>
+      <span class="ctrl-hint" id="expHint">选择实验 → 点击运行</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="col">
+      <div class="col-hd">
+        <span class="col-title">❌ 坏描述</span>
+        <span class="col-badge" style="background:rgba(220,38,38,.08);color:var(--red)">含糊、缺关键信息</span>
+      </div>
+      <div class="col-body" id="leftCol"></div>
+    </div>
+    <div class="col">
+      <div class="col-hd">
+        <span class="col-title">✅ 好描述</span>
+        <span class="col-badge" style="background:rgba(22,163,74,.08);color:var(--green)">精确、有约束</span>
+      </div>
+      <div class="col-body" id="rightCol"></div>
+    </div>
+  </div>
+
+  <div style="padding:8px 24px;border-top:1px solid var(--border);display:flex;gap:12px;flex-shrink:0">
+    <div class="insight" style="flex:1">
+      <b>核心结论：</b>工具描述 = 给模型的"使用说明书"。说明书写得越清楚，模型用得越准确。这不是工程问题——<b>产品经理应该像写 PRD 一样写工具描述。</b>
+    </div>
+    <div class="debate" style="flex:1">
+      <b>思辨：</b>工具描述是 Prompt Engineering 的延伸吗？是的——工具描述本质上就是"结构化的 Prompt"。Prompt 的所有技巧（具体、有例子、有约束）在这里同样适用。
+    </div>
+  </div>
+</div>
+<script src="nav-inject.js?v=20260422"></script>
+<script>
+var EXPS = [
+  {
+    name: '订酒店',
+    user: '帮我订上海外滩附近的酒店，明天入住两晚。',
+    bad: {
+      card: {icon:'🏨',iconBg:'rgba(220,38,38,.08)',name:'book_hotel',
+        desc:'订酒店',descBg:'rgba(220,38,38,.04)',
+        params:[
+          {name:'地点',type:'文字',hint:''},
+          {name:'时间',type:'文字',hint:''},
+          {name:'人数',type:'数字',hint:''}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'用户要订酒店，用 book_hotel。地点是上海外滩，时间是明天。'},
+        {role:'模型输出',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：book_hotel\n地点 → 上海外滩附近\n时间 → 明天\n人数 → 1'},
+        {role:'API 返回',color:'var(--red)',bg:'rgba(220,38,38,.04)',shake:true,text:'❌ 错误 400：「时间」字段无法解析。系统不认识"明天"。'},
+        {role:'模型重试',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'换个格式试试……时间 → 04/23'},
+        {role:'API 返回',color:'var(--red)',bg:'rgba(220,38,38,.04)',shake:true,text:'❌ 错误 400：日期必须包含年份。'},
+        {role:'结果',color:'var(--red)',bg:'rgba(220,38,38,.06)',text:'反复猜了 4 次格式，浪费 3000 Token，最终才蒙对。'}
+      ]
+    },
+    good: {
+      card: {icon:'🏨',iconBg:'rgba(22,163,74,.08)',name:'book_hotel',
+        desc:'预订酒店房间。返回订单确认信息。注意：日期必须是 YYYY-MM-DD 格式；退房日期必须晚于入住日期。',descBg:'rgba(22,163,74,.04)',
+        params:[
+          {name:'城市',type:'文字',hint:'如：上海'},
+          {name:'入住日期',type:'文字',hint:'格式：YYYY-MM-DD'},
+          {name:'退房日期',type:'文字',hint:'格式：YYYY-MM-DD'},
+          {name:'入住人数',type:'数字',hint:'默认 1'}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'用户要订酒店。描述说日期必须 YYYY-MM-DD。明天是 2026-04-23，住两晚退房 04-25。'},
+        {role:'模型输出',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：book_hotel\n城市 → 上海\n入住日期 → 2026-04-23\n退房日期 → 2026-04-25\n入住人数 → 1'},
+        {role:'API 返回',color:'var(--green)',bg:'rgba(22,163,74,.04)',text:'✅ 预订成功！上海外滩茂悦大酒店，4/23-4/25，2晚 ¥2,560。'},
+        {role:'结果',color:'var(--green)',bg:'rgba(22,163,74,.06)',text:'一次成功，消耗 800 Token。没有任何重试。'}
+      ]
+    }
+  },
+  {
+    name: '发邮件',
+    user: '给张三发一封邮件，告诉他明天会议改到下午3点。',
+    bad: {
+      card: {icon:'📧',iconBg:'rgba(220,38,38,.08)',name:'send_email',
+        desc:'发送邮件',descBg:'rgba(220,38,38,.04)',
+        params:[
+          {name:'收件人',type:'文字',hint:''},
+          {name:'内容',type:'文字',hint:''}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'要发邮件给张三。收件人填"张三"……'},
+        {role:'模型输出',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：send_email\n收件人 → 张三\n内容 → 明天会议改到下午3点'},
+        {role:'API 返回',color:'var(--red)',bg:'rgba(220,38,38,.04)',shake:true,text:'❌ 错误：收件人必须是邮箱地址，不是人名。'},
+        {role:'模型重试',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'我不知道张三的邮箱……只能编一个？收件人 → zhangsan@company.com'},
+        {role:'结果',color:'var(--red)',bg:'rgba(220,38,38,.06)',text:'模型编造了邮箱地址！邮件发到了不存在的地址，或者更糟——发给了错误的人。'}
+      ]
+    },
+    good: {
+      card: {icon:'📧',iconBg:'rgba(22,163,74,.08)',name:'send_email',
+        desc:'发送邮件给指定联系人。如果用户提供的是人名而非邮箱，先调用 find_contact 查找邮箱。邮件支持纯文本和 HTML 两种格式。',descBg:'rgba(22,163,74,.04)',
+        params:[
+          {name:'收件人邮箱',type:'文字',hint:'如：xx@xx.com'},
+          {name:'主题',type:'文字',hint:'邮件标题'},
+          {name:'正文',type:'文字',hint:'支持纯文本或 HTML'},
+          {name:'格式',type:'文字',hint:'text 或 html，默认 text'}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'用户要发邮件给张三，但描述说需要邮箱。用户给的是人名，描述提示我先用 find_contact 查找。'},
+        {role:'模型先查联系人',color:'var(--cyan)',bg:'rgba(8,145,178,.04)',text:'使用工具：find_contact\n姓名 → 张三\n→ 返回：zhangsan@realcompany.com'},
+        {role:'模型再发邮件',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：send_email\n收件人邮箱 → zhangsan@realcompany.com\n主题 → 会议时间变更通知\n正文 → 张三你好，明天会议改到下午3点。'},
+        {role:'结果',color:'var(--green)',bg:'rgba(22,163,74,.06)',text:'✅ 邮件发送成功。没有编造地址，流程正确。'}
+      ]
+    }
+  },
+  {
+    name: '搜索文件',
+    user: '帮我找到上周写的那份竞品分析文档。',
+    bad: {
+      card: {icon:'📂',iconBg:'rgba(220,38,38,.08)',name:'search',
+        desc:'搜索',descBg:'rgba(220,38,38,.04)',
+        params:[
+          {name:'关键词',type:'文字',hint:''}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'用户要搜索文件，用 search 工具。关键词……"竞品分析"？'},
+        {role:'模型输出',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：search\n关键词 → 竞品分析'},
+        {role:'返回',color:'var(--amber)',bg:'rgba(215,119,6,.04)',text:'返回 200 条结果……太多了，无法判断哪个是用户要的。'},
+        {role:'模型困惑',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'结果太多，我再加关键词试试？"竞品分析 上周"？但 search 工具不支持按时间筛选……'},
+        {role:'结果',color:'var(--red)',bg:'rgba(220,38,38,.06)',text:'来回调用 5 次仍未找到。因为工具描述太简单，模型无从判断该如何精准检索。'}
+      ]
+    },
+    good: {
+      card: {icon:'📂',iconBg:'rgba(22,163,74,.08)',name:'search_files',
+        desc:'在用户的文件库中搜索文档。支持关键词搜索和时间范围筛选。结果按相关性排序，最多返回 10 条。',descBg:'rgba(22,163,74,.04)',
+        params:[
+          {name:'关键词',type:'文字',hint:'搜索词'},
+          {name:'文件类型',type:'文字',hint:'doc/pdf/md，可选'},
+          {name:'时间范围',type:'文字',hint:'如：last_week，可选'},
+          {name:'排序方式',type:'文字',hint:'relevance 或 date，默认 relevance'}
+        ]},
+      steps:[
+        {role:'模型推理',color:'var(--purple)',bg:'rgba(124,58,237,.04)',text:'用户找上周的文档。描述说支持时间筛选，我用 time_range=last_week 缩小范围。'},
+        {role:'模型输出',color:'var(--purple)',bg:'rgba(124,58,237,.06)',text:'使用工具：search_files\n关键词 → 竞品分析\n时间范围 → last_week\n排序方式 → date'},
+        {role:'返回',color:'var(--green)',bg:'rgba(22,163,74,.04)',text:'✅ 找到 2 条结果，最新一条：「竞品分析报告_v3.docx」，上周三创建。'},
+        {role:'结果',color:'var(--green)',bg:'rgba(22,163,74,.06)',text:'一次命中。好描述告诉模型有时间筛选能力→模型会主动使用→精准高效。'}
+      ]
+    }
+  }
+];
+
+var curExp = 0, curBadStep = 0, curGoodStep = 0, running = false;
+
+function buildTabs() {
+  var html = '';
+  for (var i = 0; i < EXPS.length; i++) {
+    html += '<button class="exp-tab' + (i === curExp ? ' active' : '') + '" onclick="pickExp(' + i + ')">' + EXPS[i].name + '</button>';
+  }
+  document.getElementById('expTabs').innerHTML = html;
+}
+
+function pickExp(i) {
+  curExp = i;
+  buildTabs();
+  resetExp();
+}
+
+function renderToolCard(data, container) {
+  var html = '<div class="tool-card"><div class="tc-hd">' +
+    '<div class="tc-icon" style="background:' + data.icon_bg + '">' + data.icon + '</div>' +
+    '<div class="tc-name">' + data.name + '</div></div>' +
+    '<div class="tc-desc" style="background:' + data.descBg + '">' + data.desc + '</div>' +
+    '<div class="tc-params">';
+  for (var j = 0; j < data.params.length; j++) {
+    var p = data.params[j];
+    html += '<div class="tc-param"><span class="tc-param-name">' + p.name + '</span><span class="tc-param-type">' + p.type + '</span>' +
+      (p.hint ? '<span class="tc-param-hint">' + p.hint + '</span>' : '') + '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function resetExp() {
+  curBadStep = 0;
+  curGoodStep = 0;
+  running = false;
+  var exp = EXPS[curExp];
+  var bad = exp.bad, good = exp.good;
+
+  var leftHtml = renderToolCard({icon:bad.card.icon,icon_bg:bad.card.iconBg,name:bad.card.name,desc:bad.card.desc,descBg:bad.card.descBg,params:bad.card.params}, 'leftCol');
+  leftHtml += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-top:2px">用户指令</div>';
+  leftHtml += '<div style="background:rgba(8,145,178,.04);border:1px solid rgba(8,145,178,.15);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text)">' + exp.user + '</div>';
+  leftHtml += '<div class="sim-area"><div class="sim-hd"><span>模型执行过程</span><span id="badCount">0 / ' + bad.steps.length + '</span></div><div class="sim-body" id="badSim"></div></div>';
+  document.getElementById('leftCol').innerHTML = leftHtml;
+
+  var rightHtml = renderToolCard({icon:good.card.icon,icon_bg:good.card.iconBg,name:good.card.name,desc:good.card.desc,descBg:good.card.descBg,params:good.card.params}, 'rightCol');
+  rightHtml += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-top:2px">用户指令</div>';
+  rightHtml += '<div style="background:rgba(8,145,178,.04);border:1px solid rgba(8,145,178,.15);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text)">' + exp.user + '</div>';
+  rightHtml += '<div class="sim-area"><div class="sim-hd"><span>模型执行过程</span><span id="goodCount">0 / ' + good.steps.length + '</span></div><div class="sim-body" id="goodSim"></div></div>';
+  document.getElementById('rightCol').innerHTML = rightHtml;
+
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnRun').textContent = '▶ 运行实验';
+  document.getElementById('expHint').textContent = '点击运行 → 对比坏描述 vs 好描述的效果差异';
+}
+
+function addSimMsg(containerId, step) {
+  var el = document.createElement('div');
+  el.className = 'sim-msg';
+  el.style.background = step.bg;
+  el.style.border = '1px solid rgba(0,0,0,.06)';
+  el.innerHTML = '<div class="sim-msg-role" style="color:' + step.color + '">' + step.role + '</div>' +
+    '<div style="white-space:pre-line">' + step.text + '</div>';
+  document.getElementById(containerId).appendChild(el);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      el.classList.add('show');
+      if (step.shake) setTimeout(function() { el.classList.add('shake'); }, 300);
+      el.parentElement.scrollTop = el.parentElement.scrollHeight;
+    });
+  });
+}
+
+function runExperiment() {
+  if (running) return;
+  var exp = EXPS[curExp];
+  var bad = exp.bad, good = exp.good;
+  var maxSteps = Math.max(bad.steps.length, good.steps.length);
+
+  if (curBadStep >= bad.steps.length && curGoodStep >= good.steps.length) return;
+
+  running = true;
+  document.getElementById('btnRun').disabled = true;
+
+  var step = 0;
+  function tick() {
+    if (step >= maxSteps) {
+      running = false;
+      document.getElementById('btnRun').textContent = '✓ 实验完成';
+      document.getElementById('expHint').textContent = '好描述一次成功 vs 坏描述反复失败——差别只在工具描述的文字质量';
+      return;
+    }
+    if (step < bad.steps.length) {
+      addSimMsg('badSim', bad.steps[step]);
+      curBadStep = step + 1;
+      document.getElementById('badCount').textContent = curBadStep + ' / ' + bad.steps.length;
+    }
+    if (step < good.steps.length) {
+      addSimMsg('goodSim', good.steps[step]);
+      curGoodStep = step + 1;
+      document.getElementById('goodCount').textContent = curGoodStep + ' / ' + good.steps.length;
+    }
+    step++;
+    setTimeout(tick, 900);
+  }
+  tick();
+}
+
+buildTabs();
+resetExp();
+</script>
+</body>
+</html>
