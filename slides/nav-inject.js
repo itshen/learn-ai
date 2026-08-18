@@ -227,6 +227,11 @@ const SLIDE_ORDER = [
   { file: '7-6b.html',                       title: '多 Agent 协作', tr: 'en ko' },
   { file: '7-6c.html',                       title: '可观测性', tr: 'en ko' },
   { file: '7-summary.html',                  title: 'Agent 工程全景图', tr: 'en ko' },
+  { file: 'vector-db-1.html',                title: '从 Embedding 到 Milvus', tr: 'en ko' },
+  { file: 'vector-db-2.html',                title: 'Milvus 心智模型', tr: 'en ko' },
+  { file: 'vector-db-3.html',                title: 'Milvus 实操', tr: 'en ko' },
+  { file: 'vector-db-4.html',                title: '从检索到 RAG', tr: 'en ko' },
+  { file: 'vector-db-5.html',                title: 'Agent 知识库工具', tr: 'en ko' },
   { file: '8-1.html',                        title: '多轮对话成本', tr: 'en ko' },
   { file: '8-2.html',                        title: 'KV Cache', tr: 'en ko' },
   { file: '8-2b.html',                       title: '显式缓存', tr: 'en ko' },
@@ -825,7 +830,8 @@ const I18N = window.XUEAI_I18N || {
         '9-31','9-32','9-summary','9-final'];
       const ch2Files = ['5-1','5-2','6-0a','6-0b','6-1','6-2','6-3','6-4',
         'prompt-attack','prompt-attack-cases','prompt-defense',
-        '7-1','7-2','7-3','7-4','7-5','8-1','8-2','8-2b','8-3','8-4','8-5','8-5b',
+        '7-1','7-2','7-3','7-4','7-5','vector-db-1','vector-db-2','vector-db-3',
+        'vector-db-4','vector-db-5','8-1','8-2','8-2b','8-3','8-4','8-5','8-5b',
         '8-6','8-7','8-8','cost-eval','engineering-philosophy','summary-2','summary-2b'];
       if (ch4Files.includes(base)) { location.href = I18N.locFile('learn.html') + '#10-1.html'; }
       else if (ch3Files.includes(base)) { location.href = I18N.locFile('learn.html') + '#9-1.html'; }

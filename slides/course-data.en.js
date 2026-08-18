@@ -281,6 +281,19 @@ window.COURSE = {
           ],
         },
         {
+          id: 't-vector-db',
+          title: 'Vector Databases',
+          routes: ['pm', 'build'],
+          desc: 'From Embeddings and Milvus to RAG and Agent knowledge tools',
+          lessons: [
+            { file: 'vector-db-1.html', title: 'From Embeddings to Milvus', desc: 'Semantic similarity, ANN, and the responsibility boundary of a vector database', tag: 'Intro' },
+            { file: 'vector-db-2.html', title: 'The Milvus Mental Model', desc: 'Collection, Schema, Entity, Index, Search, Query, and Load', tag: 'Core' },
+            { file: 'vector-db-3.html', title: 'Hands-on Milvus', desc: 'Connect, create, batch insert, index, search, query, and delete', tag: 'Hands-on' },
+            { file: 'vector-db-4.html', title: 'From Retrieval to RAG', desc: 'Chunking, filtering, hybrid search, RRF, reranking, and evaluation', tag: 'RAG' },
+            { file: 'vector-db-5.html', title: 'Milvus as an Agent Knowledge Tool', desc: 'search_knowledge, ToolMessage, memory separation, and tests', tag: 'Agent' },
+          ],
+        },
+        {
           id: 't-cost',
           title: 'Cost Optimization & Model Selection',
           desc: 'KV Cache, caching, image Tokens, syntax/semantic/output-layer optimization, and model selection',

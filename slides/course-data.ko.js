@@ -276,6 +276,19 @@ window.COURSE = {
           ],
         },
         {
+          id: 't-vector-db',
+          title: '벡터 데이터베이스',
+          routes: ['pm', 'build'],
+          desc: 'Embedding과 Milvus부터 RAG와 Agent 지식 도구까지',
+          lessons: [
+            { file: 'vector-db-1.html', title: 'Embedding에서 Milvus까지', desc: '시맨틱 유사도, ANN과 벡터 데이터베이스의 역할 경계', tag: '입문' },
+            { file: 'vector-db-2.html', title: 'Milvus 멘탈 모델', desc: 'Collection, Schema, Entity, Index, Search, Query와 Load', tag: '기초' },
+            { file: 'vector-db-3.html', title: 'Milvus 실습', desc: '연결, 생성, 배치 삽입, 인덱스, 검색, 조회와 삭제', tag: '실전' },
+            { file: 'vector-db-4.html', title: '검색에서 RAG까지', desc: '청킹, 필터링, 하이브리드 검색, RRF, 재순위화와 평가', tag: 'RAG' },
+            { file: 'vector-db-5.html', title: 'Agent 지식 도구로서의 Milvus', desc: 'search_knowledge, ToolMessage, 메모리 분리와 테스트', tag: 'Agent' },
+          ],
+        },
+        {
           id: 't-cost',
           title: '비용 최적화와 모델 선택',
           desc: 'KV Cache, 캐시, 이미지 Token, 구문/의미/출력 계층 최적화와 모델 선택',

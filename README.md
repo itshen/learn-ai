@@ -28,6 +28,8 @@
 
 * Agent 设计与工具调用（ReAct 框架）
 
+* 向量数据库与 Milvus（RAG、Agent 知识库）
+
 * 五层成本优化体系（KV Cache 等）
 
 ### 第三篇章 · 实战：从 Demo 到产品

@@ -295,6 +295,19 @@ window.COURSE = {
           ],
         },
         {
+          id: 't-vector-db',
+          title: '向量数据库',
+          routes: ['pm', 'build'],
+          desc: '从 Embedding 与 Milvus 到 RAG 和 Agent 知识库',
+          lessons: [
+            { file: 'vector-db-1.html', title: '从 Embedding 到 Milvus', desc: '语义相似度、ANN 与向量数据库的职责边界', tag: '入门' },
+            { file: 'vector-db-2.html', title: 'Milvus 心智模型', desc: 'Collection、Schema、Entity、Index、Search、Query 与 Load', tag: '基础' },
+            { file: 'vector-db-3.html', title: 'Milvus 实操', desc: '连接、建表、批量写入、索引、搜索、查询和删除', tag: '实战' },
+            { file: 'vector-db-4.html', title: '从检索到 RAG', desc: '切分、过滤、混合检索、RRF、重排与评测', tag: 'RAG' },
+            { file: 'vector-db-5.html', title: 'Milvus 作为 Agent 知识库工具', desc: 'search_knowledge 工具、ToolMessage、记忆分层与测试', tag: 'Agent' },
+          ],
+        },
+        {
           id: 't-cost',
           title: '成本优化与选型',
           routes: ['pm', 'build'],   // 成本与选型，产品路线的刚需

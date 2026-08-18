@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Milvus 实操 | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="用当前 MilvusClient 风格完成连接、建表、插入、索引、加载、搜索、查询与删除。"><meta name="author" content="洛小山"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-3.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-3.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-3.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-3.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-3.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 产品经理培训"><meta property="og:title" content="Milvus 实操"><meta property="og:description" content="一段自洽代码走完向量数据库核心流程。"><meta property="og:url" content="https://xueai.app/slides/vector-db-3.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 实操","url":"https://xueai.app/slides/vector-db-3.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:170px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">向量数据库 · 3/5</div><h1>Milvus 实操</h1><p class="subtitle">用一套一致的集合名和真实文本 Embedding，跑通写入、检索与删除；代码假定本地 Milvus 已在 19530 端口运行。</p></header>
+<div class="vdb-note vdb-ok">先按 <a href="https://milvus.io/docs/install_standalone-docker.md" target="_blank" rel="noopener">Milvus 官方 Docker Standalone 指南</a>启动服务，再安装 <code>pymilvus</code> 与 <code>sentence-transformers</code>。示例使用公开文本模型并从实际输出推导维数，不用随机向量伪装语义效果。</div><div class="sec-label">1. 连接、Embedding、Schema 与批量写入</div><pre class="vdb-code paywall-locked xa-peek"><span class="k">from</span> pymilvus <span class="k">import</span> MilvusClient, DataType
+<span class="k">from</span> sentence_transformers <span class="k">import</span> SentenceTransformer
+
+COLLECTION = <span class="s">"support_kb"</span>
+client = MilvusClient(uri=<span class="s">"http://localhost:19530"</span>)
+print(client.list_collections())  <span class="c"># 先确认服务可达；健康检查常见于 9091/healthz</span>
+RESET_LAB = False  <span class="c"># 只有确认可丢弃旧练习数据时才改为 True</span>
+<span class="k">if</span> client.has_collection(collection_name=COLLECTION):
+    <span class="k">if not</span> RESET_LAB:
+        <span class="k">raise</span> RuntimeError(<span class="s">"support_kb 已存在；请换名称，或确认后启用 RESET_LAB"</span>)
+    client.drop_collection(collection_name=COLLECTION)  <span class="c"># 删除整个集合</span>
+encoder = SentenceTransformer(<span class="s">"BAAI/bge-m3"</span>)
+docs = [
+  {<span class="s">"id"</span>: 1, <span class="s">"text"</span>: <span class="s">"退款通常在三个工作日内到账"</span>, <span class="s">"category"</span>: <span class="s">"refund"</span>},
+  {<span class="s">"id"</span>: 2, <span class="s">"text"</span>: <span class="s">"修改密码后需要重新登录"</span>, <span class="s">"category"</span>: <span class="s">"account"</span>},
+]
+vectors = encoder.encode([d[<span class="s">"text"</span>] for d in docs], normalize_embeddings=True).tolist()
+dim = len(vectors[0])
+
+schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=False)
+schema.add_field(field_name=<span class="s">"id"</span>, datatype=DataType.INT64, is_primary=True)
+schema.add_field(field_name=<span class="s">"vector"</span>, datatype=DataType.FLOAT_VECTOR, dim=dim)
+schema.add_field(field_name=<span class="s">"text"</span>, datatype=DataType.VARCHAR, max_length=1000)
+schema.add_field(field_name=<span class="s">"category"</span>, datatype=DataType.VARCHAR, max_length=64)
+client.create_collection(collection_name=COLLECTION, schema=schema)
+
+rows = [{**d, <span class="s">"vector"</span>: v} for d, v in zip(docs, vectors)]
+client.insert(collection_name=COLLECTION, data=rows) <span class="c"># 数据较多时分批写，并记录失败批次</span></pre>
+<div class="sec-label paywall-locked">2. 建索引、Load、Top-K Search 与 Filter</div><pre class="vdb-code paywall-locked">index = client.prepare_index_params()
+index.add_index(field_name=<span class="s">"vector"</span>, index_type=<span class="s">"HNSW"</span>, metric_type=<span class="s">"COSINE"</span>,
+                params={<span class="s">"M"</span>: 16, <span class="s">"efConstruction"</span>: 200})
+client.create_index(collection_name=COLLECTION, index_params=index)
+client.load_collection(collection_name=COLLECTION)
+
+query_vector = encoder.encode([<span class="s">"退的钱多久能回来？"</span>], normalize_embeddings=True).tolist()
+hits = client.search(
+  collection_name=COLLECTION, data=query_vector, anns_field=<span class="s">"vector"</span>, limit=3,
+  filter=<span class="s">'category == "refund"'</span>, output_fields=[<span class="s">"text"</span>, <span class="s">"category"</span>],
+  search_params={<span class="s">"metric_type"</span>: <span class="s">"COSINE"</span>, <span class="s">"params"</span>: {<span class="s">"ef"</span>: 64}},
+)
+<span class="k">for</span> hit <span class="k">in</span> hits[0]:
+    print(hit[<span class="s">"id"</span>], hit[<span class="s">"distance"</span>], hit[<span class="s">"entity"</span>][<span class="s">"text"</span>])</pre>
+<div class="sec-label paywall-locked">3. Query 与 Delete</div><pre class="vdb-code paywall-locked"><span class="c"># Query 不做向量相似度计算</span>
+rows = client.query(collection_name=COLLECTION, filter=<span class="s">'category == "account"'</span>,
+                    output_fields=[<span class="s">"id"</span>, <span class="s">"text"</span>])
+client.delete(collection_name=COLLECTION, filter=<span class="s">"id == 2"</span>)
+
+<span class="c"># ⚠️ 仅用于可丢弃的练习环境；drop 会删除整个集合</span>
+<span class="c"># client.drop_collection(collection_name=COLLECTION)</span></pre>
+<div class="vdb-grid paywall-locked"><div class="vdb-card"><h3>写入策略</h3><p>批量 insert；使用稳定主键，并用 upsert 或业务去重实现幂等（insert 本身不会自动去重）；保留模型名、模型版本与内容版本。更新内容时重新生成向量。</p></div><div class="vdb-card"><h3>删除策略</h3><p>需要可撤销删除时，可先用 <code>active=false</code> 做逻辑删除，并在搜索 filter 中排除；物理删除后空间回收依赖 Compaction，不会立刻缩小文件。</p></div></div><div class="l-callout paywall-locked"><b>检查点</b>　同一模型、同一维数、同一 COSINE metric、真实文本向量、先 load 后 search。先用 FLAT 做小规模正确性基线，再比较 HNSW 的 Recall 与延迟。</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
