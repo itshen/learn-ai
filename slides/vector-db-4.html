@@ -1,5 +1,119 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>从检索到 RAG | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="把 Milvus 向量检索接入 RAG，并理解切分、过滤、重排、混合检索和 RRF。"><meta name="author" content="洛小山"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-4.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-4.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-4.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-4.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-4.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 产品经理培训"><meta property="og:title" content="从检索到 RAG"><meta property="og:description" content="让检索结果成为可引用、可评测的回答上下文。"><meta property="og:url" content="https://xueai.app/slides/vector-db-4.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"从检索到 RAG","url":"https://xueai.app/slides/vector-db-4.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">向量数据库 · 4/5</div><h1>从检索到 RAG</h1><p class="subtitle">Search 返回“可能相关的片段”，RAG 还要把它们变成有来源、有边界、能被评测的回答依据。</p></header>
-<div class="sec-label">在线链路</div><div class="vdb-flow paywall-locked xa-peek"><div class="vdb-step"><span class="vdb-num">1</span><h3>Embed Query</h3><p>用写入时同一个模型编码问题。</p></div><div class="vdb-step"><span class="vdb-num">2</span><h3>Retrieve</h3><p>租户/权限过滤 + Top-K 向量检索。</p></div><div class="vdb-step"><span class="vdb-num">3</span><h3>Rerank</h3><p>精排、去重，并控制上下文 Token。</p></div><div class="vdb-step"><span class="vdb-num">4</span><h3>Generate</h3><p>要求模型只依据证据回答并给出来源。</p></div></div>
-<div class="sec-label paywall-locked">离线摄取决定了线上上限</div><div class="vdb-cards paywall-locked"><div class="vdb-card"><h3>切分</h3><p>按标题、段落和语义边界切 chunk，保留少量 overlap。太大噪声多，太小上下文断裂。</p></div><div class="vdb-card"><h3>元数据</h3><p>保存 source_id、版本、章节、租户、ACL 与更新时间。引用、过滤和删除都依赖它。</p></div><div class="vdb-card"><h3>版本</h3><p>内容或 Embedding 模型变化要重算；蓝绿 collection 切换可避免新旧向量混用。</p></div></div>
-<div class="sec-label paywall-locked">检索质量工具箱</div><div class="vdb-table-wrap paywall-locked"><table class="vdb-table"><thead><tr><th>方法</th><th>解决什么</th><th>注意</th></tr></thead><tbody><tr><td>标量 Filter</td><td>租户、权限、时间、语言约束</td><td>权限必须在检索阶段执行，不能只靠 Prompt</td></tr><tr><td>向量 + 关键词混合检索</td><td>兼顾语义、产品型号、错误码等精确词</td><td>两种分数尺度不同，不宜直接相加</td></tr><tr><td>RRF 融合</td><td>按排名融合多路结果</td><td>简单稳健；再用 reranker 精排候选</td></tr><tr><td>Partition / TTL</td><td>隔离热点或清理过期数据</td><td>属于扩展能力，先用清晰的 collection 与 filter 设计</td></tr></tbody></table></div>
-<div class="vdb-note paywall-locked"><b>评测分两层：</b>先测检索 Recall@K、MRR / nDCG 与过滤正确性，再测答案的忠实度、引用准确率和拒答率。只看“回答像不像”会掩盖召回失败。</div><div class="l-callout paywall-locked"><b>收获</b>　RAG 不是“搜到就塞”。切分、元数据、权限过滤、融合与引用共同决定检索增强是否可靠。</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>从检索到 RAG | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="把 Milvus 向量检索接入 RAG，并理解切分、过滤、重排、混合检索和 RRF。">
+    <meta name="author" content="洛小山">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-4.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-4.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-4.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-4.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-4.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+    <meta property="og:title" content="从检索到 RAG">
+    <meta property="og:description" content="让检索结果成为可引用、可评测的回答上下文。">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-4.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"从检索到 RAG","url":"https://xueai.app/slides/vector-db-4.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">向量数据库 · 4/5</div>
+        <h1>从检索到 RAG</h1>
+        <p class="subtitle">Search 返回“可能相关的片段”，RAG 还要把它们变成有来源、有边界、能被评测的回答依据。</p>
+      </header>
+      <div class="sec-label">在线链路</div>
+      <div class="vdb-flow paywall-locked xa-peek">
+        <div class="vdb-step">
+          <span class="vdb-num">1</span>
+          <h3>Embed Query</h3>
+          <p>用写入时同一个模型编码问题。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">2</span>
+          <h3>Retrieve</h3>
+          <p>租户/权限过滤 + Top-K 向量检索。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">3</span>
+          <h3>Rerank</h3>
+          <p>精排、去重，并控制上下文 Token。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">4</span>
+          <h3>Generate</h3>
+          <p>要求模型只依据证据回答并给出来源。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">离线摄取决定了线上上限</div>
+      <div class="vdb-cards paywall-locked">
+        <div class="vdb-card">
+          <h3>切分</h3>
+          <p>按标题、段落和语义边界切 chunk，保留少量 overlap。太大噪声多，太小上下文断裂。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>元数据</h3>
+          <p>保存 source_id、版本、章节、租户、ACL 与更新时间。引用、过滤和删除都依赖它。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>版本</h3>
+          <p>内容或 Embedding 模型变化要重算；蓝绿 collection 切换可避免新旧向量混用。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">检索质量工具箱</div>
+      <div class="vdb-table-wrap paywall-locked">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>方法</th>
+              <th>解决什么</th>
+              <th>注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>标量 Filter</td>
+              <td>租户、权限、时间、语言约束</td>
+              <td>权限必须在检索阶段执行，不能只靠 Prompt</td>
+            </tr>
+            <tr>
+              <td>向量 + 关键词混合检索</td>
+              <td>兼顾语义、产品型号、错误码等精确词</td>
+              <td>两种分数尺度不同，不宜直接相加</td>
+            </tr>
+            <tr>
+              <td>RRF 融合</td>
+              <td>按排名融合多路结果</td>
+              <td>简单稳健；再用 reranker 精排候选</td>
+            </tr>
+            <tr>
+              <td>Partition / TTL</td>
+              <td>隔离热点或清理过期数据</td>
+              <td>属于扩展能力，先用清晰的 collection 与 filter 设计</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vdb-note paywall-locked">
+        <b>评测分两层：</b>先测检索 Recall@K、MRR / nDCG 与过滤正确性，再测答案的忠实度、引用准确率和拒答率。只看“回答像不像”会掩盖召回失败。</div>
+      <div class="l-callout paywall-locked">
+        <b>收获</b>　RAG 不是“搜到就塞”。切分、元数据、权限过滤、融合与引用共同决定检索增强是否可靠。</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

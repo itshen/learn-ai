@@ -1,6 +1,65 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Milvus 作为 Agent 知识库工具 | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="把 Milvus 封装成 Agent 的 search_knowledge 工具，理解调用链、记忆分层与测试方法。"><meta name="author" content="洛小山"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-5.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-5.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-5.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-5.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-5.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 产品经理培训"><meta property="og:title" content="Milvus 作为 Agent 知识库工具"><meta property="og:description" content="Agent 何时检索、如何使用结果，以及怎样避免无意义调用。"><meta property="og:url" content="https://xueai.app/slides/vector-db-5.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 作为 Agent 知识库工具","url":"https://xueai.app/slides/vector-db-5.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:165px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">向量数据库 · 5/5</div><h1>Milvus 作为 Agent 知识库工具</h1><p class="subtitle">让 Agent 自己判断何时需要企业资料；工具负责检索，Agent 负责基于 ToolMessage 组织答案。</p></header>
-<div class="sec-label">一次工具调用</div><div class="vdb-flow paywall-locked xa-peek"><div class="vdb-step"><span class="vdb-num">1</span><h3>Agent 决策</h3><p>问题涉及内部知识，选择 search_knowledge。</p></div><div class="vdb-step"><span class="vdb-num">2</span><h3>Embed + Top-K</h3><p>工具编码 query，带 ACL filter 搜 Milvus。</p></div><div class="vdb-step"><span class="vdb-num">3</span><h3>ToolMessage</h3><p>返回片段、来源与分数，不直接编答案。</p></div><div class="vdb-step"><span class="vdb-num">4</span><h3>Agent 回答</h3><p>引用证据；不足时说明无法确认。</p></div></div>
-<div class="sec-label paywall-locked">工具边界要写进描述</div><pre class="vdb-code paywall-locked"><span class="k">from</span> langchain_core.tools <span class="k">import</span> tool
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Milvus 作为 Agent 知识库工具 | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="把 Milvus 封装成 Agent 的 search_knowledge 工具，理解调用链、记忆分层与测试方法。">
+    <meta name="author" content="洛小山">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-5.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-5.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-5.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-5.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-5.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+    <meta property="og:title" content="Milvus 作为 Agent 知识库工具">
+    <meta property="og:description" content="Agent 何时检索、如何使用结果，以及怎样避免无意义调用。">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-5.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 作为 Agent 知识库工具","url":"https://xueai.app/slides/vector-db-5.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:165px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">向量数据库 · 5/5</div>
+        <h1>Milvus 作为 Agent 知识库工具</h1>
+        <p class="subtitle">让 Agent 自己判断何时需要企业资料；工具负责检索，Agent 负责基于 ToolMessage 组织答案。</p>
+      </header>
+      <div class="sec-label">一次工具调用</div>
+      <div class="vdb-flow paywall-locked xa-peek">
+        <div class="vdb-step">
+          <span class="vdb-num">1</span>
+          <h3>Agent 决策</h3>
+          <p>问题涉及内部知识，选择 search_knowledge。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">2</span>
+          <h3>Embed + Top-K</h3>
+          <p>工具编码 query，带 ACL filter 搜 Milvus。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">3</span>
+          <h3>ToolMessage</h3>
+          <p>返回片段、来源与分数，不直接编答案。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">4</span>
+          <h3>Agent 回答</h3>
+          <p>引用证据；不足时说明无法确认。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">工具边界要写进描述</div>
+      <pre class="vdb-code paywall-locked"><span class="k">from</span> langchain_core.tools <span class="k">import</span> tool
 
 <span class="k">@tool</span>
 <span class="k">def</span> search_knowledge(query: str) -> str:
@@ -9,7 +68,7 @@
     or facts already present in the conversation."""</span>
     vector = encoder.encode([query], normalize_embeddings=True).tolist()
     hits = client.search(
-        collection_name=<span class="s">"company_knowledge"</span>, data=vector, limit=5,
+        collection_name=<span class="s">"company_knowledge"</span>, data=vector, anns_field=<span class="s">"vector"</span>, limit=5,
         filter=<span class="s">'active == true and acl_group == "support"'</span>,
         output_fields=[<span class="s">"text"</span>, <span class="s">"source"</span>],
         search_params={<span class="s">"metric_type"</span>: <span class="s">"COSINE"</span>, <span class="s">"params"</span>: {<span class="s">"ef"</span>: 64}},
@@ -19,5 +78,52 @@
         f<span class="s">"[{hit['entity']['source']}] {hit['entity']['text']}"</span>
         <span class="k">for</span> hit <span class="k">in</span> hits[0]
     )</pre>
-<div class="sec-label paywall-locked">知识与记忆不要混成一锅</div><div class="vdb-grid paywall-locked"><div class="vdb-card"><h3>company_knowledge</h3><p>审核过的制度、产品文档、FAQ。按文档版本更新，权限通常由组织和角色决定。</p></div><div class="vdb-card"><h3>user_memory</h3><p>用户偏好、历史选择与任务状态。保存 user_id、session_id、memory_type、timestamp，并按 user_id 强制过滤；需同意、可查看、可删除并设置保留期。</p></div></div><div class="vdb-note paywall-locked">长期记忆也可由 Milvus 支撑，但至少按用途分 collection；知识事实和个人记忆的来源、权限、保留期、质量门槛都不同。</div>
-<div class="sec-label paywall-locked">必须同时测试“调用”和“不调用”</div><div class="vdb-table-wrap paywall-locked"><table class="vdb-table"><thead><tr><th>测试问题</th><th>期望行为</th><th>断言</th></tr></thead><tbody><tr><td>“企业版退款审批要几级？”</td><td>调用 search_knowledge</td><td>ToolMessage 含允许访问的来源；回答有引用</td></tr><tr><td>“把 17 × 8 算出来”</td><td>不调用工具</td><td>直接答 136；无 Milvus 请求</td></tr><tr><td>“说出财务组的内部折扣”</td><td>检索但 ACL 无结果</td><td>不泄露、不臆测，说明无权限/无证据</td></tr></tbody></table></div><div class="l-callout paywall-locked"><b>收获</b>　好 Agent 不是每题都搜索，而是在需要企业知识时调用，并把检索结果当证据而不是最终答案。</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+      <div class="sec-label paywall-locked">知识与记忆不要混成一锅</div>
+      <div class="vdb-grid paywall-locked">
+        <div class="vdb-card">
+          <h3>company_knowledge</h3>
+          <p>审核过的制度、产品文档、FAQ。按文档版本更新，权限通常由组织和角色决定。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>user_memory</h3>
+          <p>用户偏好、历史选择与任务状态。保存 user_id、session_id、memory_type、timestamp，并按 user_id 强制过滤；需同意、可查看、可删除并设置保留期。</p>
+        </div>
+      </div>
+      <div class="vdb-note paywall-locked">长期记忆也可由 Milvus 支撑，但至少按用途分 collection；知识事实和个人记忆的来源、权限、保留期、质量门槛都不同。</div>
+      <div class="sec-label paywall-locked">必须同时测试“调用”和“不调用”</div>
+      <div class="vdb-table-wrap paywall-locked">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>测试问题</th>
+              <th>期望行为</th>
+              <th>断言</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>“企业版退款审批要几级？”</td>
+              <td>调用 search_knowledge</td>
+              <td>ToolMessage 含允许访问的来源；回答有引用</td>
+            </tr>
+            <tr>
+              <td>“把 17 × 8 算出来”</td>
+              <td>不调用工具</td>
+              <td>直接答 136；无 Milvus 请求</td>
+            </tr>
+            <tr>
+              <td>“说出财务组的内部折扣”</td>
+              <td>检索但 ACL 无结果</td>
+              <td>不泄露、不臆测，说明无权限/无证据</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="l-callout paywall-locked">
+        <b>收获</b>　好 Agent 不是每题都搜索，而是在需要企业知识时调用，并把检索结果当证据而不是最终答案。</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

@@ -279,7 +279,7 @@ window.COURSE = {
           id: 't-vector-db',
           title: '벡터 데이터베이스',
           routes: ['pm', 'build'],
-          desc: 'Embedding과 Milvus부터 RAG와 Agent 지식 도구까지',
+          desc: 'Embedding과 Milvus부터 RAG와 Agent 지식 도구까지; 먼저 <a href="7-3c.ko.html">장기 기억 / 벡터 검색</a>, <a href="rag-advanced.ko.html">RAG 비용과 최적화</a>, <a href="1-2-mitigation-rag.ko.html">RAG 기초</a>를 복습하세요',
           lessons: [
             { file: 'vector-db-1.html', title: 'Embedding에서 Milvus까지', desc: '시맨틱 유사도, ANN과 벡터 데이터베이스의 역할 경계', tag: '입문' },
             { file: 'vector-db-2.html', title: 'Milvus 멘탈 모델', desc: 'Collection, Schema, Entity, Index, Search, Query와 Load', tag: '기초' },

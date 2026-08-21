@@ -1,12 +1,133 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Milvus 心智模型 | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="用关系数据库类比理解 Milvus 的 Collection、Schema、Entity、Index、Search、Query 与 Load。"><meta name="author" content="洛小山"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-2.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-2.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-2.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-2.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-2.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 产品经理培训"><meta property="og:title" content="Milvus 心智模型"><meta property="og:description" content="把向量数据库术语放回熟悉的数据库世界。"><meta property="og:url" content="https://xueai.app/slides/vector-db-2.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 心智模型","url":"https://xueai.app/slides/vector-db-2.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">向量数据库 · 2/5</div><h1>Milvus 心智模型</h1><p class="subtitle">把新术语映射到熟悉的“表、列、行”，再补上向量索引与内存加载两个关键概念。</p></header>
-<div class="sec-label">核心对象</div><div class="vdb-table-wrap paywall-locked xa-peek"><table class="vdb-table"><thead><tr><th>Milvus</th><th>可类比为</th><th>职责</th></tr></thead><tbody><tr><td>Collection</td><td>表</td><td>一组具有同一 Schema 的 Entity</td></tr><tr><td>Schema / Field</td><td>表结构 / 列</td><td>约束主键、向量维数与标量类型</td></tr><tr><td>Entity</td><td>行</td><td>一条业务对象；主键必须能稳定定位</td></tr><tr><td>Index</td><td>索引</td><td>加速向量近邻搜索</td></tr></tbody></table></div>
-<div class="sec-label paywall-locked">一条知识库 Entity</div><pre class="vdb-code paywall-locked">{
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Milvus 心智模型 | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="用关系数据库类比理解 Milvus 的 Collection、Schema、Entity、Index、Search、Query 与 Load。">
+    <meta name="author" content="洛小山">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-2.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-2.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-2.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-2.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-2.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+    <meta property="og:title" content="Milvus 心智模型">
+    <meta property="og:description" content="把向量数据库术语放回熟悉的数据库世界。">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-2.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 心智模型","url":"https://xueai.app/slides/vector-db-2.html","inLanguage":"zh-CN","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">向量数据库 · 2/5</div>
+        <h1>Milvus 心智模型</h1>
+        <p class="subtitle">把新术语映射到熟悉的“表、列、行”，再补上向量索引与内存加载两个关键概念。</p>
+      </header>
+      <div class="sec-label">核心对象</div>
+      <div class="vdb-table-wrap paywall-locked xa-peek">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>Milvus</th>
+              <th>可类比为</th>
+              <th>职责</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Collection</td>
+              <td>表</td>
+              <td>一组具有同一 Schema 的 Entity</td>
+            </tr>
+            <tr>
+              <td>Schema / Field</td>
+              <td>表结构 / 列</td>
+              <td>约束主键、向量维数与标量类型</td>
+            </tr>
+            <tr>
+              <td>Entity</td>
+              <td>行</td>
+              <td>一条业务对象；主键必须能稳定定位</td>
+            </tr>
+            <tr>
+              <td>Index</td>
+              <td>索引</td>
+              <td>加速向量近邻搜索</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-label paywall-locked">一条知识库 Entity</div>
+      <pre class="vdb-code paywall-locked">{
   <span class="s">"id"</span>: 42,                 <span class="c"># 主键：用于更新、删除、追踪</span>
   <span class="s">"vector"</span>: [0.12, ...],   <span class="c"># 向量字段：用于 Search</span>
   <span class="s">"text"</span>: <span class="s">"退款通常 3 天到账"</span>,
   <span class="s">"category"</span>: <span class="s">"refund"</span>, <span class="c"># 标量字段：用于 Filter / Query</span>
   <span class="s">"active"</span>: true
 }</pre>
-<div class="sec-label paywall-locked">Search、Query、Load 各做什么</div><div class="vdb-cards paywall-locked"><div class="vdb-card"><h3>Search</h3><p>输入查询向量，按距离返回 Top-K；可附加 <code>filter='active == true'</code>。答案是“语义上谁最像”。</p></div><div class="vdb-card"><h3>Query</h3><p>不传向量，按主键或标量表达式取数据。答案是“哪些记录满足条件”。</p></div><div class="vdb-card"><h3>Load</h3><p>搜索前把 collection 的索引与数据准备到查询节点。创建成功不代表已经可搜，资源不足时也要规划释放。</p></div></div>
-<div class="sec-label paywall-locked">索引选型不是“越高级越好”</div><div class="vdb-table-wrap paywall-locked"><table class="vdb-table"><thead><tr><th>Index</th><th>优势</th><th>代价 / 场景</th></tr></thead><tbody><tr><td>FLAT</td><td>精确、无需训练</td><td>全量比较；小数据集或 Recall 基线</td></tr><tr><td>IVF_FLAT</td><td>通过聚类缩小候选</td><td>需调 nlist / nprobe；数据量较大、成本可控</td></tr><tr><td>HNSW</td><td>高 Recall、低延迟</td><td>占更多内存且建索引较慢；在线检索常用</td></tr></tbody></table></div>
-<div class="vdb-note paywall-locked"><b>生命周期：</b>定义 Schema → 创建 Collection → 写 Entity → 建 Index → Load → Search / Query。主键是业务追踪锚点，向量字段负责相似度，标量字段负责权限、租户、时间和状态过滤。</div><div class="l-callout paywall-locked"><b>收获</b>　Search 是“按含义找”，Query 是“按条件取”；Index 解决速度，Load 决定是否进入可查询状态。</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+      <div class="sec-label paywall-locked">Search、Query、Load 各做什么</div>
+      <div class="vdb-cards paywall-locked">
+        <div class="vdb-card">
+          <h3>Search</h3>
+          <p>输入查询向量，按距离返回 Top-K；可附加 <code>filter='active == true'</code>。答案是“语义上谁最像”。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>Query</h3>
+          <p>不传向量，按主键或标量表达式取数据。答案是“哪些记录满足条件”。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>Load</h3>
+          <p>搜索前把 collection 的索引与数据准备到查询节点。创建成功不代表已经可搜，资源不足时也要规划释放。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">索引选型不是“越高级越好”</div>
+      <div class="vdb-table-wrap paywall-locked">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>优势</th>
+              <th>代价 / 场景</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FLAT</td>
+              <td>精确、无需训练</td>
+              <td>全量比较；小数据集或 Recall 基线</td>
+            </tr>
+            <tr>
+              <td>IVF_FLAT</td>
+              <td>通过聚类缩小候选</td>
+              <td>需调 nlist / nprobe；数据量较大、成本可控</td>
+            </tr>
+            <tr>
+              <td>HNSW</td>
+              <td>高 Recall、低延迟</td>
+              <td>占更多内存且建索引较慢；在线检索常用</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vdb-note paywall-locked">
+        <b>生命周期：</b>定义 Schema → 创建 Collection → 写 Entity → 建 Index → Load → Search / Query。主键是业务追踪锚点，向量字段负责相似度，标量字段负责权限、租户、时间和状态过滤。</div>
+      <div class="l-callout paywall-locked">
+        <b>收获</b>　Search 是“按含义找”，Query 是“按条件取”；Index 解决速度，Load 决定是否进入可查询状态。</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

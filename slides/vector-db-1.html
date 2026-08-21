@@ -1,10 +1,125 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>从 Embedding 到 Milvus | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
-<meta name="description" content="理解 Embedding、语义相似度、ANN 与 Milvus 的职责边界。"><meta name="author" content="洛小山"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-1.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-1.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-1.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-1.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-1.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 产品经理培训"><meta property="og:title" content="从 Embedding 到 Milvus"><meta property="og:description" content="向量数据库入门：从语义表示到近似最近邻搜索。"><meta property="og:url" content="https://xueai.app/slides/vector-db-1.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"从 Embedding 到 Milvus","url":"https://xueai.app/slides/vector-db-1.html","inLanguage":"zh-CN","learningResourceType":"课程","educationalLevel":"入门","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body>
-<article class="lesson wide"><header class="lesson-header"><div class="kicker">向量数据库 · 1/5</div><h1>从 Embedding 到 Milvus</h1><p class="subtitle">先建立直觉：模型把含义变成坐标，Milvus 负责在海量坐标中快速找到“意思最接近”的内容。</p></header>
-<div class="sec-label">一条完整的数据链</div><div class="vdb-flow paywall-locked xa-peek"><div class="vdb-step"><span class="vdb-num">1</span><h3>原始内容</h3><p>“退款多久到账？”以及文档、图片等业务数据。</p></div><div class="vdb-step"><span class="vdb-num">2</span><h3>Embedding</h3><p>同一个模型把内容编码成固定长度的浮点向量。</p></div><div class="vdb-step"><span class="vdb-num">3</span><h3>ANN 搜索</h3><p>近似最近邻用少量精度换取数量级更高的速度。</p></div><div class="vdb-step"><span class="vdb-num">4</span><h3>业务结果</h3><p>返回 Top-K 文档，再交给应用或大模型使用。</p></div></div>
-<div class="sec-label paywall-locked">为什么普通关键词搜索不够</div><div class="vdb-grid paywall-locked"><div class="vdb-card"><h3>字面不同，意思相近</h3><p>“如何退钱”和“退款流程”未必共享关键词，但在语义空间里距离很近。Embedding 捕捉的是统计语义，不是可靠的事实判断。</p></div><div class="vdb-card"><h3>不能逐条硬算</h3><p>一百万条向量逐一精确比较成本太高。ANN 索引先缩小候选集，再计算距离；因此需要用 Recall 与延迟共同评测。</p></div></div>
-<div class="sec-label paywall-locked">相似度的方向别弄反</div><div class="vdb-table-wrap paywall-locked"><table class="vdb-table"><thead><tr><th>Metric</th><th>怎样更相似</th><th>适用提示</th></tr></thead><tbody><tr><td>L2（欧氏距离）</td><td>越小越近</td><td>关注绝对空间距离</td></tr><tr><td>IP（内积）</td><td>越大越近</td><td>向量模长会影响分数</td></tr><tr><td>COSINE</td><td>越大越近</td><td>关注方向；文本语义常用</td></tr></tbody></table></div>
-<div class="vdb-note paywall-locked"><b>关键约束：</b>写入与查询必须使用同一 Embedding 模型、同一预处理方式和同一维度；建索引与搜索的 metric 也必须一致。否则“有结果”不等于“结果可信”。</div>
-<div class="sec-label paywall-locked">Milvus 到底负责什么</div><div class="vdb-cards paywall-locked"><div class="vdb-card"><h3>存</h3><p>同时保存向量、主键与来源、类别、时间等标量字段。</p></div><div class="vdb-card"><h3>找</h3><p>用向量索引完成 Top-K 搜索，并用标量 filter 缩小范围。</p></div><div class="vdb-card"><h3>管</h3><p>管理 collection、索引、加载与数据生命周期；它不替你生成 Embedding，也不替大模型回答。</p></div></div>
-<div class="l-callout paywall-locked"><b>收获</b>　Embedding 决定“含义如何表示”，Milvus 决定“如何可靠且快速地存与找”。下一课把它翻译成数据库心智模型。</div></article>
-<script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>从 Embedding 到 Milvus | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="理解 Embedding、语义相似度、ANN 与 Milvus 的职责边界。">
+    <meta name="author" content="洛小山">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-1.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-1.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-1.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-1.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-1.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI 产品经理培训">
+    <meta property="og:title" content="从 Embedding 到 Milvus">
+    <meta property="og:description" content="向量数据库入门：从语义表示到近似最近邻搜索。">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-1.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"从 Embedding 到 Milvus","url":"https://xueai.app/slides/vector-db-1.html","inLanguage":"zh-CN","learningResourceType":"课程","educationalLevel":"入门","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">向量数据库 · 1/5</div>
+        <h1>从 Embedding 到 Milvus</h1>
+        <p class="subtitle">先建立直觉：模型把含义变成坐标，Milvus 负责在海量坐标中快速找到“意思最接近”的内容。</p>
+      </header>
+      <div class="sec-label">一条完整的数据链</div>
+      <div class="vdb-flow paywall-locked xa-peek">
+        <div class="vdb-step">
+          <span class="vdb-num">1</span>
+          <h3>原始内容</h3>
+          <p>“退款多久到账？”以及文档、图片等业务数据。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">2</span>
+          <h3>Embedding</h3>
+          <p>同一个模型把内容编码成固定长度的浮点向量。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">3</span>
+          <h3>ANN 搜索</h3>
+          <p>近似最近邻用少量精度换取数量级更高的速度。</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">4</span>
+          <h3>业务结果</h3>
+          <p>返回 Top-K 文档，再交给应用或大模型使用。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">为什么普通关键词搜索不够</div>
+      <div class="vdb-grid paywall-locked">
+        <div class="vdb-card">
+          <h3>字面不同，意思相近</h3>
+          <p>“如何退钱”和“退款流程”未必共享关键词，但在语义空间里距离很近。Embedding 捕捉的是统计语义，不是可靠的事实判断。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>不能逐条硬算</h3>
+          <p>一百万条向量逐一精确比较成本太高。ANN 索引先缩小候选集，再计算距离；因此需要用 Recall 与延迟共同评测。</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">相似度的方向别弄反</div>
+      <div class="vdb-table-wrap paywall-locked">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>怎样更相似</th>
+              <th>适用提示</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>L2（欧氏距离）</td>
+              <td>越小越近</td>
+              <td>关注绝对空间距离</td>
+            </tr>
+            <tr>
+              <td>IP（内积）</td>
+              <td>越大越近</td>
+              <td>向量模长会影响分数</td>
+            </tr>
+            <tr>
+              <td>COSINE</td>
+              <td>越大越近</td>
+              <td>关注方向；文本语义常用</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vdb-note paywall-locked">
+        <b>关键约束：</b>写入与查询必须使用同一 Embedding 模型、同一预处理方式和同一维度；建索引与搜索的 metric 也必须一致。否则“有结果”不等于“结果可信”。</div>
+      <div class="sec-label paywall-locked">Milvus 到底负责什么</div>
+      <div class="vdb-cards paywall-locked">
+        <div class="vdb-card">
+          <h3>存</h3>
+          <p>同时保存向量、主键与来源、类别、时间等标量字段。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>找</h3>
+          <p>用向量索引完成 Top-K 搜索，并用标量 filter 缩小范围。</p>
+        </div>
+        <div class="vdb-card">
+          <h3>管</h3>
+          <p>管理 collection、索引、加载与数据生命周期；它不替你生成 Embedding，也不替大模型回答。</p>
+        </div>
+      </div>
+      <div class="l-callout paywall-locked">
+        <b>收获</b>　Embedding 决定“含义如何表示”，Milvus 决定“如何可靠且快速地存与找”。下一课把它翻译成数据库心智模型。</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

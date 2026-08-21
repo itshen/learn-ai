@@ -1,5 +1,44 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Milvus 실습 | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="MilvusClient로 연결, Schema, 배치 삽입, 인덱스, Load, Search, Query와 Delete를 완료합니다."><meta name="author" content="뤄샤오산 (洛小山)"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-3.ko.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-3.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-3.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-3.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-3.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI 프로덕트 매니저 교육"><meta property="og:title" content="Milvus 실습"><meta property="og:description" content="하나의 일관된 예제로 벡터 데이터베이스 핵심 흐름을 실습합니다."><meta property="og:url" content="https://xueai.app/slides/vector-db-3.ko.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 실습","url":"https://xueai.app/slides/vector-db-3.ko.html","inLanguage":"ko","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:170px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">벡터 데이터베이스 · 3/5</div><h1>Milvus 실습</h1><p class="subtitle">삽입부터 삭제까지 동일한 Collection 이름과 실제 텍스트 Embedding을 사용합니다. 로컬 Milvus가 19530 포트에서 실행 중이라고 가정합니다.</p></header><div class="vdb-note vdb-ok"><a href="https://milvus.io/docs/install_standalone-docker.md" target="_blank" rel="noopener">공식 Docker Standalone 안내서</a>로 서비스를 시작한 뒤 <code>pymilvus</code>와 <code>sentence-transformers</code>를 설치하세요. 실제 모델 출력에서 차원을 구하며, 랜덤 벡터로 시맨틱 검색을 흉내 내지 않습니다.</div>
-<div class="sec-label">연결, 정의, 배치 삽입</div><pre class="vdb-code paywall-locked xa-peek"><span class="k">from</span> pymilvus <span class="k">import</span> MilvusClient, DataType
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Milvus 실습 | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="MilvusClient로 연결, Schema, 배치 삽입, 인덱스, Load, Search, Query와 Delete를 완료합니다.">
+    <meta name="author" content="뤄샤오산 (洛小山)">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-3.ko.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-3.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-3.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-3.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-3.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI 프로덕트 매니저 교육">
+    <meta property="og:title" content="Milvus 실습">
+    <meta property="og:description" content="하나의 일관된 예제로 벡터 데이터베이스 핵심 흐름을 실습합니다.">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-3.ko.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Milvus 실습","url":"https://xueai.app/slides/vector-db-3.ko.html","inLanguage":"ko","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:170px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">벡터 데이터베이스 · 3/5</div>
+        <h1>Milvus 실습</h1>
+        <p class="subtitle">삽입부터 삭제까지 동일한 Collection 이름과 실제 텍스트 Embedding을 사용합니다. 로컬 Milvus가 19530 포트에서 실행 중이라고 가정합니다.</p>
+      </header>
+      <div class="vdb-note vdb-ok">
+        <a href="https://milvus.io/docs/install_standalone-docker.md" target="_blank" rel="noopener">공식 Docker Standalone 안내서</a>로 서비스를 시작한 뒤 <code>pymilvus</code>와 <code>sentence-transformers</code>를 설치하세요. 실제 모델 출력에서 차원을 구하며, 랜덤 벡터로 시맨틱 검색을 흉내 내지 않습니다.</div>
+      <div class="sec-label">연결, 정의, 배치 삽입</div>
+      <pre class="vdb-code paywall-locked xa-peek"><span class="k">from</span> pymilvus <span class="k">import</span> MilvusClient, DataType
 <span class="k">from</span> sentence_transformers <span class="k">import</span> SentenceTransformer
 COLLECTION = <span class="s">"support_kb"</span>
 client = MilvusClient(uri=<span class="s">"http://localhost:19530"</span>)
@@ -20,7 +59,8 @@ schema.add_field(field_name=<span class="s">"text"</span>, datatype=DataType.VAR
 schema.add_field(field_name=<span class="s">"category"</span>, datatype=DataType.VARCHAR, max_length=64)
 client.create_collection(collection_name=COLLECTION, schema=schema)
 client.insert(collection_name=COLLECTION, data=[{**d, <span class="s">"vector"</span>: v} for d, v in zip(docs, vectors)])</pre>
-<div class="sec-label paywall-locked">인덱스, Load, 필터 Top-K Search</div><pre class="vdb-code paywall-locked">index = client.prepare_index_params()
+      <div class="sec-label paywall-locked">인덱스, Load, 필터 Top-K Search</div>
+      <pre class="vdb-code paywall-locked">index = client.prepare_index_params()
 index.add_index(field_name=<span class="s">"vector"</span>, index_type=<span class="s">"HNSW"</span>, metric_type=<span class="s">"COSINE"</span>,
                 params={<span class="s">"M"</span>: 16, <span class="s">"efConstruction"</span>: 200})
 client.create_index(collection_name=COLLECTION, index_params=index)
@@ -29,8 +69,26 @@ query_vector = encoder.encode([<span class="s">"환불 금액은 언제 들어�
 hits = client.search(collection_name=COLLECTION, data=query_vector, anns_field=<span class="s">"vector"</span>, limit=3,
     filter=<span class="s">'category == "refund"'</span>, output_fields=[<span class="s">"text"</span>, <span class="s">"category"</span>],
     search_params={<span class="s">"metric_type"</span>: <span class="s">"COSINE"</span>, <span class="s">"params"</span>: {<span class="s">"ef"</span>: 64}})</pre>
-<div class="sec-label paywall-locked">Query와 Delete</div><pre class="vdb-code paywall-locked">rows = client.query(collection_name=COLLECTION, filter=<span class="s">'category == "account"'</span>, output_fields=[<span class="s">"id"</span>, <span class="s">"text"</span>])
+      <div class="sec-label paywall-locked">Query와 Delete</div>
+      <pre class="vdb-code paywall-locked">rows = client.query(collection_name=COLLECTION, filter=<span class="s">'category == "account"'</span>, output_fields=[<span class="s">"id"</span>, <span class="s">"text"</span>])
 client.delete(collection_name=COLLECTION, filter=<span class="s">"id == 2"</span>)
 <span class="c"># 파괴적 작업이므로 일회성 실습 환경에서만 사용:</span>
 <span class="c"># client.drop_collection(collection_name=COLLECTION)</span></pre>
-<div class="vdb-grid paywall-locked"><div class="vdb-card"><h3>쓰기</h3><p>배치 삽입하되 안정적인 ID와 upsert 또는 애플리케이션 중복 제거로 멱등성을 구현합니다. insert만으로는 중복이 제거되지 않습니다. 콘텐츠와 Embedding 모델 버전을 함께 기록하세요.</p></div><div class="vdb-card"><h3>삭제</h3><p>삭제를 되돌릴 수 있게 하려면 먼저 <code>active=false</code>로 논리 삭제합니다. 물리 삭제 공간은 이후 Compaction으로 회수됩니다.</p></div></div><div class="l-callout paywall-locked"><b>체크</b>　같은 모델·차원·COSINE metric, 실제 Embedding, Search 전 Load. HNSW를 조정하기 전 FLAT으로 소규모 정확도 기준선을 만드세요.</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+      <div class="vdb-grid paywall-locked">
+        <div class="vdb-card">
+          <h3>쓰기</h3>
+          <p>배치 삽입하되 안정적인 ID와 upsert 또는 애플리케이션 중복 제거로 멱등성을 구현합니다. insert만으로는 중복이 제거되지 않습니다. 콘텐츠와 Embedding 모델 버전을 함께 기록하세요.</p>
+        </div>
+        <div class="vdb-card">
+          <h3>삭제</h3>
+          <p>삭제를 되돌릴 수 있게 하려면 먼저 <code>active=false</code>로 논리 삭제합니다. 물리 삭제 공간은 이후 Compaction으로 회수됩니다.</p>
+        </div>
+      </div>
+      <div class="l-callout paywall-locked">
+        <b>체크</b>　같은 모델·차원·COSINE metric, 실제 Embedding, Search 전 Load. HNSW를 조정하기 전 FLAT으로 소규모 정확도 기준선을 만드세요.</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

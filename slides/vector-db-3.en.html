@@ -1,5 +1,43 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Hands-on Milvus | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="Connect, create a schema, batch insert, index, load, search, query, and delete with MilvusClient."><meta name="author" content="Luo Xiaoshan (洛小山)"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-3.en.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-3.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-3.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-3.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-3.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI Product Manager Training"><meta property="og:title" content="Hands-on Milvus"><meta property="og:description" content="One coherent example for the core vector-database workflow."><meta property="og:url" content="https://xueai.app/slides/vector-db-3.en.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Hands-on Milvus","url":"https://xueai.app/slides/vector-db-3.en.html","inLanguage":"en","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:170px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">Vector Databases · 3/5</div><h1>Hands-on Milvus</h1><p class="subtitle">Use one collection name and real text embeddings from insert through delete. This example assumes local Milvus is already listening on port 19530.</p></header><div class="vdb-note vdb-ok">Start the service with the <a href="https://milvus.io/docs/install_standalone-docker.md" target="_blank" rel="noopener">official Docker Standalone guide</a>, then install <code>pymilvus</code> and <code>sentence-transformers</code>. The dimension is derived from actual model output—no random vectors posing as semantic search.</div>
-<div class="sec-label">Connect, define, and batch insert</div><pre class="vdb-code paywall-locked xa-peek"><span class="k">from</span> pymilvus <span class="k">import</span> MilvusClient, DataType
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Hands-on Milvus | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="Connect, create a schema, batch insert, index, load, search, query, and delete with MilvusClient.">
+    <meta name="author" content="Luo Xiaoshan (洛小山)">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-3.en.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-3.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-3.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-3.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-3.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI Product Manager Training">
+    <meta property="og:title" content="Hands-on Milvus">
+    <meta property="og:description" content="One coherent example for the core vector-database workflow.">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-3.en.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"Hands-on Milvus","url":"https://xueai.app/slides/vector-db-3.en.html","inLanguage":"en","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:170px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">Vector Databases · 3/5</div>
+        <h1>Hands-on Milvus</h1>
+        <p class="subtitle">Use one collection name and real text embeddings from insert through delete. This example assumes local Milvus is already listening on port 19530.</p>
+      </header>
+      <div class="vdb-note vdb-ok">Start the service with the <a href="https://milvus.io/docs/install_standalone-docker.md" target="_blank" rel="noopener">official Docker Standalone guide</a>, then install <code>pymilvus</code> and <code>sentence-transformers</code>. The dimension is derived from actual model output—no random vectors posing as semantic search.</div>
+      <div class="sec-label">Connect, define, and batch insert</div>
+      <pre class="vdb-code paywall-locked xa-peek"><span class="k">from</span> pymilvus <span class="k">import</span> MilvusClient, DataType
 <span class="k">from</span> sentence_transformers <span class="k">import</span> SentenceTransformer
 COLLECTION = <span class="s">"support_kb"</span>
 client = MilvusClient(uri=<span class="s">"http://localhost:19530"</span>)
@@ -20,7 +58,8 @@ schema.add_field(field_name=<span class="s">"text"</span>, datatype=DataType.VAR
 schema.add_field(field_name=<span class="s">"category"</span>, datatype=DataType.VARCHAR, max_length=64)
 client.create_collection(collection_name=COLLECTION, schema=schema)
 client.insert(collection_name=COLLECTION, data=[{**d, <span class="s">"vector"</span>: v} for d, v in zip(docs, vectors)])</pre>
-<div class="sec-label paywall-locked">Index, load, and filtered Top-K search</div><pre class="vdb-code paywall-locked">index = client.prepare_index_params()
+      <div class="sec-label paywall-locked">Index, load, and filtered Top-K search</div>
+      <pre class="vdb-code paywall-locked">index = client.prepare_index_params()
 index.add_index(field_name=<span class="s">"vector"</span>, index_type=<span class="s">"HNSW"</span>, metric_type=<span class="s">"COSINE"</span>,
                 params={<span class="s">"M"</span>: 16, <span class="s">"efConstruction"</span>: 200})
 client.create_index(collection_name=COLLECTION, index_params=index)
@@ -29,8 +68,26 @@ query_vector = encoder.encode([<span class="s">"When will my refund arrive?"</sp
 hits = client.search(collection_name=COLLECTION, data=query_vector, anns_field=<span class="s">"vector"</span>, limit=3,
     filter=<span class="s">'category == "refund"'</span>, output_fields=[<span class="s">"text"</span>, <span class="s">"category"</span>],
     search_params={<span class="s">"metric_type"</span>: <span class="s">"COSINE"</span>, <span class="s">"params"</span>: {<span class="s">"ef"</span>: 64}})</pre>
-<div class="sec-label paywall-locked">Query and delete</div><pre class="vdb-code paywall-locked">rows = client.query(collection_name=COLLECTION, filter=<span class="s">'category == "account"'</span>, output_fields=[<span class="s">"id"</span>, <span class="s">"text"</span>])
+      <div class="sec-label paywall-locked">Query and delete</div>
+      <pre class="vdb-code paywall-locked">rows = client.query(collection_name=COLLECTION, filter=<span class="s">'category == "account"'</span>, output_fields=[<span class="s">"id"</span>, <span class="s">"text"</span>])
 client.delete(collection_name=COLLECTION, filter=<span class="s">"id == 2"</span>)
 <span class="c"># Destructive; use only in a disposable lab:</span>
 <span class="c"># client.drop_collection(collection_name=COLLECTION)</span></pre>
-<div class="vdb-grid paywall-locked"><div class="vdb-card"><h3>Writes</h3><p>Insert in batches; use stable IDs plus upsert or application deduplication for idempotency—insert alone does not deduplicate. Record content, embedding-model, and model-version metadata.</p></div><div class="vdb-card"><h3>Deletes</h3><p>For reversible deletion, mark <code>active=false</code> first. Physical deletes reclaim storage later through Compaction.</p></div></div><div class="l-callout paywall-locked"><b>Checklist</b>　Same model, dimension, and COSINE metric; real embeddings; load before search. Use FLAT as a small-scale correctness baseline before tuning HNSW.</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+      <div class="vdb-grid paywall-locked">
+        <div class="vdb-card">
+          <h3>Writes</h3>
+          <p>Insert in batches; use stable IDs plus upsert or application deduplication for idempotency—insert alone does not deduplicate. Record content, embedding-model, and model-version metadata.</p>
+        </div>
+        <div class="vdb-card">
+          <h3>Deletes</h3>
+          <p>For reversible deletion, mark <code>active=false</code> first. Physical deletes reclaim storage later through Compaction.</p>
+        </div>
+      </div>
+      <div class="l-callout paywall-locked">
+        <b>Checklist</b>　Same model, dimension, and COSINE metric; real embeddings; load before search. Use FLAT as a small-scale correctness baseline before tuning HNSW.</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>

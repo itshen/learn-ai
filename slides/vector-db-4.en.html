@@ -1,4 +1,119 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>From Retrieval to RAG | xueai.app</title><script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script><link rel="stylesheet" href="lesson.css?v=20260809a"><link rel="stylesheet" href="vector-db-course.css?v=20260818a"><link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k"><style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style><meta name="description" content="Connect Milvus retrieval to RAG with chunking, filtering, reranking, hybrid search, and RRF."><meta name="author" content="Luo Xiaoshan (洛小山)"><meta name="robots" content="index, follow"><link rel="canonical" href="https://xueai.app/slides/vector-db-4.en.html"><link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-4.html"><link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-4.en.html"><link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-4.ko.html"><link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-4.html"><meta property="og:type" content="article"><meta property="og:site_name" content="xueai.app · AI Product Manager Training"><meta property="og:title" content="From Retrieval to RAG"><meta property="og:description" content="Turn search results into grounded, cited, and testable context."><meta property="og:url" content="https://xueai.app/slides/vector-db-4.en.html"><meta property="og:image" content="https://xueai.app/og-cover.jpg"><meta name="twitter:card" content="summary_large_image"><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"From Retrieval to RAG","url":"https://xueai.app/slides/vector-db-4.en.html","inLanguage":"en","isAccessibleForFree":false}</script><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script></head><body><article class="lesson wide"><header class="lesson-header"><div class="kicker">Vector Databases · 4/5</div><h1>From Retrieval to RAG</h1><p class="subtitle">Search returns possibly relevant chunks. RAG must turn them into bounded, citable, and measurable evidence.</p></header>
-<div class="sec-label">Online path</div><div class="vdb-flow paywall-locked xa-peek"><div class="vdb-step"><span class="vdb-num">1</span><h3>Embed query</h3><p>Use the same model as ingestion.</p></div><div class="vdb-step"><span class="vdb-num">2</span><h3>Retrieve</h3><p>Tenant/ACL filter plus Top-K search.</p></div><div class="vdb-step"><span class="vdb-num">3</span><h3>Rerank</h3><p>Rerank, deduplicate, and budget tokens.</p></div><div class="vdb-step"><span class="vdb-num">4</span><h3>Generate</h3><p>Answer only from evidence and cite sources.</p></div></div>
-<div class="sec-label paywall-locked">Offline ingestion sets the ceiling</div><div class="vdb-cards paywall-locked"><div class="vdb-card"><h3>Chunking</h3><p>Split on titles, paragraphs, and semantic boundaries with modest overlap. Large chunks add noise; tiny chunks lose context.</p></div><div class="vdb-card"><h3>Metadata</h3><p>Keep source ID, version, section, tenant, ACL, and update time for citations, filters, and deletion.</p></div><div class="vdb-card"><h3>Versioning</h3><p>Re-embed when content or the model changes. Blue/green collections avoid mixing incompatible vectors.</p></div></div>
-<div class="sec-label paywall-locked">Retrieval toolbox</div><div class="vdb-table-wrap paywall-locked"><table class="vdb-table"><thead><tr><th>Method</th><th>Purpose</th><th>Caution</th></tr></thead><tbody><tr><td>Scalar filter</td><td>Tenant, ACL, time, language</td><td>Enforce access during retrieval, never only in the prompt</td></tr><tr><td>Vector + keyword hybrid</td><td>Semantics plus exact SKUs/error codes</td><td>Raw score scales are not directly comparable</td></tr><tr><td>RRF</td><td>Fuse several rankings</td><td>Simple and stable; rerank the resulting candidates</td></tr><tr><td>Partition / TTL</td><td>Hot-data isolation or expiration</td><td>Advanced options; start with clean collections and filters</td></tr></tbody></table></div><div class="vdb-note paywall-locked"><b>Evaluate two layers:</b> retrieval Recall@K, MRR/nDCG, and filter correctness first; then answer faithfulness, citation accuracy, and appropriate refusal. A fluent answer can hide failed retrieval.</div><div class="l-callout paywall-locked"><b>Takeaway</b>　RAG is more than stuffing search hits into a prompt. Chunking, metadata, access filters, fusion, and citations make retrieval-augmented answers reliable.</div></article><script src="i18n.js?v=20260818a"></script><script src="nav-inject.js?v=20260818a"></script><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>From Retrieval to RAG | xueai.app</title>
+    <script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+    <link rel="stylesheet" href="lesson.css?v=20260809a">
+    <link rel="stylesheet" href="vector-db-course.css?v=20260818a">
+    <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+    <style>@keyframes _si{to{opacity:1}}body{opacity:0;animation:_si .15s ease .08s forwards}</style>
+    <meta name="description" content="Connect Milvus retrieval to RAG with chunking, filtering, reranking, hybrid search, and RRF.">
+    <meta name="author" content="Luo Xiaoshan (洛小山)">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://xueai.app/slides/vector-db-4.en.html">
+    <link rel="alternate" hreflang="zh-CN" href="https://xueai.app/slides/vector-db-4.html">
+    <link rel="alternate" hreflang="en" href="https://xueai.app/slides/vector-db-4.en.html">
+    <link rel="alternate" hreflang="ko" href="https://xueai.app/slides/vector-db-4.ko.html">
+    <link rel="alternate" hreflang="x-default" href="https://xueai.app/slides/vector-db-4.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="xueai.app · AI Product Manager Training">
+    <meta property="og:title" content="From Retrieval to RAG">
+    <meta property="og:description" content="Turn search results into grounded, cited, and testable context.">
+    <meta property="og:url" content="https://xueai.app/slides/vector-db-4.en.html">
+    <meta property="og:image" content="https://xueai.app/og-cover.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"name":"From Retrieval to RAG","url":"https://xueai.app/slides/vector-db-4.en.html","inLanguage":"en","isAccessibleForFree":false}</script>
+    <style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:150px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 20%,transparent);mask-image:linear-gradient(#000 20%,transparent)}</style>
+    <script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script>
+  </head>
+  <body>
+    <article class="lesson wide">
+      <header class="lesson-header">
+        <div class="kicker">Vector Databases · 4/5</div>
+        <h1>From Retrieval to RAG</h1>
+        <p class="subtitle">Search returns possibly relevant chunks. RAG must turn them into bounded, citable, and measurable evidence.</p>
+      </header>
+      <div class="sec-label">Online path</div>
+      <div class="vdb-flow paywall-locked xa-peek">
+        <div class="vdb-step">
+          <span class="vdb-num">1</span>
+          <h3>Embed query</h3>
+          <p>Use the same model as ingestion.</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">2</span>
+          <h3>Retrieve</h3>
+          <p>Tenant/ACL filter plus Top-K search.</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">3</span>
+          <h3>Rerank</h3>
+          <p>Rerank, deduplicate, and budget tokens.</p>
+        </div>
+        <div class="vdb-step">
+          <span class="vdb-num">4</span>
+          <h3>Generate</h3>
+          <p>Answer only from evidence and cite sources.</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">Offline ingestion sets the ceiling</div>
+      <div class="vdb-cards paywall-locked">
+        <div class="vdb-card">
+          <h3>Chunking</h3>
+          <p>Split on titles, paragraphs, and semantic boundaries with modest overlap. Large chunks add noise; tiny chunks lose context.</p>
+        </div>
+        <div class="vdb-card">
+          <h3>Metadata</h3>
+          <p>Keep source ID, version, section, tenant, ACL, and update time for citations, filters, and deletion.</p>
+        </div>
+        <div class="vdb-card">
+          <h3>Versioning</h3>
+          <p>Re-embed when content or the model changes. Blue/green collections avoid mixing incompatible vectors.</p>
+        </div>
+      </div>
+      <div class="sec-label paywall-locked">Retrieval toolbox</div>
+      <div class="vdb-table-wrap paywall-locked">
+        <table class="vdb-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Purpose</th>
+              <th>Caution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Scalar filter</td>
+              <td>Tenant, ACL, time, language</td>
+              <td>Enforce access during retrieval, never only in the prompt</td>
+            </tr>
+            <tr>
+              <td>Vector + keyword hybrid</td>
+              <td>Semantics plus exact SKUs/error codes</td>
+              <td>Raw score scales are not directly comparable</td>
+            </tr>
+            <tr>
+              <td>RRF</td>
+              <td>Fuse several rankings</td>
+              <td>Simple and stable; rerank the resulting candidates</td>
+            </tr>
+            <tr>
+              <td>Partition / TTL</td>
+              <td>Hot-data isolation or expiration</td>
+              <td>Advanced options; start with clean collections and filters</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vdb-note paywall-locked">
+        <b>Evaluate two layers:</b> retrieval Recall@K, MRR/nDCG, and filter correctness first; then answer faithfulness, citation accuracy, and appropriate refusal. A fluent answer can hide failed retrieval.</div>
+      <div class="l-callout paywall-locked">
+        <b>Takeaway</b>　RAG is more than stuffing search hits into a prompt. Chunking, metadata, access filters, fusion, and citations make retrieval-augmented answers reliable.</div>
+    </article>
+    <script src="i18n.js?v=20260818a"></script>
+    <script src="nav-inject.js?v=20260818a"></script>
+    <!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260816a"></script><!--seo:end-->
+  </body>
+</html>
