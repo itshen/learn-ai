@@ -284,7 +284,7 @@ window.COURSE = {
           id: 't-vector-db',
           title: 'Vector Databases',
           routes: ['pm', 'build'],
-          desc: 'From Embeddings and Milvus to RAG and Agent knowledge tools; review <a href="7-3c.en.html">long-term memory / vector retrieval</a>, <a href="rag-advanced.en.html">RAG costs and optimization</a>, and <a href="1-2-mitigation-rag.en.html">RAG fundamentals</a> first',
+          desc: 'From Embeddings and Milvus to RAG and Agent knowledge tools',
           lessons: [
             { file: 'vector-db-1.html', title: 'From Embeddings to Milvus', desc: 'Semantic similarity, ANN, and the responsibility boundary of a vector database', tag: 'Intro' },
             { file: 'vector-db-2.html', title: 'The Milvus Mental Model', desc: 'Collection, Schema, Entity, Index, Search, Query, and Load', tag: 'Core' },

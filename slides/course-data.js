@@ -298,7 +298,7 @@ window.COURSE = {
           id: 't-vector-db',
           title: '向量数据库',
           routes: ['pm', 'build'],
-          desc: '从 Embedding 与 Milvus 到 RAG 和 Agent 知识库；可先复习<a href="7-3c.html">长期记忆 / 向量检索</a>、<a href="rag-advanced.html">RAG 的代价与优化策略</a>和<a href="1-2-mitigation-rag.html">RAG 检索增强生成</a>',
+          desc: '从 Embedding 与 Milvus 到 RAG 和 Agent 知识库',
           lessons: [
             { file: 'vector-db-1.html', title: '从 Embedding 到 Milvus', desc: '语义相似度、ANN 与向量数据库的职责边界', tag: '入门' },
             { file: 'vector-db-2.html', title: 'Milvus 心智模型', desc: 'Collection、Schema、Entity、Index、Search、Query 与 Load', tag: '基础' },
