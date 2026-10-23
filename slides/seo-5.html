@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>一个人的优先级：先写能被搜到的问题 | 被搜到：SEO 与 GEO</title>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
-<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
-<link rel="stylesheet" href="lesson.css?v=20260827a">
-<link rel="stylesheet" href="taste.css?v=20260810a">
-<link rel="stylesheet" href="seo.css?v=20260811a">
-<!-- SEO Start -->
-<meta name="description" content="一人公司没有 SEO 团队，只有排序能力。核心方法：先写用户真的会打出来的那句问题，再堆功能；一页只答一个问题；用真实经历换可信度。反面清单也在这一节：买外链、关键词堆砌、AI 批量灌水页，哪些手段是找死。">
-<meta name="keywords" content="SEO 选题,长尾关键词,搜索意图,内容策略,黑帽 SEO,一人公司,独立开发者">
-<meta name="author" content="洛小山">
+<title>工具测评怎么写：实测数据、对比表、FAQ 和下载清单 | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。">
+<meta name="author" content="洛小山、黄啊码">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://xueai.miyang.cn/slides/seo-5.html">
 <link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-5.html">
@@ -23,435 +15,135 @@
 <link rel="alternate" hreflang="zh-MO" href="https://xueai.miyang.cn/slides/seo-5.hk.html">
 <link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-5.html">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="xueai.miyang.cn · AI 产品经理培训">
-<meta property="og:title" content="一个人的优先级：先写能被搜到的问题">
-<meta property="og:description" content="没有团队就靠排序：写有人搜的问题，用真实经历换可信度，离黑帽远点。">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="工具测评怎么写：实测数据、对比表、FAQ 和下载清单">
+<meta property="og:description" content="沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。">
 <meta property="og:url" content="https://xueai.miyang.cn/slides/seo-5.html">
-<meta property="og:image" content="https://xueai.miyang.cn/slides/og/seo-5.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/04.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="一个人的优先级：先写能被搜到的问题">
-<meta name="twitter:description" content="没有团队就靠排序：写有人搜的问题，用真实经历换可信度，离黑帽远点。">
-<meta name="twitter:image" content="https://xueai.miyang.cn/og-cover.jpg">
-<!-- SEO End -->
-<style>
-/* ── 选题体检台 ──
-   背景：选题是一人公司 SEO 的最大杠杆，好坏差在意图和竞争两个维度，
-   要逐个体检才有手感。
-   设计意图：四个候选选题点开出体检单（意图强度条 + 竞争度条 + 判词），
-   两条仪表一次到位；四个全看完给排序结论。 */
-.t5-list{display:flex;flex-direction:column;gap:10px;}
-.t5-item{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px 16px;cursor:pointer;transition:border-color .2s ease;}
-.t5-item:hover{border-color:var(--ct-line);}
-.t5-item.open{cursor:default;}
-.t5-item.open.hot{border-color:var(--good);}
-.t5-item.open.cold{border-color:var(--border);}
-.t5-t{font-size:13.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.t5-grade{display:none;font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:999px;}
-.t5-item.open.hot .t5-grade{display:inline-block;background:var(--good);color:#fff;}
-.t5-item.open.cold .t5-grade{display:inline-block;background:rgba(0,0,0,.12);color:var(--sub);}
-.t5-body{display:none;margin-top:10px;}
-.t5-item.open .t5-body{display:block;}
-.t5-meter{display:grid;grid-template-columns:minmax(0,88px) 1fr 40px;gap:10px;align-items:center;margin-top:6px;}
-.t5-ml{font-size:11.5px;font-weight:800;color:var(--sub);text-align:right;}
-.t5-track{height:9px;border-radius:5px;background:rgba(0,0,0,.05);overflow:hidden;}
-.t5-fill{height:100%;width:0;border-radius:5px;transition:width .4s ease-out;}
-.t5-fill.i{background:var(--ct);}
-.t5-fill.c{background:var(--bad);}
-.t5-mv{font-size:11.5px;font-weight:800;color:var(--sub);text-align:right;font-variant-numeric:tabular-nums;}
-.t5-why{margin-top:8px;font-size:12.5px;color:var(--sub);line-height:1.7;padding:10px 12px;border-radius:8px;background:rgba(0,0,0,.02);border:1px solid var(--border);}
-.t5-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.t5-note.show{display:block;}
-.t5-note b{color:var(--ct-deep);}
-
-/* ── 长尾翻译练习 ── */
-.l5-feat{padding:14px 18px;border-radius:12px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:12px;}
-.l5-slots{display:flex;flex-direction:column;gap:8px;}
-.l5-slot{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1.5px dashed var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:border-color .2s ease;}
-.l5-slot:hover{border-color:var(--ct-line);}
-.l5-slot.filled{border-style:solid;border-color:var(--ct);cursor:default;background:var(--ct-soft);}
-.l5-n{width:22px;height:22px;border-radius:7px;background:rgba(0,0,0,.05);color:var(--sub);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px;}
-.l5-slot.filled .l5-n{background:var(--ct);color:#fff;}
-.l5-q{font-size:13px;color:var(--sub);line-height:1.7;}
-.l5-slot.filled .l5-q{color:var(--text);font-weight:700;}
-.l5-i{display:none;font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.6;}
-.l5-slot.filled .l5-i{display:block;}
-.l5-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.l5-note.show{display:block;}
-.l5-note b{color:var(--ct-deep);}
-
-/* ── 黑帽判断台 ── */
-.h5-list{display:flex;flex-direction:column;gap:10px;}
-.h5-item{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px 16px;transition:border-color .2s ease;}
-.h5-item.judged.safe{border-color:var(--good);}
-.h5-item.judged.risky{border-color:var(--bad);}
-.h5-t{font-size:13.5px;font-weight:800;color:var(--text);line-height:1.6;}
-.h5-btns{display:flex;gap:8px;margin-top:10px;}
-.h5-btn{padding:6px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-size:12.5px;font-weight:800;color:var(--sub);cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s;}
-.h5-btn:hover{border-color:var(--ct-line);}
-.h5-item.judged .h5-btns{display:none;}
-.h5-fb{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.7;}
-.h5-item.judged .h5-fb{display:block;}
-.h5-item.judged .h5-fb.right{background:var(--good-soft);border:1px solid rgba(22,163,74,.25);color:var(--text);}
-.h5-item.judged .h5-fb.wrong{background:var(--bad-soft);border:1px solid rgba(220,38,38,.25);color:var(--text);}
-.h5-fb b{color:var(--ct-deep);}
-.h5-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.h5-note.show{display:block;}
-.h5-note b{color:var(--ct-deep);}
-</style>
+<meta name="twitter:title" content="工具测评怎么写：实测数据、对比表、FAQ 和下载清单">
+<meta name="twitter:description" content="沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/04.jpg">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
 <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
-<!--seo:begin--><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"headline":"一个人的优先级：先写能被搜到的问题","name":"一个人的优先级：先写能被搜到的问题","url":"https://xueai.miyang.cn/slides/seo-5.html","inLanguage":"zh-CN","author":{"@type":"Person","name":"洛小山"},"publisher":{"@type":"Organization","name":"xueai.miyang.cn","url":"https://xueai.miyang.cn"},"learningResourceType":"课程","educationalLevel":"入门到进阶","isPartOf":{"@type":"Course","name":"AI 实战课 · 优先级与收官","url":"https://xueai.miyang.cn/slides/learn.html"},"isAccessibleForFree":false,"description":"一人公司没有 SEO 团队，只有排序能力。核心方法：先写用户真的会打出来的那句问题，再堆功能；一页只答一个问题；用真实经历换可信度。反面清单也在这一节：买外链、关键词堆砌、AI 批量灌水页，哪些手段是找死。","datePublished":"2026-08-12","dateModified":"2026-08-27","hasPart":{"@type":"WebPageElement","isAccessibleForFree":false,"cssSelector":".paywall-locked"}}</script><style>.xa-tldr{margin:18px 0 4px;padding:14px 18px;background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.16);border-radius:10px}.xa-tldr .xa-tldr-tag{display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent,#0066ff);margin-bottom:6px}.xa-tldr p{margin:0;font-size:15px;line-height:1.8;color:var(--text,#1f2937)}</style><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:132px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%);mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script><!--seo:end-->
-</head>
-<body>
-<main class="lesson">
-
-  <header class="lesson-header">
-    <div class="kicker">被搜到 · 5 / 6</div>
-    <h1>一个人的优先级：先写能被搜到的问题</h1>
-    <p class="subtitle">技术清单前面三节讲完了，全是一次性动作。真正日复一日的仗在内容：写什么、先写什么。一人公司没有 SEO 团队、没有词库工具的预算，<b>你唯一的武器是排序能力</b>：把力气花在有人搜的问题上，用真实经历换可信度，离歪路远一点。</p>
-    <div class="chips"><span class="chip">选题体检</span><span class="chip">问题句思维</span><span class="chip">长尾练习</span><span class="chip">黑帽避雷</span></div>
-  </header><!--seo:begin--><aside class="xa-tldr"><span class="xa-tldr-tag">一句话速览</span><p>先写用户真的会打出来的那句问题，再堆功能；用真实经历换可信度。反面清单也在这一节：买外链、关键词堆砌、AI 批量灌水页，哪些是找死</p></aside><!--seo:end-->  <section class="reveal">
-    <div class="sec-label">先写问题，再堆功能</div>
-    <p class="desc">独立开发者的内容通病是「功能视角」：更新日志、功能介绍、版本对比，写得勤快，全是没人搜的东西。用户不搜「XX 工具 v2.3 更新了什么」，他搜的是自己的麻烦：「发票专票普票区别」「猫疫苗过期了怎么办」。<b>选题的第一原则：写用户真的会打进搜索框和 AI 对话框的那句话。</b></p>
-    <p class="desc" style="margin-top:16px">好选题只看两个维度：<b>意图强度</b>（搜这句话的人离用你的产品有多近）和<b>竞争度</b>（这个问题已经有多少人答得不错）。意图强、竞争弱的就是金矿，一人公司专挖这种，大词让大厂去卷。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 四个候选选题，逐个体检</div>
-    <p class="desc">还是那个给自由职业者做开票工具的例子。站主列了四个候选选题，<b>点开逐个体检</b>，看意图和竞争两条仪表怎么走。</p>
-    <div class="toy" id="t5Pick">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></span>
-        <span class="toy-t">选题体检台</span>
-        <span class="toy-badge" id="t5Badge">体检 0 / 4</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">仪表为示意值，方法是真的：每个选题先问「谁会搜这句、搜的人离付费多近」</div>
-        <div class="t5-list">
-          <div class="t5-item" data-i="88" data-c="20" data-g="hot">
-            <div class="t5-t">「自由职业者给公司开票要交多少税」<span class="t5-grade"></span></div>
-            <div class="t5-body">
-              <div class="t5-meter"><span class="t5-ml">意图强度</span><span class="t5-track"><span class="t5-fill i"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-meter"><span class="t5-ml">竞争度</span><span class="t5-track"><span class="t5-fill c"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-why">搜这句的人正卡在开票流程里，离用你的工具一步之遥。认真答这个问题的内容少，大多是税务机构的官样文章。金矿选题，先写它。</div>
-            </div>
-          </div>
-          <div class="t5-item" data-i="15" data-c="95" data-g="cold">
-            <div class="t5-t">「什么是发票」<span class="t5-grade"></span></div>
-            <div class="t5-body">
-              <div class="t5-meter"><span class="t5-ml">意图强度</span><span class="t5-track"><span class="t5-fill i"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-meter"><span class="t5-ml">竞争度</span><span class="t5-track"><span class="t5-fill c"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-why">搜索量看着大，但搜这句的人八成是学生查作业，离付费十万八千里；而且百科、官网、门户全在答。大词高竞争低意图，一人公司碰它是给巨头陪跑。</div>
-            </div>
-          </div>
-          <div class="t5-item" data-i="75" data-c="35" data-g="hot">
-            <div class="t5-t">「税务代开被拒的常见原因」<span class="t5-grade"></span></div>
-            <div class="t5-body">
-              <div class="t5-meter"><span class="t5-ml">意图强度</span><span class="t5-track"><span class="t5-fill i"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-meter"><span class="t5-ml">竞争度</span><span class="t5-track"><span class="t5-fill c"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-why">搜的人刚被拒，急着解决，情绪和意图都在顶点。愿意把「被拒」这种不光彩经历写清楚的人少，你写了就是稀缺供给。</div>
-            </div>
-          </div>
-          <div class="t5-item" data-i="10" data-c="15" data-g="cold">
-            <div class="t5-t">「发票猫头鹰 v2.3 更新日志」<span class="t5-grade"></span></div>
-            <div class="t5-body">
-              <div class="t5-meter"><span class="t5-ml">意图强度</span><span class="t5-track"><span class="t5-fill i"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-meter"><span class="t5-ml">竞争度</span><span class="t5-track"><span class="t5-fill c"></span></span><span class="t5-mv"></span></div>
-              <div class="t5-why">竞争是零，因为搜索量也是零。除了你自己，没人搜一个小工具的版本号。更新日志该写（老用户和 AI 引擎都会看），但别指望它带新流量，更别把它当内容主力。</div>
-            </div>
-          </div>
-        </div>
-        <div class="t5-note" id="t5Note"><b>四个体检完，排序自己浮出来了：</b>先写一、三（强意图弱竞争），二不碰（给巨头陪跑），四保持但零期待。每次列选题都过一遍这两条仪表，这就是一个人的「SEO 团队」。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">点一点 · 问题句 vs 功能句</div>
-    <p class="desc">同一篇内容，标题的写法决定它有没有入口。<b>点你认为更容易被搜到的那篇。</b></p>
-    <div class="toy" id="d5Duel">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></span>
-        <span class="toy-t">同一篇内容的两个标题</span>
-        <span class="toy-badge">A/B 对决</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">内容完全一样，只有标题不同</div>
-        <div class="duel">
-          <div class="duel-side">
-            <span class="duel-tag">方案 A</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">petdiary.example.com/blog/reminder</span></div>
-              <div class="mock" style="padding:18px;min-height:150px;">
-                <div style="font-size:14.5px;font-weight:800;color:#111827;line-height:1.6;">全新智能提醒引擎上线：多维度、可配置、更懂你</div>
-                <p style="font-size:11.5px;color:#4b5563;line-height:1.7;margin-top:8px;">我们重构了提醒系统，支持按疫苗类型、宠物年龄自定义提醒规则…</p>
-              </div>
-            </div>
-          </div>
-          <div class="duel-side">
-            <span class="duel-tag">方案 B</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">petdiary.example.com/blog/reminder</span></div>
-              <div class="mock" style="padding:18px;min-height:150px;">
-                <div style="font-size:14.5px;font-weight:800;color:#111827;line-height:1.6;">猫疫苗过期了几天，还能补吗？兽医的说法和我的处理</div>
-                <p style="font-size:11.5px;color:#4b5563;line-height:1.7;margin-top:8px;">先说结论：过期两周内通常补一针就行，超过一个月要重新起免…</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="duel-verdict"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 把一个功能翻译成五个问句</div>
-    <p class="desc">功能句思维改成问题句思维，有个机械可行的练习：<b>拿一个功能，写出五句用户可能打进搜索框的问话</b>，每句就是一篇内容的选题。下面拿开票工具的「合同识别」功能做示范，点五个空位逐个揭晓。</p>
-    <div class="toy" id="l5Trans">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg></span>
-        <span class="toy-t">功能 → 问句翻译机</span>
-        <span class="toy-badge" id="l5Badge">翻译 0 / 5</span>
-      </div>
-      <div class="toy-body">
-        <div class="l5-feat">功能：上传合同 PDF，自动识别金额、税号和开票类型</div>
-        <div class="toy-hint">点空位，看这个功能能翻译出哪五句用户的原话</div>
-        <div class="l5-slots">
-          <div class="l5-slot" data-q="合同金额含税不含税怎么看" data-i="用户拿着合同发懵的第一个问题。答好这篇，他顺手就试了你的识别功能。">
-            <span class="l5-n">1</span><span><span class="l5-q">点这里翻译第一句</span><span class="l5-i"></span></span>
-          </div>
-          <div class="l5-slot" data-q="对方只给了营业执照，税号在哪找" data-i="开票前的真实卡点，搜的人正在流程中间，意图极强。">
-            <span class="l5-n">2</span><span><span class="l5-q">点这里翻译第二句</span><span class="l5-i"></span></span>
-          </div>
-          <div class="l5-slot" data-q="合同写的服务费，发票开什么类目" data-i="类目开错是最常见的退票原因，这篇能救人于水火。">
-            <span class="l5-n">3</span><span><span class="l5-q">点这里翻译第三句</span><span class="l5-i"></span></span>
-          </div>
-          <div class="l5-slot" data-q="框架合同没写金额，发票按什么开" data-i="边角场景，答的人极少，竞争接近零，全是你的。">
-            <span class="l5-n">4</span><span><span class="l5-q">点这里翻译第四句</span><span class="l5-i"></span></span>
-          </div>
-          <div class="l5-slot" data-q="合同和发票金额差一分钱有事吗" data-i="小到没人写、真到人人搜的问题，长尾流量的样子就是这样。">
-            <span class="l5-n">5</span><span><span class="l5-q">点这里翻译第五句</span><span class="l5-i"></span></span>
-          </div>
-        </div>
-        <div class="l5-note" id="l5Note"><b>看出门道了吗：</b>五句话里没有一句提你的产品，全是用户自己的麻烦。他为麻烦而来，因为你答得好而留下，顺手发现你的工具正好能解决。这就是内容和产品的正确咬合方式。轮到你了：拿自己产品的一个功能，照这个格式写五句，写不出来说明这个功能可能压根没人需要。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal paywall-locked xa-peek">
-    <div class="sec-label">用真实经历换可信度</div>
-    <p class="desc">选题解决「写什么」，还剩「凭什么是你」。搜索引擎和 AI 引擎这几年都在收紧同一个阀门：<b>偏爱有第一手经验的内容</b>。Google 把经验（Experience）写进了内容评估标准，AI 引擎挑引用时也明显偏向带具体数字和亲历细节的段落，上一节的引用竞标你亲眼见过。</p>
-    <p class="desc" style="margin-top:16px">这对一人公司是天大的好消息：你没有编辑团队，但你有别人抄不走的东西。真实的账单、真实的报错、真实的谈判记录、真实踩过的坑。本站 OPC 篇章拿自己注册商标的驳回经历当教材、拿域名议价的真实报价单当案例，那些页面恰恰是被引用最多的。<b>写你亲手做过的事，配上过程里的真实数字，这是 AI 批量灌水页永远仿不出来的指纹。</b></p>
-    <p class="desc" style="margin-top:16px">盘点一下你手里可能已经有的素材，每一样都是一篇别人写不出的内容：</p>
-    <ul class="desc" style="margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;">
-      <li>云服务的真实账单：「一个 XX 类产品每月到底花多少钱」永远有人搜。</li>
-      <li>一次线上事故的完整时间线：报错截图、定位过程、最后那行罪魁祸首。</li>
-      <li>和供应商、平台、客户的谈判记录（脱敏后）：价格类问题的搜索意图极强。</li>
-      <li>被拒的经历：商标被驳回、上架被拒、贷款被拒，愿意写「失败」的人少，搜的人多。</li>
-      <li>做错的决策和返工记录：「早知道就…」开头的内容天然可信。</li>
-    </ul>
-    <p class="desc" style="margin-top:16px">脱敏的分寸参照本站的做法：金额、日期、过程保留（这些是可信度的来源），对手方名称、文书文号、个人信息一律隐去。</p>
-    <a class="xref" href="opc-1.html">
-      <span class="xref-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
-      <span><span class="xref-t">一人公司 OPC · 用亲历案例讲确权</span><span class="xref-d">商标驳回、域名议价、软著申请全是第一手记录，也是「真实经历换可信度」的现成示范。</span></span>
-    </a>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">新写，还是回去更新旧的</div>
-    <p class="desc">台账跑起来之后会遇到一个每周都要做的小决策：这周的名额给新选题，还是回去翻修旧文章。判断标准比想象中简单：</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>情况</th><th>动作</th><th>理由</th></tr>
-      <tr><td><b>旧文有排名但数据旧了</b></td><td>优先更新</td><td>已有排名的页面补新数据，是全部动作里投入产出比最高的：地基是现成的，只添一层</td></tr>
-      <tr><td><b>旧文没排名也没点击</b></td><td>先诊断再决定</td><td>回第 1 节的漏斗查漏在哪层。选题本身没人搜的，放弃不心疼；title 拖后腿的，改两行字就行</td></tr>
-      <tr><td><b>台账里有强意图弱竞争的候选</b></td><td>新写</td><td>金矿选题有时效性，被别人先答了，竞争度那格就变了</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">大致节奏：每写两三篇新的，回头翻修一篇旧的。旧文更新记得连带更新 dateModified，第 3 节讲过，这个日期 AI 引擎真的在看。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">AI 在内容生产里站哪个位置</div>
-    <p class="desc">这门课教到这里，你多半会想：内容也让 AI 写不就完了。答案要分岗位说。<b>AI 是好助手，是坏印刷机</b>：让它加速你的真实经验，效率翻倍；让它凭空批量生产页面，就滑向了下面反面清单里的灌水页。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>环节</th><th>让 AI 干（助手位）</th><th>别让 AI 干（印刷机位）</th></tr>
-      <tr><td><b>选题</b></td><td>把一个功能翻译成二十个候选问句，你来挑</td><td>让它自己决定写什么，它只会挑大词</td></tr>
-      <tr><td><b>初稿</b></td><td>把你的口述、日志、账单整理成结构化初稿</td><td>没有输入材料硬编一篇「深度好文」</td></tr>
-      <tr><td><b>事实</b></td><td>帮你列出需要核对的数字和出处清单</td><td>让它直接填数字，它会一本正经地编</td></tr>
-      <tr><td><b>批量</b></td><td>批量起草几百页的一句话摘要，人工过一遍再发</td><td>批量生成几百个没人核过的独立页面</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">分界线其实就一条：<b>页面里有没有只有你能提供的东西</b>。有，AI 参与再多也是你的内容；没有，你亲手打字它也是灌水。本站的一句话速览就是「批量起草加人工过一遍」的产物，几百页的活儿一个人两天收工。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">动手 · 六个手段，哪些是找死</div>
-    <p class="desc">最后是反面清单。SEO 圈里永远有人兜售捷径，其中一些短期真有效，代价是被引擎识别后整站惩罚，对只有一个站的一人公司就是团灭。<b>六个手段逐个判断：稳，还是坑。</b></p>
-    <div class="toy" id="h5Judge">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
-        <span class="toy-t">黑帽风险判断台</span>
-        <span class="toy-badge" id="h5Badge">判断 0 / 6</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">每条选「稳」或「坑」，判错也有解释</div>
-        <div class="h5-list">
-          <div class="h5-item" data-risky="1" data-fb="坑。买来的外链引擎认得出来（链接农场的模式太明显），轻则外链作废，重则连坐惩罚。一人公司的外链只有一条正路：内容好到别人主动引用。">
-            <div class="h5-t">花五百块买一批「高权重外链」</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-          <div class="h5-item" data-risky="0" data-fb="稳。给已有的问答页补 FAQPage 结构化数据是引擎官方鼓励的做法，前提是页面内容真是问答，标记和内容一致。">
-            <div class="h5-t">给帮助文档的问答页批量加 FAQPage 结构化数据</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-          <div class="h5-item" data-risky="1" data-fb="坑。用 AI 一晚上生成五百篇「XX 城市 XX 服务」模板页，这是各引擎近年重点打击的批量灌水（scaled content abuse），命中就是整站降权。AI 可以当写作助手，不能当页面印刷机。">
-            <div class="h5-t">让 AI 按城市名批量生成五百个落地页</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-          <div class="h5-item" data-risky="1" data-fb="坑。把关键词用白色小字藏在页脚，是上古黑帽，识别率接近百分之百。所有「用户看不到但引擎看得到」的小聪明都归为 cloaking，包括给爬虫和用户返回不同内容。第 4 节的软墙合规就合规在声明了这件事。">
-            <div class="h5-t">页脚放一段白底白字的关键词</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-          <div class="h5-item" data-risky="0" data-fb="稳。旧文重写是白帽里性价比最高的动作之一：内容真更新、日期真更新，引擎和读者都受益。前提是真改了内容，只改日期不改正文是另一种作弊。">
-            <div class="h5-t">把两年前的旧文章补上新数据重发，更新 dateModified</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-          <div class="h5-item" data-risky="1" data-fb="坑。「保证三个月上首页」的服务商，手段无非是买链和灌水，风险全在你的域名上，他收完钱换个马甲继续。判断标准很简单：敢承诺排名的都别碰，引擎自己都不承诺。">
-            <div class="h5-t">签一家「保证三个月上首页」的 SEO 服务商</div>
-            <div class="h5-btns"><button class="h5-btn" data-v="0">稳</button><button class="h5-btn" data-v="1">坑</button></div>
-            <div class="h5-fb"></div>
-          </div>
-        </div>
-        <div class="h5-note" id="h5Note"><b>六条判完，规律只有一条：</b>凡是想骗过引擎的都是坑，凡是帮引擎读懂真实内容的都是稳。一人公司输不起整站惩罚，这条线别试探。</div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">被骗子找上门时的话术也预告一下，无非三句：「内部渠道」「保证排名」「不做就被对手超了」。听到任何一句，对话可以结束了。你省下的钱，一年够把全后缀域名续三轮。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">落地：一张最小可行的内容台账</div>
-    <p class="desc">选题方法要落进一张表才算数。不需要工具，电子表格四列就够：</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>选题（用户的原话）</th><th>意图</th><th>竞争</th><th>状态</th></tr>
-      <tr><td>自由职业者给公司开票要交多少税</td><td>强</td><td>弱</td><td>已发布 08-02</td></tr>
-      <tr><td>税务代开被拒的常见原因</td><td>强</td><td>中</td><td>写作中</td></tr>
-      <tr><td>合同金额含税不含税怎么看</td><td>中</td><td>弱</td><td>排期</td></tr>
-      <tr><td>发票红冲是什么意思</td><td>中</td><td>中</td><td>候选</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">规矩两条：新选题先进「候选」，每周只从上往下拿一到两个；发布满一个月的，回台账补一列真实数据（搜索展示、AI 引用与否），<b>让下一轮排序踩着上一轮的事实</b>。坚持一个季度，这张表比任何关键词工具都懂你的用户。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">本节要点</div>
-    <div class="takeaways">
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>先写问题再堆功能：</b>用户搜的是自己的麻烦，不是你的更新日志。每个选题过两条仪表：意图强度和竞争度，专挖强意图弱竞争的金矿。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>一个功能翻译五个问句：</b>写不出五句用户原话的功能，先怀疑它是不是伪需求。问句本身就是内容排期表。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>真实经历是抄不走的指纹：</b>账单、报错、谈判记录、踩过的坑。引擎和 AI 都在加权第一手经验，这是一人公司对灌水工厂的唯一护城河，也是最深的。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>黑帽的判断标准一句话：</b>骗引擎的都是坑，帮引擎读懂真实内容的都是稳。敢承诺排名的服务商直接拉黑。</p></div>
-    </div>
-    <p class="src-note"><b>内容来源：</b>小山学堂「被搜到」专题原创。选题体检的仪表为教学示意值；「经验」进入内容评估标准见 Google 搜索质量评估指南（E-E-A-T），批量灌水打击见 Google 2024 年 3 月核心更新的公开公告。</p>
-  </section>
-
-</main>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "工具测评怎么写：实测数据、对比表、FAQ 和下载清单", "name": "工具测评怎么写：实测数据、对比表、FAQ 和下载清单", "url": "https://xueai.miyang.cn/slides/seo-5.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-08-12", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/04.jpg", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="7">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 7 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 7 / 14</div><h1>工具测评怎么写：实测数据、对比表、FAQ 和下载清单</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2312" data-source-end="2373">
+<p>别去相信什么“一篇文章必须写满两千字才算优质”的鬼话，Google 压根不在乎字数，<strong>它只在乎你有没有把问题解决了。</strong></p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 7 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>普通用户进来是在你文章“觅食”啊。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#answer">先把答案甩出来，别让用户到处觅食</a></li>
+<li><a href="#experience">把实操截图、踩坑经验和硬数据端出来</a></li>
+<li><a href="#useful-images">别放握手假笑商务图，配图得真有用</a></li>
+<li><a href="#asset">一篇文章，做成能反复使用的复合资产</a></li>
+<li><a href="#expertise">AI 是干苦力的，压箱底的经验得是你的</a></li></ol></details>
+<section id="answer" class="reveal sc-section" data-source-section data-point-ids="K048 K049 K050"><span id="k048" class="sc-point-anchor" aria-hidden="true"></span><span id="k049" class="sc-point-anchor" aria-hidden="true"></span><span id="k050" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>先把答案甩出来，别让用户到处觅食</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2393" data-source-end="2445">
+<p><strong>开头前两段说重点了吗？</strong> 别磨叽两千字铺垫，先把答案甩出来，因为这决定了你网站页面的跳出率；</p></div>
+<div class="sc-author-passage" data-source-key="A3" data-source-start="1041" data-source-end="1367">
+<p>大模型看文章，不是一字一句读，而是把长文切成一小段一小段（业内叫 Chunk），如果你的段落全都是水话，AI 切块时直接就当垃圾扔了：</p>
+<ul>
+<li><strong>第一句话就给结论：</strong> 每个小节开头前两句，直接把定义、数据或者结果甩脸上，别再藏着掖着；</li>
+<li><strong>多用 Markdown 标题和表格：</strong> 用户最喜欢问“A 和 B 选哪个更好”，AI 在答题时最喜欢偷懒找表格，你提前把对比维度、参数用 Markdown 表格整理好，AI 几乎会原封不动地搬进它的答案里，所以知道 AI 喜欢什么格式的文字了吧，<strong>立马改，马上给我改！</strong></li>
+<li><strong>多写 FAQ：</strong> 直接用“Q：某某问题怎么解决？A：第一步、第二步、第三步”这种格式，AI 抓这种现成答案最顺手。</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>保留原文“结论、标题、表格、FAQ”的表达方法。不同 AI 检索系统的切块方式不同；这些格式不保证被原样采用。FAQ 用于解答问题，Google FAQ 富媒体结果已停止展示。 · <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">Google：生成式 AI 搜索优化指南</a> · <a href="https://developers.google.com/search/updates">Google：2026 年 FAQ 功能与 llms.txt 说明更新</a></aside></section>
+<figure id="fig-a3-04" class="sc-figure" data-asset-key="A3-04" data-after-anchor="k050"><a class="sc-image-link" href="images/seo-geo/2108759625306624027/04.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108759625306624027/04.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="小狗把长文整理成结论、对比和 FAQ"></a><figcaption>先给结论，再用对比与 FAQ 补齐条件；结构清楚有助于理解，不保证被 AI 采用。</figcaption></figure>
+<section id="experience" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K051 K052"><span id="k051" class="sc-point-anchor" aria-hidden="true"></span><span id="k052" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>把实操截图、踩坑经验和硬数据端出来</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2447" data-source-end="2566">
+<p><strong>有没有拿得出手的干货？</strong> 扔两张实操截图、贴两组真实数据，比空喊口号强得多，也许你说跟我一样，写一堆文字也有人看，但那是因为大家知道我这篇文章是用来干嘛的，普通用户进来是在你文章“觅食”啊，你在答案中给它夹杂一堆💩，他能不跑？</p></div>
+<div class="sc-author-passage" data-source-key="A4" data-source-start="1340" data-source-end="1473">
+<p><strong>第一手真实数据与评测</strong>：<br>包含真实的实测图表、测试数据、长线使用跟踪；<br>提供独家的对比表格、选型决策树，或者自身的经验沉淀和行业知识，如果涉及到你的产品，请围绕你的产品展开，别把中心偏移去追逐流量，比如你的产品是 Agent，别给我偏移去聊X 尊脚踏板；</p></div>
+<div class="sc-author-passage" data-source-key="A3" data-source-start="1543" data-source-end="1639"><ul>
+<li><strong>多扔硬核数据（用数据说话）：</strong> 别说“速度大幅提升”，直接写“首帧加载缩短到 120ms”；别说“通过率极高”，直接写“实测通过率 98.6%”，大模型非常看重这些能佐证事实的数字。</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>120ms、98.6% 为原文写法示例，不是本课实测。真实发布要补上测试条件、样本、日期和出处。</aside></section>
+<figure id="fig-a4-04" class="sc-figure" data-asset-key="A4-04" data-after-anchor="k052"><a class="sc-image-link" href="images/seo-geo/2110342528948113829/04.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2110342528948113829/04.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：官网、测评与用户反馈互相核对"></a><figcaption>实测数字要能回到方法、条件和原始材料，并与官网、独立测评及反馈交叉核对。</figcaption></figure>
+<section id="useful-images" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K053"><span id="k053" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别放握手假笑商务图，配图得真有用</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2568" data-source-end="2645">
+<p><strong>配图有用吗？</strong> 别放那些毫无意义的握手假笑商务图，放图就要配上清楚的 alt 描述，说明这张图在画啥，alt 就跟 AI 的数据标注一个道理。</p></div></section>
+<section id="asset" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K054 K055"><span id="k054" class="sc-point-anchor" aria-hidden="true"></span><span id="k055" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>一篇文章，做成能反复使用的复合资产</h2>
+<div class="sc-author-passage" data-source-key="A4" data-source-start="1475" data-source-end="1582">
+<p><strong>构建复合型资产（我将其认为是曲线作弊手段）</strong>：<br><strong>内嵌小型工具</strong>：如收益计算器、对比筛选器、配置生成器；<br><strong>可下载资源</strong>：行业模板、SOP清单、数据手册，这类资产能极大提升外链自然增长与收藏率；</p></div></section>
+<figure id="fig-a4-05" class="sc-figure" data-asset-key="A4-05" data-after-anchor="k055"><a class="sc-image-link" href="images/seo-geo/2110342528948113829/05.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2110342528948113829/05.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：工具站与多种变现方式"></a><figcaption>模板、数据和小工具可以成为可重复使用的内容资产，需要持续维护。</figcaption></figure>
+<section id="expertise" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K056 K057"><span id="k056" class="sc-point-anchor" aria-hidden="true"></span><span id="k057" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>AI 是干苦力的，压箱底的经验得是你的</h2>
+<div class="sc-author-passage" data-source-key="A1" data-source-start="1463" data-source-end="1546">
+<p>AI 确实香，但它是个干苦力的，你写了一篇压箱底的干货，让 AI 帮你改写成知乎版、小红书版，但真正能留住人的，永远是你自己踩坑踩出来的经验，这是 AI 编不出来的。</p></div>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="1750" data-source-end="1911">
+<p>传统内容团队习惯把真正的答案藏起来：先花八百字讲行业宏大趋势，再渲染一波业务焦虑，最后话锋一转，留下联系方式诱导私聊。</p>
+<p>这套漏斗高度依赖用户因为没看懂而继续点击，但在 AI 搜索里，中间多了一道更加严格的筛选：<strong>AI 需要直接从页面中提取能支撑回答的论据。如果一篇文章始终在绕圈子，别说收录，AI 拿着都觉得嫌弃。</strong></p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>保持原文的专业中心与真实经验；产品或结论变化时同步更新已有材料，比重复生成近似稿更有用。</aside></section>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>先写答案</strong>在开头交代问题、结论和关键条件，再安排解释。检查是否仍把必要信息留到私聊，或者用无关铺垫拖延回答。</li>
+<li><strong>补足材料</strong>整理实测过程、截图和异常记录，注明版本与条件。没有做过的测试单列，不用官网宣传或模型输出冒充亲历。</li>
+<li><strong>选择资产</strong>根据任务增加 FAQ、比较表、模板或小工具。工具说明输入和方法，下载材料说明适用范围与使用步骤。</li>
+<li><strong>安排维护</strong>把页面与事实源、相关内容连接起来，产品变化时同步修订。AI 改写也要经过同一核验，日期更新对应实际信息变化。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份能够独立回答问题的内容页，以及可复用材料的说明、事实依据和更新责任；装饰图不计作实证。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 哪种材料最能增加读者可核验的信息？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="有效增量来自事实、过程与条件。表格、FAQ 和配图帮助理解，不能替代真实依据，也不能保证获得引用。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>哪种材料最能增加读者可核验的信息？</legend>
+<label class="sc-option">
+<input type="radio" name="q7" value="0"><span>把“功能强大”换十种表达</span></label>
+<label class="sc-option">
+<input type="radio" name="q7" value="1"><span>相同条件下的真实使用过程、结果与限制</span></label>
+<label class="sc-option">
+<input type="radio" name="q7" value="2"><span>未经测试却写得非常精确的通过率</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>有效增量来自事实、过程与条件。表格、FAQ 和配图帮助理解，不能替代真实依据，也不能保证获得引用。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-7" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-7-question"><span>这页回答的问题</span>
+<textarea id="work-7-question" name="question" rows="3" maxlength="20000" placeholder="用读者的原话表达"></textarea></label>
+<label class="sc-field wide" for="work-7-answer"><span>直接答案与条件</span>
+<textarea id="work-7-answer" name="answer" rows="3" maxlength="20000" placeholder="两三句话说清结论、适用对象及限制"></textarea></label>
+<label class="sc-field wide" for="work-7-evidence"><span>证据与更新</span>
+<textarea id="work-7-evidence" name="evidence" rows="3" maxlength="20000" placeholder="记录真实过程、出处、版本和待核实项"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-performance.html"><small>上一讲</small>打开慢、点不动、页面乱跳：三个性能指标怎么查？</a><a class="next" href="seo-3.html"><small>下一讲</small>AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？</a></nav></main>
 <script src="i18n.js?v=20260903a"></script>
 <script src="lesson.js"></script>
 <script src="taste.js?v=20260810a"></script>
-<script src="nav-inject.js?v=20260903a"></script>
-<script>
-/* ── 选题体检台 ──
-   背景：意图 × 竞争两维度要逐个选题上手看，仪表是示意值（页内声明）。
-   设计意图：点开出体检单，两条仪表从零长到位；四个全开亮排序结论。 */
-(function () {
-  var root = document.getElementById('t5Pick');
-  var badge = document.getElementById('t5Badge');
-  var note = document.getElementById('t5Note');
-  var opened = 0;
-  root.addEventListener('click', function (e) {
-    var item = e.target.closest('.t5-item');
-    if (!item || item.classList.contains('open')) return;
-    item.classList.add('open', item.dataset.g);
-    item.querySelector('.t5-grade').textContent = item.dataset.g === 'hot' ? '先写' : '别碰';
-    var meters = item.querySelectorAll('.t5-meter');
-    var vals = [item.dataset.i, item.dataset.c];
-    meters.forEach(function (m, i) {
-      m.querySelector('.t5-mv').textContent = vals[i];
-      requestAnimationFrame(function () {
-        m.querySelector('.t5-fill').style.width = vals[i] + '%';
-      });
-    });
-    opened++;
-    badge.textContent = '体检 ' + opened + ' / 4';
-    if (opened === 4) {
-      badge.textContent = '✓ 4 / 4';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* 问题句 vs 功能句：B 赢在标题就是用户的原话 */
-tasteDuel('d5Duel', {
-  winner: 1,
-  verdict: '方案 A 的「智能提醒引擎」是站主的骄傲，但没人会搜它。方案 B 的标题就是猫主人凌晨两点打进搜索框的原话，还带着第一手经历（兽医的说法、我的处理）。<b>内容一样，入口天差地别：一个等着老用户碰巧点进来，一个每天接住新的焦虑猫主人。</b>'
-});
-
-/* ── 功能 → 问句翻译机 ── */
-(function () {
-  var root = document.getElementById('l5Trans');
-  var badge = document.getElementById('l5Badge');
-  var note = document.getElementById('l5Note');
-  var filled = 0;
-  root.addEventListener('click', function (e) {
-    var slot = e.target.closest('.l5-slot');
-    if (!slot || slot.classList.contains('filled')) return;
-    slot.classList.add('filled', 'seo-pop');
-    slot.querySelector('.l5-q').textContent = '「' + slot.dataset.q + '」';
-    slot.querySelector('.l5-i').textContent = slot.dataset.i;
-    filled++;
-    badge.textContent = '翻译 ' + filled + ' / 5';
-    if (filled === 5) {
-      badge.textContent = '✓ 5 / 5';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* ── 黑帽判断台 ──
-   背景：反面清单要判断过才记得住，判错的解释比判对更有教学价值。
-   设计意图：每条独立判定，对错各配判词；六条判完亮收口。 */
-(function () {
-  var root = document.getElementById('h5Judge');
-  var badge = document.getElementById('h5Badge');
-  var note = document.getElementById('h5Note');
-  var judged = 0;
-  root.addEventListener('click', function (e) {
-    var btn = e.target.closest('.h5-btn');
-    if (!btn) return;
-    var item = btn.closest('.h5-item');
-    if (item.classList.contains('judged')) return;
-    var risky = item.dataset.risky === '1';
-    var pick = btn.dataset.v === '1';
-    var hit = pick === risky;
-    item.classList.add('judged', risky ? 'risky' : 'safe');
-    var fb = item.querySelector('.h5-fb');
-    fb.classList.add(hit ? 'right' : 'wrong');
-    fb.innerHTML = (hit ? '<b>判对了。</b>' : '<b>判反了。</b>') + item.dataset.fb;
-    judged++;
-    badge.textContent = '判断 ' + judged + ' / 6';
-    if (judged === 6) {
-      badge.textContent = '✓ 6 / 6';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-</script>
-<script src="skill-data.js?v=20260903a"></script>
-<script src="skill-copy.js?v=20260817a"></script>
-<!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260903a"></script><!--seo:end-->
-</body>
-</html>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

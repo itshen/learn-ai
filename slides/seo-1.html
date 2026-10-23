@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>做出来了，为什么没人来 | 被搜到：SEO 与 GEO</title>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
-<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
-<link rel="stylesheet" href="lesson.css?v=20260827a">
-<link rel="stylesheet" href="taste.css?v=20260810a">
-<link rel="stylesheet" href="seo.css?v=20260811a">
-<!-- SEO Start -->
-<meta name="description" content="AI 把「做出来」的成本打到很低，被发现的入口反而更挤。三条流量入口各有各的脾气：搜索引擎主动搜、AI 引擎直接问、社交传播替你说。玩一遍收录漏斗，看你的产品卡在哪一层。">
-<meta name="keywords" content="SEO,GEO,流量入口,收录,搜索引擎,AI 引擎,一人公司,独立开发者">
-<meta name="author" content="洛小山">
+<title>几十节课程放一页，怎么让搜索引擎读到？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。">
+<meta name="author" content="洛小山、黄啊码">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://xueai.miyang.cn/slides/seo-1.html">
 <link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-1.html">
@@ -23,437 +15,149 @@
 <link rel="alternate" hreflang="zh-MO" href="https://xueai.miyang.cn/slides/seo-1.hk.html">
 <link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-1.html">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="xueai.miyang.cn · AI 产品经理培训">
-<meta property="og:title" content="做出来了，为什么没人来">
-<meta property="og:description" content="做完不等于有人来。三条流量入口的分工，和一个五层收录漏斗。">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="几十节课程放一页，怎么让搜索引擎读到？">
+<meta property="og:description" content="从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。">
 <meta property="og:url" content="https://xueai.miyang.cn/slides/seo-1.html">
-<meta property="og:image" content="https://xueai.miyang.cn/slides/og/seo-1.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108374618365108603/01-cover.webp">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="做出来了，为什么没人来">
-<meta name="twitter:description" content="做完不等于有人来。三条流量入口的分工，和一个五层收录漏斗。">
-<meta name="twitter:image" content="https://xueai.miyang.cn/og-cover.jpg">
-<!-- SEO End -->
-<style>
-/* ── 入口三张卡：点开看各自的脾气 ──
-   背景：三条入口的差别是全章地基，读表格记不住，点一张翻一张才有体感。
-   设计意图：未翻开只给名字和一句悬念；翻开后正面内容滑入（seo-slide-up
-   只播一次），三张全翻完在底部收口。约束：翻开不可逆，符合「看过了」的语义。 */
-.e1-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.e1-card{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:16px;cursor:pointer;transition:border-color .2s ease,transform .2s ease;min-height:150px;display:flex;flex-direction:column;}
-.e1-card:hover{border-color:var(--ct-line);transform:translateY(-2px);}
-.e1-card.open{cursor:default;border-color:var(--ct);}
-.e1-card.open:hover{transform:none;}
-.e1-name{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--text);}
-.e1-name svg{width:16px;height:16px;color:var(--ct);flex-shrink:0;}
-.e1-tease{margin-top:8px;font-size:12.5px;color:var(--sub);line-height:1.7;}
-.e1-body{display:none;margin-top:10px;font-size:12.5px;line-height:1.75;color:var(--text);}
-.e1-card.open .e1-tease{display:none;}
-.e1-card.open .e1-body{display:block;}
-.e1-row{display:flex;gap:8px;margin-top:6px;}
-.e1-k{flex-shrink:0;font-size:11px;font-weight:800;color:var(--ct-deep);background:var(--ct-soft);border-radius:6px;padding:2px 8px;white-space:nowrap;height:fit-content;}
-.e1-v{color:var(--sub);}
-.e1-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.e1-note.show{display:block;}
-.e1-note b{color:var(--ct-deep);}
-
-/* ── 收录漏斗模拟器 ──
-   背景：「没人来」是个笼统的抱怨，拆成五层漏斗才知道漏在哪。
-   设计意图：四个开关各修一层，关着的开关在对应层挂红色病名；
-   数字是示意值（页脚声明），条宽过渡 350ms 一次到位，无稳态动画。 */
-.f1-switches{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-.f1-sw{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:border-color .2s ease,background .2s ease;}
-.f1-sw:hover{border-color:var(--ct-line);}
-.f1-sw.on{border-color:var(--ct);background:var(--ct-soft);}
-.f1-toggle{width:34px;height:20px;border-radius:999px;background:rgba(0,0,0,.15);position:relative;flex-shrink:0;transition:background .2s ease;margin-top:1px;}
-.f1-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s ease;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-.f1-sw.on .f1-toggle{background:var(--ct);}
-.f1-sw.on .f1-toggle::after{left:16px;}
-.f1-swt{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;}
-.f1-swd{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.6;}
-.f1-funnel{display:flex;flex-direction:column;gap:8px;}
-.f1-layer{display:grid;grid-template-columns:minmax(0,120px) 1fr 56px;gap:10px;align-items:center;}
-.f1-ln{font-size:12.5px;font-weight:800;color:var(--text);text-align:right;}
-.f1-track{height:26px;border-radius:8px;background:rgba(0,0,0,.04);overflow:hidden;position:relative;}
-.f1-fill{height:100%;border-radius:8px;background:var(--ct-line);transition:width .35s ease-out;display:flex;align-items:center;}
-.f1-fill.hot{background:var(--ct);}
-.f1-flaw{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:800;color:var(--bad);background:var(--bad-soft);border-radius:6px;padding:1px 8px;white-space:nowrap;}
-.f1-num{font-size:13px;font-weight:800;color:var(--ct-deep);font-variant-numeric:tabular-nums;text-align:right;}
-.f1-verdict{margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.f1-verdict b{color:var(--ct-deep);}
-.f1-fine{margin-top:10px;font-size:11.5px;color:var(--sub);}
-
-/* ── 三分钟自查 ── */
-.c1-list{display:flex;flex-direction:column;gap:10px;}
-.c1-item{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:border-color .2s ease;}
-.c1-item:hover{border-color:var(--ct-line);}
-.c1-item.done{border-color:var(--ct);background:var(--ct-soft);cursor:default;}
-.c1-box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:transparent;margin-top:1px;transition:background .2s ease,color .2s ease;}
-.c1-item.done .c1-box{background:var(--ct);border-color:var(--ct);color:#fff;}
-.c1-t{font-size:13.5px;font-weight:800;color:var(--text);}
-.c1-t code{font-size:12px;background:rgba(0,0,0,.05);border-radius:5px;padding:1px 6px;font-family:ui-monospace,monospace;}
-.c1-d{font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:3px;}
-.c1-r{display:none;font-size:12.5px;color:var(--text);line-height:1.7;margin-top:8px;padding:10px 12px;border-radius:8px;background:#fff;border:1px solid var(--ct-line);}
-.c1-item.done .c1-r{display:block;}
-.c1-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--good-soft);border:1.5px solid rgba(22,163,74,.25);font-size:13.5px;line-height:1.8;color:var(--text);}
-.c1-note.show{display:block;}
-.c1-note b{color:var(--good);}
-
-@media (max-width:768px){
-  .e1-grid{grid-template-columns:1fr;}
-  .f1-switches{grid-template-columns:1fr;}
-  .f1-layer{grid-template-columns:minmax(0,88px) 1fr 48px;}
-}
-@media (prefers-reduced-motion:reduce){
-  .f1-fill,.f1-toggle,.f1-toggle::after{transition:none;}
-}
-</style>
+<meta name="twitter:title" content="几十节课程放一页，怎么让搜索引擎读到？">
+<meta name="twitter:description" content="从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108374618365108603/01-cover.webp">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
 <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
-<!--seo:begin--><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"headline":"做出来了，为什么没人来","name":"做出来了，为什么没人来","url":"https://xueai.miyang.cn/slides/seo-1.html","inLanguage":"zh-CN","author":{"@type":"Person","name":"洛小山"},"publisher":{"@type":"Organization","name":"xueai.miyang.cn","url":"https://xueai.miyang.cn"},"learningResourceType":"课程","educationalLevel":"入门到进阶","isPartOf":{"@type":"Course","name":"AI 实战课 · 先搞清被发现这件事","url":"https://xueai.miyang.cn/slides/learn.html"},"isAccessibleForFree":true,"description":"AI 把「做出来」的成本打到很低，被发现的入口反而更挤。三条流量入口各有各的脾气：搜索引擎主动搜、AI 引擎直接问、社交传播替你说。玩一遍收录漏斗，看你的产品卡在哪一层。","datePublished":"2026-08-12","dateModified":"2026-08-27"}</script><style>.xa-tldr{margin:18px 0 4px;padding:14px 18px;background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.16);border-radius:10px}.xa-tldr .xa-tldr-tag{display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent,#0066ff);margin-bottom:6px}.xa-tldr p{margin:0;font-size:15px;line-height:1.8;color:var(--text,#1f2937)}</style><!--seo:end-->
-</head>
-<body>
-<main class="lesson">
-
-  <header class="lesson-header">
-    <div class="kicker">被搜到 · 1 / 6</div>
-    <h1>做出来了，为什么没人来</h1>
-    <p class="subtitle">前面的课把产品做出来了，OPC 把它确了权。然后是一个更朴素的问题：<b>做完不等于有人来</b>。这一节先把「被发现」这件事拆开：流量从哪三条路来、各自什么脾气，再用一个五层漏斗，找到你的产品卡在哪一层。</p>
-    <div class="chips"><span class="chip">开篇立论</span><span class="chip">三条入口</span><span class="chip">收录漏斗</span><span class="chip">三分钟自查</span></div>
-  </header><!--seo:begin--><aside class="xa-tldr"><span class="xa-tldr-tag">一句话速览</span><p>三条流量入口各有各的脾气：搜索引擎主动搜、AI 引擎直接问、社交传播替你说。先玩一遍收录漏斗，看你的产品卡在哪一层</p></aside><!--seo:end-->  <section class="reveal">
-    <div class="sec-label">东西在变多，入口没变多</div>
-    <p class="desc">Vibe Coding 把「做出来」的成本打到很低，这件事有个少被提起的另一面：你能十分钟做一个产品，别人也能。做出来的东西以肉眼可见的速度变多，用户的注意力入口却还是那几个。<b>竞争没有消失，只是从「能不能做」挪到了「会不会被看见」。</b></p>
-    <p class="desc" style="margin-top:16px">很多独立开发者的路径是这样的：憋一个月上线，发个朋友圈，来了三十个访客，一周后归零。然后得出结论「产品不行」。多数时候这个结论下早了，产品可能没问题，问题是它压根没有进入任何一条被发现的通道。</p>
-    <div class="quote-card" style="margin-top:16px"><b>做出来只是开始，被找到才算上线。</b>没人来的产品和没做的产品，在市场眼里是同一个东西。</div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 三条入口，一张一张翻开</div>
-    <p class="desc">用户发现一个新产品，路径基本逃不出三条。三张卡各写了一条，<b>点开看它的脾气</b>：谁在主导、多久见效、你能控制多少。</p>
-    <div class="toy" id="e1Cards">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></span>
-        <span class="toy-t">流量的三条来路</span>
-        <span class="toy-badge" id="e1Badge">翻开 0 / 3</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">点卡片翻开，三张都看完再往下走</div>
-        <div class="e1-grid">
-          <div class="e1-card" data-k="0">
-            <div class="e1-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>搜索引擎</div>
-            <p class="e1-tease">用户带着问题主动来找。点开看它的脾气。</p>
-            <div class="e1-body">
-              <div class="e1-row"><span class="e1-k">谁主导</span><span class="e1-v">用户。他打出一句问题，你的页面要恰好是答案</span></div>
-              <div class="e1-row"><span class="e1-k">见效</span><span class="e1-v">慢。收录要几周，排名要几个月，但一旦成了就持续来人</span></div>
-              <div class="e1-row"><span class="e1-k">你能控制</span><span class="e1-v">内容和结构全在你手里，这是三条里你控制力最强的一条</span></div>
-            </div>
-          </div>
-          <div class="e1-card" data-k="1">
-            <div class="e1-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>AI 引擎</div>
-            <p class="e1-tease">用户不搜了，直接问。答案里有没有你，AI 说了算。</p>
-            <div class="e1-body">
-              <div class="e1-row"><span class="e1-k">谁主导</span><span class="e1-v">AI。它替用户读完全网，再决定引用谁。用户看到的是答案，你要争的是答案里的一句引用</span></div>
-              <div class="e1-row"><span class="e1-k">见效</span><span class="e1-v">取决于你有没有进它的索引和检索源，进了就可能被引用</span></div>
-              <div class="e1-row"><span class="e1-k">你能控制</span><span class="e1-v">部分。内容写法能优化（第 3 节整节讲），但引用与否是它的决定</span></div>
-            </div>
-          </div>
-          <div class="e1-card" data-k="2">
-            <div class="e1-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>社交传播</div>
-            <p class="e1-tease">别人替你说。来得快，去得也快。</p>
-            <div class="e1-body">
-              <div class="e1-row"><span class="e1-k">谁主导</span><span class="e1-v">平台和转发的人。一条帖子火不火，你只能影响，不能决定</span></div>
-              <div class="e1-row"><span class="e1-k">见效</span><span class="e1-v">快。当天就能看到曲线，但曲线通常一周内回落</span></div>
-              <div class="e1-row"><span class="e1-k">你能控制</span><span class="e1-v">最弱。它适合当引爆器，不适合当地基</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="e1-note" id="e1Note"><b>三张翻完，分工就清楚了。</b>社交传播管引爆，搜索引擎管细水长流，AI 引擎是正在长大的新入口。本章接下来只讲后两条，因为它们有一个共同点：<b>见效慢，但你能控制，且做对一次长期有效</b>。社交传播怎么做口碑，雷军课讲过，这里不重教。</div>
-      </div>
-    </div>
-    <a class="xref" href="lei-6.html">
-      <span class="xref-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
-      <span><span class="xref-t">口碑的本质是超出预期 · 雷军创业课</span><span class="xref-d">社交传播那条入口的方法论在这一节：预期管理，和用心可以被用户感知。</span></span>
-    </a>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 收录漏斗，看你漏在哪一层</div>
-    <p class="desc">「没人来」是个笼统的抱怨，拆开是五层：做出来了、能被抓取、被收录了、被展示了、被点击了。每一层都会漏掉一批。下面四个开关对应四个常见病，<b>试着关掉再打开</b>，看每层的数字怎么变。</p>
-    <div class="toy" id="f1Funnel">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></svg></span>
-        <span class="toy-t">收录漏斗模拟器</span>
-        <span class="toy-badge" id="f1Badge">四个开关</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">开关默认全关，这是很多新站上线时的真实状态。逐个打开，看哪层被修好</div>
-        <div class="f1-switches">
-          <div class="f1-sw" data-k="0">
-            <span class="f1-toggle"></span>
-            <span><span class="f1-swt">正文服务端可见</span><span class="f1-swd">页面源代码里就有正文，爬虫不用执行 JS 也能读到。AI 生成的前端最爱犯的错就是全靠 JS 渲染</span></span>
-          </div>
-          <div class="f1-sw" data-k="1">
-            <span class="f1-toggle"></span>
-            <span><span class="f1-swt">提交了 sitemap 和站长平台</span><span class="f1-swd">主动告诉引擎「我在这、我有哪些页」，收录从随缘变成可观测</span></span>
-          </div>
-          <div class="f1-sw" data-k="2">
-            <span class="f1-swt-wrap"><span class="f1-toggle"></span></span>
-            <span><span class="f1-swt">每页有说人话的 title 和描述</span><span class="f1-swd">搜索结果页上用户看到的就是这两行字，写得像人话才有人点</span></span>
-          </div>
-          <div class="f1-sw" data-k="3">
-            <span class="f1-toggle"></span>
-            <span><span class="f1-swt">内容答的是有人搜的问题</span><span class="f1-swd">页面再多，答的问题没人搜，就永远轮不到被展示</span></span>
-          </div>
-        </div>
-        <div class="f1-funnel" id="f1Bars"></div>
-        <div class="f1-verdict" id="f1Verdict"></div>
-        <div class="f1-fine">条形数值为示意指数，用来感受各层的相对损耗，不是统计数据。</div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">玩完应该能看出一个规律：<b>四个开关分别修四个不同的层，谁也替代不了谁</b>。正文可见修「能被抓」，sitemap 修「被收录」，title 修「被点击」，选题修「被展示」。抱怨没流量之前，先搞清自己漏在哪一层，后面几节按层给药。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 三分钟，查你的产品在不在</div>
-    <p class="desc">不用装任何工具，三个动作就能给自己的站做一次粗诊。如果你现在手上有产品，边读边做；没有的话，拿你常用的某个小工具站试也行。<b>做完一项点一项。</b></p>
-    <div class="toy" id="c1Check">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
-        <span class="toy-t">三分钟粗诊</span>
-        <span class="toy-badge" id="c1Badge">完成 0 / 3</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">每项做完点一下，看这一步在诊断什么</div>
-        <div class="c1-list">
-          <div class="c1-item" data-k="0">
-            <span class="c1-box">✓</span>
-            <span>
-              <span class="c1-t">在搜索框输入 <code>site:你的域名</code></span>
-              <span class="c1-d">Google 和 Bing 各查一次，出来的结果数就是收录数</span>
-              <span class="c1-r">这一步诊断「被收录了没」。两边都是零，说明引擎压根不知道你存在，先去第 2 节做提交；只有 Google 有、Bing 没有，第 4 节会讲这为什么很要命。</span>
-            </span>
-          </div>
-          <div class="c1-item" data-k="1">
-            <span class="c1-box">✓</span>
-            <span>
-              <span class="c1-t">拿你产品能解决的问题，问一次 AI</span>
-              <span class="c1-d">用你目标用户的原话问 ChatGPT 或 Kimi，看答案里有没有你，有没有你的竞品</span>
-              <span class="c1-r">这一步诊断「AI 引擎眼里你在不在」。答案里全是竞品，说明这条入口已经有人在收割，你还没上桌；答案里谁都没有，说明这个问题还没人占，是机会。</span>
-            </span>
-          </div>
-          <div class="c1-item" data-k="2">
-            <span class="c1-box">✓</span>
-            <span>
-              <span class="c1-t">搜你自己的品牌名</span>
-              <span class="c1-d">产品名加上「是什么」「怎么样」，看第一页是你自己，还是别人在替你介绍</span>
-              <span class="c1-r">这一步诊断「品牌词守住了没」。连自己名字都搜不到自己，用户听说了你也找不到你，这是被发现链条上最冤的一种断法。</span>
-            </span>
-          </div>
-        </div>
-        <div class="c1-note" id="c1Note"><b>三项做完，你手里已经有一份粗诊报告了。</b>记下三个结果，学完这一章回来再查一遍，变化就是你的成绩单。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">都 2026 年了，还学 SEO 干嘛</div>
-    <p class="desc">一个合理的质疑：用户都去问 AI 了，搜索引擎优化是不是过时手艺？拆开看恰好相反。第一，搜索没死：大量「找到某个网站」的需求仍然走搜索框，尤其是带交易意图的（查价格、找工具、比服务）。第二，也是更关键的：<b>AI 引擎回答问题前，自己也要先「搜」一遍</b>，它的检索源就是搜索引擎的索引和你站上的内容。SEO 做的能被抓、能被读懂那套基本功，恰好是被 AI 引用的入场券。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>你做的事</th><th>对搜索引擎的作用</th><th>对 AI 引擎的作用</th></tr>
-      <tr><td><b>正文进 HTML</b></td><td>能被收录</td><td>能被读到，多数 AI 爬虫不执行 JS</td></tr>
-      <tr><td><b>title 说人话</b></td><td>搜索结果里有人点</td><td>AI 判断这页答什么问题的第一依据</td></tr>
-      <tr><td><b>提交 sitemap</b></td><td>收录变快变全</td><td>进了索引才可能进 AI 的检索源</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">所以这一章把 SEO 和 GEO 放在一起讲：不是两门课，是同一套基本功的两个出口。第 2 节讲共用的地基，第 3 节讲 AI 特有的部分。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">选一选 · 新站三个月没流量</div>
-    <div class="toy" id="q1Quiz">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
-        <span class="toy-t">一个用 AI 做的工具站上线三个月，搜索流量几乎为零。最该先查什么？</span>
-        <span class="toy-badge">单选</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">选错也有解释，选到对的为止</div>
-        <div class="quiz-opts">
-          <div class="quiz-opt" data-k="0"><span class="qo-key">A</span><span>产品功能还不够多，先加功能</span></div>
-          <div class="quiz-opt" data-k="1"><span class="qo-key">B</span><span>用 site: 查收录数，再看页面源代码里有没有正文</span></div>
-          <div class="quiz-opt" data-k="2"><span class="qo-key">C</span><span>花钱投一波广告，先把量冲起来</span></div>
-          <div class="quiz-opt" data-k="3"><span class="qo-key">D</span><span>把首页做得更炫，加动画和视频</span></div>
-        </div>
-        <div class="quiz-fb"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">本章地图</div>
-    <p class="desc">接下来五节按漏斗从上往下走，每节收一层：</p>
-    <ol class="desc" style="margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;">
-      <li>第 2 节修「能被抓、被收录」：SEO 最低可行清单，十项全是一次性动作。</li>
-      <li>第 3 节修「能被 AI 引用」：GEO 四杠杆，答案块、FAQ、llms.txt、日期。</li>
-      <li>第 4 节看一台真实手术：本站 2026 年 8 月的审计和改造全记录。</li>
-      <li>第 5 节打持久战：选题排序、真实经历换可信度、黑帽避雷。</li>
-      <li>第 6 节收口：12 项验收清单加四个度量口径，进度存在本地。</li>
-    </ol>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">本节要点</div>
-    <div class="takeaways">
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>做完不等于有人来：</b>执行成本塌了之后，做出来的东西变多，被发现的入口没变多。没人来的产品和没做的产品，在市场眼里是同一个。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>三条入口三种脾气：</b>社交传播管引爆但控制力最弱，搜索引擎慢但你说了算，AI 引擎是正在长大的新入口。本章只讲后两条。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>「没流量」要拆成五层看：</b>做出来了、能被抓、被收录、被展示、被点击，每层的病不一样，药也不一样。先定位漏在哪层，再对症下药。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>三分钟粗诊随时能做：</b>site: 查收录、问一次 AI、搜自己品牌名。记下今天的结果，学完全章回来对比。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>SEO 和 GEO 是同一套基本功的两个出口：</b>AI 引擎回答前也要先检索，能被抓、能被读懂的功课两边通用。</p></div>
-    </div>
-    <p class="src-note"><b>内容来源：</b>小山学堂「被搜到」专题原创，方法与案例来自本站 2026 年 8 月的真实 SEO / GEO 改造记录（第 4 节整节复盘）。</p>
-  </section>
-
-</main>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "几十节课程放一页，怎么让搜索引擎读到？", "name": "几十节课程放一页，怎么让搜索引擎读到？", "url": "https://xueai.miyang.cn/slides/seo-1.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-08-12", "dateModified": "2026-10-18", "isAccessibleForFree": true, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108374618365108603/01-cover.webp"}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="1">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 1 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 1 / 14</div><h1>几十节课程放一页，怎么让搜索引擎读到？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A1" data-source-start="0" data-source-end="236">
+<p>昨晚快十一点，我跟一群大佬在聊关于域名的事情，顺延着就聊到了 SEO和 GEO，这事情，对于我这个做了接近 200 个站点的人来说不就是小菜一碟吗？</p>
+<p>本来我只是想顺嘴回两句，结果大伙全冒出来了，有人喊我开课，有人翻出自己十多年前的古董博客，还有技术老哥一边听一边现场改代码。一个多小时里，大家从二级域名一路聊到页面结构，最后又扯到了最近满天飞的新词——GEO。</p>
+<p>聊到最后我发现，大部分人踩的坑其实一模一样：<strong>新概念学得比谁都快，但搜索引擎甚至连他是谁都没搞明白。</strong></p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 1 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>新概念学得比谁都快，但搜索引擎甚至连他是谁都没搞明白。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#site-shell">你以为搭了个网站，爬虫眼里却是个空壳子</a></li>
+<li><a href="#old-craft">名字怎么变，底层的规矩先弄明白</a></li>
+<li><a href="#not-volume">别一骨碌塞几百篇，最后连客户影子都没有</a></li>
+<li><a href="#today">别想太复杂，今天先干这四件事</a></li></ol></details>
+<section id="site-shell" class="reveal sc-section" data-source-section data-point-ids="K001 K003"><span id="k001" class="sc-point-anchor" aria-hidden="true"></span><span id="k003" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>你以为搭了个网站，爬虫眼里却是个空壳子</h2>
+<div class="sc-author-passage" data-source-key="A1" data-source-start="265" data-source-end="542">
+<p>群里有个朋友做了教学网站，乍一看页面挺多，点进去内容非常饱满。但我顺手帮他看了一眼代码结构，好家伙，问题全暴露了：他把几十节课的内容全都塞在一个页面里，人点着是挺方便，但搜索爬虫根本读不懂这种千层饼结构。</p>
+<p>我当时直接跟他说了实话：<strong>一个知识点，就老老实实给它一个独立的页面。</strong></p>
+<p>这个页面得有干干净净的独立网址，标题清清楚楚，正文直接写在源码里，别搞那些复杂的嵌套。爬虫一进来，一眼就能看懂这页在讲啥、跟你的网站有什么关系。你搞那么多弹窗和层层嵌套，人看着热闹，爬虫抓到的就是几行空架子。你辛辛苦苦做了几十节课，在搜索引擎眼里，你可能就只是个单页。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>这里“一知识点一页”的建议，针对原文里课程正文难以独立访问的情境。实际拆页仍按核心问题组织，相关问题可以放在同一页，不必为每个词拆一页。</aside></section>
+<figure id="fig-a1-01" class="sc-figure" data-asset-key="A1-01" data-after-anchor="k001"><a class="sc-image-link" href="images/seo-geo/2108374618365108603/01-cover.webp" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108374618365108603/01-cover.webp" width="1200" height="480" loading="lazy" decoding="async" alt="原文封面：让互联网认识品牌"></a><figcaption>先让品牌、产品与业务信息在互联网上可识别，再讨论新增访问。</figcaption></figure>
+<section id="old-craft" class="reveal sc-section" data-source-section data-point-ids="K002 K004"><span id="k002" class="sc-point-anchor" aria-hidden="true"></span><span id="k004" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>名字怎么变，底层的规矩先弄明白</h2>
+<div class="sc-author-passage" data-source-key="A1" data-source-start="1265" data-source-end="1461">
+<p>聊着聊着，有人忍不住问：“现在不都是 GEO 时代了吗？还用这些老掉牙的方法有用吗？”</p>
+<p>其实我在 2024 年就帮企业做过这种事，只是那时候还没这洋气的英文缩写，大家都叫它“企业搜索优化”。</p>
+<p>名字怎么变其实无所谓，底层的规矩压根就没变过，永远是这三条：</p>
+<ol start="1">
+<li>机器能不能看懂你在说什么？；</li>
+<li>网上有没有别人在引用你、提你，这是信任的来源；</li>
+<li>你是不是一直在聊同一个专业的事。</li>
+</ol></div>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="2301" data-source-end="2405">
+<p>归根结底，企业内部的知识库是极好的源头，你发布到公网的内容，技术 SEO 继续负责解决被发现与被顺利抓取，专业内容负责提供硬核解答，评估机制负责监测答案的变化，三者互补，共同构造了新时代的 SEO【GEO】。</p></div></section>
+<section id="not-volume" class="reveal sc-section" data-source-section data-point-ids="K006 K007"><span id="k006" class="sc-point-anchor" aria-hidden="true"></span><span id="k007" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别一骨碌塞几百篇，最后连客户影子都没有</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="0" data-source-end="349">
+<p>上篇咱们聊了为什么别把网站搞成“空壳子”，今天咱们接着整点更实在的：<strong>怎么把自己的小破站，改造成搜索引擎喜欢的产品。</strong></p>
+<p>有部分初学者超级喜欢网站刚上线，就一骨碌塞几百篇文章，结果一个月过去，一个客户都没有，别说客户吧，另1 个访问量都没有。</p>
+<p>其实折腾网站优化，说穿了就三步：<strong>让搜索引擎喜欢、让用的人知道你在说什么、长期坚持优化，把后台数据把卡点修好。</strong></p>
+<p>很多人老喜欢去买一堆的书籍，《SEO 从入门到精通》《让 GEO 掌握 AI 流量分配》，噗，这东西看起来就跟《五年高考三年模拟》一样八股，别去死记那些复杂的行业黑话啦，今天咱就着 Google 官方的规矩，讲讲人话版的操作手册，别问为啥不用百度，因为现在在 X。（开玩笑的，因为谷歌在搜索引擎方面是百度的粑粑），ok，开始吧。</p></div>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="684" data-source-end="893">
+<p><strong>许多服务商和团队的生存模式，是建立在“可计件交付”之上的。</strong></p>
+<p>文章按篇收费，分发按链接收费，效果按关键词截图验收。这种商业合同天然鼓励“堆产量、降成本”，它从机制上就惩罚那些愿意花三天时间去向产品经理核实一项业务事实的人。</p>
+<p>当甲方采购的依然是“发稿数量”，乙方就永远没有动力去做深度的业务访谈。哪怕合同封面的项目名称改成了时髦的 GEO，团队在执行时，依然会本能地退回到最容易交差、最容易按件计费的动作上去。</p></div></section>
+<figure id="fig-a2-02" class="sc-figure" data-asset-key="A2-02" data-after-anchor="k007"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/02-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/02-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗在文章纸堆旁爬梯，右侧为空客户座位"></a><figcaption>文章数量增加，不代表客户的问题得到了解答；先检查缺失的事实和业务承接。图内数量、参数或收入设问为示意或原文修辞，不作为本课程实测结论。</figcaption></figure>
+<section id="today" class="reveal sc-section" data-source-section data-point-ids="K005 K008"><span id="k005" class="sc-point-anchor" aria-hidden="true"></span><span id="k008" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别想太复杂，今天先干这四件事</h2>
+<div class="sc-author-passage" data-source-key="A1" data-source-start="1636" data-source-end="2089">
+<p>如果你最近也盯着 GEO 头大，先别去买那些割韭菜的课，把手头这四件事弄清楚就行：</p>
+<p>第一，现在就打开搜索框搜一下你自己的名字或者品牌，看看第一页跳出来的到底是你，还是八竿子打不着的路人，想当初我为了这样的效果真的是各种手段都出。</p>
+<p>第二，去翻翻你网站最重要的几篇文章，看它们是不是都有独立的链接？标题和正文对不对得上？爬虫能不能直接读到内容？</p>
+<p>第三，找两三个权重高的大平台，把你肚子里最有价值的经验写透一篇，然后用 AI 帮你稍微润色排版发出去。</p>
+<p>第四，每个月老老实实看一眼数据：哪些页面被抓取了？搜什么词能找到你？别嫌慢，拿个小本子记下来。</p>
+<p>别天天想着一口气生成几百页弯道超车，也没必要追着每一个新词团团转，先把地基打牢，让搜索引擎认清你是谁，再慢慢让互联网上的内容跟你产生关联，后面的事情自然就顺了。</p>
+<p>说到底，不管是 SEO 还是 GEO，拼的还是那点老手艺，虽然说 GEO 是当下的热点，但 SEO 才是GEO 的粑粑啊。</p>
+<p><strong>搜索引擎都不知道你是谁，AI 怎么可能会在答案里推荐你？</strong></p></div>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2905" data-source-end="3177">
+<p>国内站看百度搜索资源平台，海外看 Google Search Console（GSC），有了后台，你就不用瞎猜，看数据对症下药：</p>
+<ul>
+<li><strong>页面根本没收录</strong>：先查代码是不是把爬虫挡了，或者页面是不是空白没渲染出来，还是不知道，用 site:网址；</li>
+<li><strong>有展现、没点击</strong>：说明排上去了，但标题和简介写得太无聊，改改文案，吸引人点进来；</li>
+<li><strong>有点击、没人咨询</strong>：说明标题把人骗进来了，但正文写得不对路，或者联系方式藏得太深，别人找不到；</li>
+<li><strong>某个页面源源不断来客户</strong>：别闲着，抓紧顺着这个话题多写几篇关联文章，把优势扩大。</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>品牌出现不等于获得推荐，发布频率本身也不是垃圾内容的判定依据。site: 仅作粗查；展现、点击和咨询还受查询意图、位置与承接影响。 · <a href="https://developers.google.com/search/docs/monitor-debug/search-operators/all-search-site">Google：site: 查询的边界</a></aside></section>
+<figure id="fig-a1-04" class="sc-figure" data-asset-key="A1-04" data-after-anchor="k008"><a class="sc-image-link" href="images/seo-geo/2108374618365108603/04.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108374618365108603/04.png" width="886" height="255" loading="lazy" decoding="async" alt="原文截图：品牌搜索结果"></a><figcaption>品牌搜索可用于记录基线。图为原文历史截图，不代表当前搜索结果或精确收录数量。</figcaption></figure>
+<details class="sc-teaching-extras">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>确定范围</strong>挑选首页、核心产品和一个教程作为起点。记录各页目标和应该服务的用户，不把一个页面的观察扩写成全站结论。</li>
+<li><strong>收集证据</strong>保存实际响应、搜索后台状态、主要查询和业务反馈。暂时没有数据的项目写未建立基线，不用估计值填满表格。</li>
+<li><strong>定位卡点</strong>把每项观察放到访问、索引、展现、点击或业务承接的一层。列出可能解释，并为最重要的一个安排验证动作。</li>
+<li><strong>安排复查</strong>写明负责人、修改内容与复查条件。动作完成和效果出现分开记录，避免反复返工已经验证通过的环节。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份范围明确的页面诊断记录，至少包含网址、目标用户、当前证据、待验证解释和下一次检查动作。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 有展现、有点击，却几乎没有合适咨询，第一步怎样处理？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="先处理已经观察到的卡点。检查访问者的问题是否与你的服务匹配，正文是否回答顾虑，联系方式或工具入口是否清楚；索引问题仍可查，但不能替代转化诊断。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>有展现、有点击，却几乎没有合适咨询，第一步怎样处理？</legend>
+<label class="sc-option">
+<input type="radio" name="q1" value="0"><span>继续大量提交站点地图</span></label>
+<label class="sc-option">
+<input type="radio" name="q1" value="1"><span>核对查询意图、页面解答与业务承接</span></label>
+<label class="sc-option">
+<input type="radio" name="q1" value="2"><span>把每篇文章扩写到固定字数</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>先处理已经观察到的卡点。检查访问者的问题是否与你的服务匹配，正文是否回答顾虑，联系方式或工具入口是否清楚；索引问题仍可查，但不能替代转化诊断。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-1" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-1-page"><span>关键页面</span>
+<textarea id="work-1-page" name="page" rows="3" maxlength="20000" placeholder="一个真实页面地址"></textarea></label>
+<label class="sc-field wide" for="work-1-observation"><span>当前证据</span>
+<textarea id="work-1-observation" name="observation" rows="3" maxlength="20000" placeholder="记录抓取、索引、展现、点击或询盘中实际可见的信息"></textarea></label>
+<label class="sc-field wide" for="work-1-next"><span>下一步检查</span>
+<textarea id="work-1-next" name="next" rows="3" maxlength="20000" placeholder="写清一个检查动作及其能够回答的问题"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-basics-content-geo.html"><small>上一篇基础</small>内容和外链怎么做：从二手手机选词，一路接上 GEO</a><a class="next" href="seo-intent.html"><small>下一讲</small>SaaS、物流、题库：小站选什么题才能接到生意？</a></nav></main>
 <script src="i18n.js?v=20260903a"></script>
 <script src="lesson.js"></script>
 <script src="taste.js?v=20260810a"></script>
-<script src="nav-inject.js?v=20260903a"></script>
-<script>
-/* ── 入口三张卡 ──
-   背景：三条入口的差别是全章地基，表格记不住，逐张翻开才有体感。
-   设计意图：翻开一瞬正文滑入（seo-slide-up 只播一次），三张全开在
-   底部收口并把徽标翻绿；翻开不可逆，符合「看过了」的语义。 */
-(function () {
-  var root = document.getElementById('e1Cards');
-  var badge = document.getElementById('e1Badge');
-  var note = document.getElementById('e1Note');
-  var opened = 0;
-  root.addEventListener('click', function (e) {
-    var card = e.target.closest('.e1-card');
-    if (!card || card.classList.contains('open')) return;
-    card.classList.add('open');
-    card.querySelector('.e1-body').classList.add('seo-slide-up');
-    opened++;
-    badge.textContent = '翻开 ' + opened + ' / 3';
-    if (opened === 3) {
-      badge.textContent = '✓ 3 / 3';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* ── 收录漏斗模拟器 ──
-   背景：「没人来」要拆层定位，四个开关各修一层，亲手拨才记得住。
-   设计意图：数值是示意指数（页脚声明），每层损耗率由开关状态决定；
-   开关全关时的惨状就是很多新站的真实起点。条宽过渡一次到位，
-   关着的层挂红色病名徽章。 */
-(function () {
-  var LAYERS = [
-    { n: '做出来了',   flaw: null },
-    { n: '能被抓取',   flaw: '正文在 JS 里，爬虫拿到空壳' },
-    { n: '被收录了',   flaw: '引擎不知道你存在' },
-    { n: '被展示了',   flaw: '答的问题没人搜' },
-    { n: '被点击了',   flaw: '标题读不懂，没人想点' }
-  ];
-  /* 每个开关关闭时对应层的通过率，打开后恢复到较高值 */
-  var PASS = [
-    { off: 0.15, on: 0.95 },   /* 开关0 修第1层：能被抓取 */
-    { off: 0.25, on: 0.85 },   /* 开关1 修第2层：被收录 */
-    { off: 0.30, on: 0.75 },   /* 开关3 修第3层：被展示（选题） */
-    { off: 0.20, on: 0.60 }    /* 开关2 修第4层：被点击（title） */
-  ];
-  /* 开关 DOM 顺序：0 正文可见、1 sitemap、2 title、3 选题；
-     漏斗层顺序：抓取←0、收录←1、展示←3、点击←2 */
-  var SW_TO_LAYER = [0, 1, 3, 2];
-  var state = [false, false, false, false];
-  var bars = document.getElementById('f1Bars');
-  var verdict = document.getElementById('f1Verdict');
-
-  bars.innerHTML = LAYERS.map(function (l, i) {
-    return '<div class="f1-layer">'
-      + '<span class="f1-ln">' + l.n + '</span>'
-      + '<span class="f1-track"><span class="f1-fill" id="f1b' + i + '"></span>'
-      + (l.flaw ? '<span class="f1-flaw" id="f1f' + i + '">' + l.flaw + '</span>' : '')
-      + '</span>'
-      + '<span class="f1-num" id="f1n' + i + '"></span>'
-      + '</div>';
-  }).join('');
-
-  function render() {
-    var v = 100;
-    var vals = [v];
-    for (var i = 0; i < 4; i++) {
-      /* 第 i+1 层的通过率由「修这层的那个开关」决定 */
-      var swIdx = SW_TO_LAYER.indexOf(i);
-      var p = state[swIdx] ? PASS[i].on : PASS[i].off;
-      v = v * p;
-      vals.push(v);
-    }
-    vals.forEach(function (val, i) {
-      var fill = document.getElementById('f1b' + i);
-      fill.style.width = Math.max(val, 1.5) + '%';
-      fill.className = 'f1-fill' + (val > 20 ? ' hot' : '');
-      document.getElementById('f1n' + i).textContent = Math.round(val);
-      if (i > 0) {
-        var flaw = document.getElementById('f1f' + i);
-        var swIdx = SW_TO_LAYER.indexOf(i - 1);
-        if (flaw) flaw.style.display = state[swIdx] ? 'none' : '';
-      }
-    });
-    var onCount = state.filter(Boolean).length;
-    var last = Math.round(vals[4]);
-    if (onCount === 0) {
-      verdict.innerHTML = '<b>全关：一百个访问机会最后剩 ' + last + ' 个。</b>这就是「上线了但像没上线」的样子。逐个打开开关，看每层怎么被修好。';
-    } else if (onCount < 4) {
-      verdict.innerHTML = '<b>开了 ' + onCount + ' 个，走到最后的有 ' + last + ' 个。</b>还挂着红色病名的那几层就是你的瓶颈，开关之间替代不了：sitemap 修不了 JS 空壳，好标题救不了没人搜的选题。';
-    } else {
-      verdict.innerHTML = '<b>四个全开，走到最后的有 ' + last + ' 个。</b>注意即使全做对，损耗依然存在，这是常态。SEO 不是把漏斗变成直筒，是别让任何一层漏成筛子。四个开关怎么落地，就是接下来两节的全部内容。';
-    }
-  }
-
-  document.querySelectorAll('#f1Funnel .f1-sw').forEach(function (sw, i) {
-    sw.addEventListener('click', function () {
-      state[i] = !state[i];
-      sw.classList.toggle('on', state[i]);
-      render();
-    });
-  });
-  render();
-})();
-
-/* ── 三分钟自查 ──
-   背景：粗诊要当场做才有意义，勾一项展开一项的「在诊断什么」。
-   设计意图：勾选不可逆（做过了就是做过了），三项全勾亮出收口卡。 */
-(function () {
-  var root = document.getElementById('c1Check');
-  var badge = document.getElementById('c1Badge');
-  var note = document.getElementById('c1Note');
-  var done = 0;
-  root.addEventListener('click', function (e) {
-    var item = e.target.closest('.c1-item');
-    if (!item || item.classList.contains('done')) return;
-    item.classList.add('done');
-    item.querySelector('.c1-r').classList.add('seo-slide-up');
-    done++;
-    badge.textContent = '完成 ' + done + ' / 3';
-    if (done === 3) {
-      badge.textContent = '✓ 3 / 3';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* 判断题：先诊断再动手，别上来就加功能或买量 */
-tasteQuiz('q1Quiz', {
-  answer: 1,
-  why: [
-    '功能多少和搜索流量没有直接关系。答的问题没人搜，功能再多也轮不到被展示。',
-    '先查收录数定位漏在哪一层：收录为零说明引擎不知道你存在；收录了没流量说明问题在展示或点击层。源代码里没正文则是更底层的病，爬虫抓到的是空壳。诊断清楚了再动手，每一分力气才花在对的层上。',
-    '广告能买来访问，买不来收录。预算停了流量归零，漏斗上的洞一个都没堵上。',
-    '动画和视频通常让抓取更糟：正文更依赖 JS，加载更慢。好看解决不了「引擎看不见」。'
-  ]
-});
-</script>
-<!--seo:begin--><script src="watermark.js?v=20260806c"></script><!--seo:end-->
-</body>
-</html>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

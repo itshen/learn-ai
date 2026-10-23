@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>拆本站：Google 收录 693 页，Bing 只有 50 页 | 被搜到：SEO 与 GEO</title>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
-<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
-<link rel="stylesheet" href="lesson.css?v=20260827a">
-<link rel="stylesheet" href="taste.css?v=20260810a">
-<link rel="stylesheet" href="seo.css?v=20260811a">
-<!-- SEO Start -->
-<meta name="description" content="小山学堂 2026 年 8 月真实 SEO/GEO 审计复盘：Google 收录约 693 页而 Bing 只有约 50 页意味着什么、sitemap 为什么漏了全部英韩页面、Q&A 页只标 Article 白扔了 FAQ 引用、日志丢弃爬虫导致 GEO 不可度量。每个缺口讲清怎么发现、改了什么、拿什么验收。">
-<meta name="keywords" content="SEO 审计,GEO 案例,Bing 收录,sitemap,llms-full.txt,FAQPage,软墙,isAccessibleForFree,爬虫日志">
-<meta name="author" content="洛小山">
+<title>课程站读不到、收银文案答非所问，分别怎么改？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。">
+<meta name="author" content="洛小山、黄啊码">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://xueai.miyang.cn/slides/seo-4.html">
 <link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-4.html">
@@ -23,435 +15,133 @@
 <link rel="alternate" hreflang="zh-MO" href="https://xueai.miyang.cn/slides/seo-4.hk.html">
 <link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-4.html">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="xueai.miyang.cn · AI 产品经理培训">
-<meta property="og:title" content="拆本站：Google 收录 693 页，Bing 只有 50 页">
-<meta property="og:description" content="用小山学堂自己的一次真实改造当解剖台，五个缺口逐个拆。">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="课程站读不到、收银文案答非所问，分别怎么改？">
+<meta property="og:description" content="复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。">
 <meta property="og:url" content="https://xueai.miyang.cn/slides/seo-4.html">
-<meta property="og:image" content="https://xueai.miyang.cn/slides/og/seo-4.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/05-dog.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="拆本站：Google 收录 693 页，Bing 只有 50 页">
-<meta name="twitter:description" content="用小山学堂自己的一次真实改造当解剖台，五个缺口逐个拆。">
-<meta name="twitter:image" content="https://xueai.miyang.cn/og-cover.jpg">
-<!-- SEO End -->
-<style>
-/* ── 收录数对比条 ──
-   背景：Bing 50 对 Google 693 是全节的题眼，数字要长出来才震撼。
-   设计意图：点「跑一次实测」两条按真实比例生长（一次到位），
-   随后弹出「为什么这很要命」的解释卡。数据挂口径徽章。 */
-.i4-stage{display:flex;flex-direction:column;gap:14px;}
-.i4-row{display:grid;grid-template-columns:minmax(0,96px) 1fr 72px;gap:12px;align-items:center;}
-.i4-eng{font-size:13px;font-weight:800;color:var(--text);text-align:right;}
-.i4-track{height:30px;border-radius:8px;background:rgba(0,0,0,.04);overflow:hidden;}
-.i4-fill{height:100%;width:0;border-radius:8px;transition:width .8s cubic-bezier(.22,1,.36,1);}
-.i4-fill.g{background:var(--ct);}
-.i4-fill.b{background:var(--bad);}
-.i4-num{font-size:14px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;}
-.i4-run{align-self:flex-start;padding:9px 20px;border-radius:10px;border:none;background:var(--ct);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit;}
-.i4-run:disabled{opacity:.5;cursor:default;}
-.i4-why{display:none;padding:14px 18px;border-radius:10px;background:var(--bad-soft);border:1.5px solid rgba(220,38,38,.25);font-size:13.5px;line-height:1.8;color:var(--text);}
-.i4-why.show{display:block;}
-.i4-why b{color:var(--bad);}
-
-/* ── 审计报告板 ── */
-.g4-list{display:flex;flex-direction:column;gap:10px;}
-.g4-item{border:1.5px solid var(--border);border-radius:12px;background:var(--card);overflow:hidden;cursor:pointer;transition:border-color .2s ease;}
-.g4-item:hover{border-color:var(--ct-line);}
-.g4-item.open{border-color:var(--ct);cursor:default;}
-.g4-head{display:flex;align-items:center;gap:12px;padding:14px 16px;}
-.g4-no{width:26px;height:26px;border-radius:8px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
-.g4-item.open .g4-no{background:var(--ct-soft);color:var(--ct-deep);}
-.g4-t{font-size:13.5px;font-weight:800;color:var(--text);line-height:1.5;}
-.g4-body{display:none;padding:0 16px 14px;border-top:1px dashed var(--border);}
-.g4-item.open .g4-body{display:block;}
-.g4-row{display:flex;gap:10px;margin-top:12px;font-size:12.5px;line-height:1.75;}
-.g4-k{flex-shrink:0;font-size:11px;font-weight:800;padding:2px 10px;border-radius:6px;height:fit-content;white-space:nowrap;margin-top:2px;}
-.g4-k.find{background:var(--bad-soft);color:var(--bad);}
-.g4-k.fix{background:var(--ct-soft);color:var(--ct-deep);}
-.g4-k.chk{background:var(--good-soft);color:var(--good);}
-.g4-v{color:var(--sub);}
-.g4-v code{font-family:ui-monospace,monospace;font-size:11.5px;background:rgba(0,0,0,.05);border-radius:5px;padding:1px 6px;}
-.g4-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.g4-note.show{display:block;}
-.g4-note b{color:var(--ct-deep);}
-
-/* ── 软墙演示 ── */
-.w4-stage{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.w4-col{display:flex;flex-direction:column;gap:8px;min-width:0;}
-.w4-colt{font-size:12.5px;font-weight:800;color:var(--sub);}
-.w4-page{padding:14px 16px;font-size:11.5px;line-height:1.7;background:#fff;min-height:170px;}
-.w4-h{font-size:13.5px;font-weight:800;color:#111827;}
-.w4-p{color:#4b5563;margin-top:6px;}
-.w4-fade{position:relative;color:#9ca3af;}
-.w4-fade::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent,#fff 85%);}
-.w4-lockbar{margin-top:8px;padding:8px 12px;border-radius:8px;background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;font-size:11px;font-weight:700;text-align:center;}
-.w4-src{background:#0f172a;border-radius:12px;padding:12px 14px;font-family:ui-monospace,monospace;font-size:10.5px;line-height:1.8;color:#94a3b8;overflow-x:auto;min-height:170px;}
-.w4-src .txt{color:#e2e8f0;}
-.w4-src .tag{color:#7dd3fc;}
-.w4-src .warn{color:#f87171;font-weight:700;}
-.w4-src .ok{color:#4ade80;}
-.w4-verdict{margin-top:14px;padding:14px 18px;border-radius:10px;font-size:13.5px;line-height:1.8;color:var(--text);}
-.w4-verdict.bad{background:var(--bad-soft);border:1.5px solid rgba(220,38,38,.25);}
-.w4-verdict.bad b{color:var(--bad);}
-.w4-verdict.ok{background:var(--good-soft);border:1.5px solid rgba(22,163,74,.25);}
-.w4-verdict.ok b{color:var(--good);}
-
-/* ── 前后翻牌 ── */
-.p4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.p4-card{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px;cursor:pointer;text-align:center;transition:border-color .2s ease,transform .2s ease;}
-.p4-card:hover{border-color:var(--ct-line);transform:translateY(-2px);}
-.p4-card.flip{cursor:default;border-color:var(--good);background:var(--good-soft);}
-.p4-card.flip:hover{transform:none;}
-.p4-m{font-size:11.5px;font-weight:800;color:var(--sub);line-height:1.5;}
-.p4-v{font-size:19px;font-weight:800;color:var(--bad);margin-top:6px;font-variant-numeric:tabular-nums;}
-.p4-card.flip .p4-v{color:var(--good);}
-.p4-s{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.55;}
-.p4-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--good-soft);border:1.5px solid rgba(22,163,74,.25);font-size:13.5px;line-height:1.8;color:var(--text);}
-.p4-note.show{display:block;}
-.p4-note b{color:var(--good);}
-
-@media (max-width:768px){
-  .w4-stage{grid-template-columns:1fr;}
-  .p4-grid{grid-template-columns:1fr 1fr;}
-}
-@media (prefers-reduced-motion:reduce){
-  .i4-fill{transition:none;}
-}
-</style>
+<meta name="twitter:title" content="课程站读不到、收银文案答非所问，分别怎么改？">
+<meta name="twitter:description" content="复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/05-dog.png">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
 <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
-<!--seo:begin--><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"headline":"拆本站：Google 收录 693 页，Bing 只有 50 页","name":"拆本站：Google 收录 693 页，Bing 只有 50 页","url":"https://xueai.miyang.cn/slides/seo-4.html","inLanguage":"zh-CN","author":{"@type":"Person","name":"洛小山"},"publisher":{"@type":"Organization","name":"xueai.miyang.cn","url":"https://xueai.miyang.cn"},"learningResourceType":"课程","educationalLevel":"入门到进阶","isPartOf":{"@type":"Course","name":"AI 实战课 · 拆一个真实案例","url":"https://xueai.miyang.cn/slides/learn.html"},"isAccessibleForFree":false,"description":"小山学堂 2026 年 8 月真实 SEO/GEO 审计复盘：Google 收录约 693 页而 Bing 只有约 50 页意味着什么、sitemap 为什么漏了全部英韩页面、Q&A 页只标 Article 白扔了 FAQ 引用、日志丢弃爬虫导致 GEO 不可度量。每个缺口讲清怎么发现、改了什么、拿什么验收。","datePublished":"2026-08-12","dateModified":"2026-08-27","hasPart":{"@type":"WebPageElement","isAccessibleForFree":false,"cssSelector":".paywall-locked"}}</script><style>.xa-tldr{margin:18px 0 4px;padding:14px 18px;background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.16);border-radius:10px}.xa-tldr .xa-tldr-tag{display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent,#0066ff);margin-bottom:6px}.xa-tldr p{margin:0;font-size:15px;line-height:1.8;color:var(--text,#1f2937)}</style><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:132px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%);mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script><!--seo:end-->
-</head>
-<body>
-<main class="lesson">
-
-  <header class="lesson-header">
-    <div class="kicker">被搜到 · 4 / 6</div>
-    <h1>拆本站：Google 收录 693 页，Bing 只有 50 页</h1>
-    <p class="subtitle">前两节的清单和杠杆，这一节全部落在一个真实病人身上：小山学堂自己。2026 年 8 月 10 日我们给全站做了一次 SEO / GEO 审计，查出十个缺口，当周修完一轮。<b>这一节挑五个最有代表性的，每个讲清怎么发现的、改了什么、拿什么验收。</b></p>
-    <div class="chips"><span class="chip">真实案例</span><span class="chip">收录对比</span><span class="chip">审计报告</span><span class="chip">软墙拆解</span></div>
-  </header><!--seo:begin--><aside class="xa-tldr"><span class="xa-tldr-tag">一句话速览</span><p>小山学堂 2026 年 8 月真实审计复盘：sitemap 漏了全部英韩页、Q&amp;A 页白扔了 FAQ 引用、日志把爬虫全丢弃。每个缺口讲清怎么发现、改了什么、拿什么验收</p></aside><!--seo:end-->  <section class="reveal">
-    <div class="sec-label">先交代病人的底子</div>
-    <p class="desc">审计那天的本站是这样的：759 个 HTML 页面，中英韩三语，绝大多数页面有 description（743 页）和 JSON-LD（741 页）<span class="data-note">2026-08-10 实测</span>。也就是说，上一节那张最低可行清单，它大部分是过关的。按很多教程的标准，这已经算「SEO 做得不错的站」了。</p>
-    <p class="desc" style="margin-top:16px">但一做实测就露馅了。这正是本章反复强调「自己动手核对」的原因：<b>清单过了不代表没病，数字才是诊断书。</b>第一项实测就查出了全场最大的病。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 第一项实测：两边的收录数</div>
-    <p class="desc">第 1 节教的三分钟粗诊，第一步就是 site: 查收录。给本站跑这一步，结果如下。<b>点按钮跑一次。</b></p>
-    <div class="toy" id="i4Cmp">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16h8"/><path d="M7 11h12"/><path d="M7 6h3"/></svg></span>
-        <span class="toy-t">site:xueai.miyang.cn 收录数实测</span>
-        <span class="toy-badge">2026-08-10 口径</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">同一个站，同一天，两个引擎</div>
-        <div class="i4-stage">
-          <div class="i4-row"><span class="i4-eng">Google</span><span class="i4-track"><span class="i4-fill g" id="i4g"></span></span><span class="i4-num" id="i4gn">—</span></div>
-          <div class="i4-row"><span class="i4-eng">Bing</span><span class="i4-track"><span class="i4-fill b" id="i4b"></span></span><span class="i4-num" id="i4bn">—</span></div>
-          <button class="i4-run" id="i4Run">跑一次实测</button>
-          <div class="i4-why" id="i4Why"><b>差了将近 14 倍，而且短的那头最要命。</b>上一节埋的伏笔在这里兑现：ChatGPT 的联网搜索大量依赖 Bing 的索引。Bing 只认识你 50 页，意味着不管另外 640 页写得多好，ChatGPT 替用户搜的时候都翻不到它们。诊断结论：本站在 Google 眼里是个内容站，在 ChatGPT 眼里接近不存在。处方在下面的审计报告里（缺口一）。</div>
-        </div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">复盘这个病的成因很典型：站长平台只注册了 Google，Bing 全靠自然爬。Google 的爬虫勤快、配额大，慢慢也能爬全；Bing 对没提交的小站爬得很保守。<b>不是内容有差别，是你根本没跟 Bing 打过招呼。</b></p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 审计报告板：五个缺口逐个拆</div>
-    <p class="desc">十个缺口里挑五个最有教学价值的。<b>每条点开，按「怎么发现、改了什么、拿什么验收」三段看</b>。注意每条的「发现」都是一个可复制的动作，你可以原样用在自己站上。</p>
-    <div class="toy" id="g4Audit">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="m9 15 2 2 4-4"/></svg></span>
-        <span class="toy-t">2026-08-10 审计报告（节选五条）</span>
-        <span class="toy-badge" id="g4Badge">拆开 0 / 5</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">点一条展开一条</div>
-        <div class="g4-list">
-          <div class="g4-item">
-            <div class="g4-head"><span class="g4-no">1</span><span class="g4-t">Bing 收录约 50 页，Google 约 693 页</span></div>
-            <div class="g4-body">
-              <div class="g4-row"><span class="g4-k find">发现</span><span class="g4-v">两个引擎各跑一次 <code>site:xueai.miyang.cn</code>，肉眼对比结果数。成本三十秒。</span></div>
-              <div class="g4-row"><span class="g4-k fix">修法</span><span class="g4-v">注册 Bing Webmaster、提交 sitemap；接 IndexNow，发版脚本自动把变更页面地址推给 Bing。第一次推送还吃了个 403，原因是 key 文件没先放到站点根目录，key 验证通过后恢复正常。</span></div>
-              <div class="g4-row"><span class="g4-k chk">验收</span><span class="g4-v">定的目标是两周内 Bing 收录从 50 到 300 以上，每周在站长后台记一次数。</span></div>
-            </div>
-          </div>
-          <div class="g4-item">
-            <div class="g4-head"><span class="g4-no">2</span><span class="g4-t">sitemap 漏了全部英文和韩文页面，约 470 个地址</span></div>
-            <div class="g4-body">
-              <div class="g4-row"><span class="g4-k find">发现</span><span class="g4-v">打开自己的 sitemap.xml 数条目：约 330 条，全是中文页。但站上明明有 .en 和 .ko 页面，它们全在靠外链随缘被发现。英文内容恰恰是海外 AI 引擎引用的主要语言，等于把 GEO 的半张牌桌让了。</span></div>
-              <div class="g4-row"><span class="g4-k fix">修法</span><span class="g4-v">改生成脚本：每个课程页输出中英韩三条 <code>&lt;url&gt;</code>，条目内用 <code>hreflang</code> 互指三个语言版本，引擎就知道它们是同一页的翻译，不会当成重复内容。</span></div>
-              <div class="g4-row"><span class="g4-k chk">验收</span><span class="g4-v">sitemap 条目从约 330 涨到约 800，站长工具无格式报错。</span></div>
-            </div>
-          </div>
-          <div class="g4-item">
-            <div class="g4-head"><span class="g4-no">3</span><span class="g4-t">37 个天然 Q&amp;A 页只标了 Article，白扔 FAQ 引用</span></div>
-            <div class="g4-body">
-              <div class="g4-row"><span class="g4-k find">发现</span><span class="g4-v">本站的小白三千问系列每页就是一问一答（「Token 是什么」「AI 客服为什么蠢」），全是小白会原样打进 AI 的问题。查 JSON-LD 却只有 Article 类型，上一节讲的 FAQPage 杠杆一个没用上。</span></div>
-              <div class="g4-row"><span class="g4-k fix">修法</span><span class="g4-v">构建脚本对这批页面额外注入 FAQPage：页面标题当 Question，页首答案块的文本当 acceptedAnswer。全自动，不逐页手写。</span></div>
-              <div class="g4-row"><span class="g4-k chk">验收</span><span class="g4-v">Google 富媒体测试通过；每月拿这批问题问一遍 Perplexity，记录本站被引用的次数。</span></div>
-            </div>
-          </div>
-          <div class="g4-item">
-            <div class="g4-head"><span class="g4-no">4</span><span class="g4-t">JSON-LD 没有日期，AI 引擎判断不了新鲜度</span></div>
-            <div class="g4-body">
-              <div class="g4-row"><span class="g4-k find">发现</span><span class="g4-v">抽查几页的 JSON-LD，<code>datePublished</code> 和 <code>dateModified</code> 都没有。「2026 年学 AI 该从哪开始」这类问题，引擎会偏向能证明自己新鲜的内容。</span></div>
-              <div class="g4-row"><span class="g4-k fix">修法</span><span class="g4-v">日期不手填：脚本从 git 提交记录取每页的首次提交和最近内容提交，写进 JSON-LD 并缓存，构建时批量注入。</span></div>
-              <div class="g4-row"><span class="g4-k chk">验收</span><span class="g4-v">抽查十页 schema 校验通过，日期与 git 记录一致。</span></div>
-            </div>
-          </div>
-          <div class="g4-item">
-            <div class="g4-head"><span class="g4-no">5</span><span class="g4-t">统计脚本把爬虫流量全丢了，GEO 效果不可度量</span></div>
-            <div class="g4-body">
-              <div class="g4-row"><span class="g4-k find">发现</span><span class="g4-v">流量统计脚本为了数字干净，把所有 bot 请求直接过滤掉。人的访问是干净了，代价是 GPTBot 来没来、来了抓什么，一概不知道。改造做没做进 AI 的索引，没有任何仪表能看。</span></div>
-              <div class="g4-row"><span class="g4-k fix">修法</span><span class="g4-v">过滤改成归档：bot 请求单独存，按 UA 统计 GPTBot、ClaudeBot、PerplexityBot、Bytespider 等的日抓取量和热门路径，后台加一张「AI 抓取」表。</span></div>
-              <div class="g4-row"><span class="g4-k chk">验收</span><span class="g4-v">后台能看到各 AI 爬虫近 7 天的抓取曲线。上一节说的「GEO 仪表盘」，就是这张表。</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="g4-note" id="g4Note"><b>五条拆完，注意一个共性：</b>每条的修法都进了脚本和流程，没有一条靠手工。一个人维护几百个页面，手工必漏；让构建脚本每次发版自动做对，才是一人公司的 SEO 姿势。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal paywall-locked xa-peek">
-    <div class="sec-label">动手 · 软墙：付费内容怎么既让爬虫看见又不白送</div>
-    <p class="desc">本站有个绕不开的矛盾：五百多个页面（含英韩版）要登录才能看，但整页拦住的话，引擎和 AI 也一个字都抓不到。审计前的做法就是这样的「硬墙」，531 个受限页对引擎完全不可见。改造后换成「软墙」。<b>切换看两种墙下，用户和爬虫各自看到什么。</b></p>
-    <div class="toy" id="w4Wall">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-        <span class="toy-t">硬墙 vs 软墙</span>
-        <span class="toy-badge">切一切</span>
-      </div>
-      <div class="toy-body">
-        <div class="seg" id="w4Seg" style="margin-bottom:14px"><button class="on" data-k="0">硬墙（改造前）</button><button data-k="1">软墙（改造后）</button></div>
-        <div class="w4-stage">
-          <div class="w4-col">
-            <span class="w4-colt">未登录用户看到的</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">xueai.miyang.cn/slides/agent-3.html</span></div>
-              <div class="mock w4-page" id="w4User"></div>
-            </div>
-          </div>
-          <div class="w4-col">
-            <span class="w4-colt">爬虫抓到的源码（节选）</span>
-            <div class="w4-src" id="w4Src"></div>
-          </div>
-        </div>
-        <div class="w4-verdict" id="w4Verdict"></div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">软墙和骗引擎的 cloaking 只隔一层纸，隔开它们的是那行 <b>isAccessibleForFree: false</b> 声明：在 JSON-LD 里明说「这页有付费部分，受限范围在哪」，这是 Google 官方认可的做法（Flexible Sampling）。删掉声明、给引擎全文却给用户空页，就滑进违规了。改完的结果：531 个受限页全文可抓，可索引页从 28 涨到 186，再到审计后的全量<span class="data-note">2026-08 改造记录</span>。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">动手 · 改造前后，六张牌翻一翻</div>
-    <p class="desc">整轮改造的成绩单收在六张牌里，<b>点一张翻一张</b>。左上角第一张是最重要的提醒：有些数字改造当天不会动，要等引擎消化。</p>
-    <div class="toy" id="p4Flip">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></span>
-        <span class="toy-t">改造前 → 改造后</span>
-        <span class="toy-badge" id="p4Badge">翻开 0 / 6</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">数字口径：2026-08-10 审计与当周改造记录</div>
-        <div class="p4-grid">
-          <div class="p4-card" data-a="~800 条" data-s="中英韩互指，一次构建全量生成"><div class="p4-m">sitemap 条目</div><div class="p4-v">~330 条</div><div class="p4-s">漏掉全部英韩页</div></div>
-          <div class="p4-card" data-a="317 节 + llms-full" data-s="全站正文可被 AI 一次拉取"><div class="p4-m">llms.txt 体系</div><div class="p4-v">仅目录</div><div class="p4-s">没有全文版</div></div>
-          <div class="p4-card" data-a="37 页 FAQPage" data-s="标题当问题，答案块当回答"><div class="p4-m">Q&amp;A 结构化数据</div><div class="p4-v">0 页</div><div class="p4-s">全标成普通文章</div></div>
-          <div class="p4-card" data-a="git 日期全量注入" data-s="发布与修改日期进 JSON-LD"><div class="p4-m">新鲜度信号</div><div class="p4-v">无</div><div class="p4-s">引擎判断不了时效</div></div>
-          <div class="p4-card" data-a="按 UA 归档成曲线" data-s="后台新增 AI 抓取报表"><div class="p4-m">AI 爬虫监控</div><div class="p4-v">全丢弃</div><div class="p4-s">GEO 效果盲飞</div></div>
-          <div class="p4-card" data-a="待引擎消化" data-s="目标两周 300+，每周记一次数"><div class="p4-m">Bing 收录</div><div class="p4-v">~50 页</div><div class="p4-s">改造当天不会变</div></div>
-        </div>
-        <div class="p4-note" id="p4Note"><b>注意最后一张牌的诚实：</b>Bing 收录数在改造当天一页都不会多。SEO 和 GEO 的动作是当天做完的，效果是按周计的。所以验收标准里才全是「两周内」「每周记一次」这种带时间的写法，当天出效果的 SEO，多半是骗子。</div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">六张牌背后的工作量交代一下：审计半天，改造集中在一周内完成，绝大部分是改一个构建脚本。<b>一个人、一周、几乎零现金成本</b>，这就是把动作全部脚本化之后，SEO / GEO 对一人公司的真实价格。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">照抄清单 · 给自己的站做同款审计</div>
-    <p class="desc">这轮审计用到的动作全部可以照抄，一个下午能跑完。按顺序来：</p>
-    <ol class="desc" style="margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:8px;">
-      <li>Google 和 Bing 各跑一次 site: 查询，两个数记进台账，差距大就知道该先补哪家。</li>
-      <li>打开自己的 sitemap.xml 数条目，和实际页面数对一对，缺的就是引擎不知道的。</li>
-      <li>随机抽五页看源码：正文在不在、description 有没有、canonical 对不对、JSON-LD 带不带日期。</li>
-      <li>找出站上所有一问一答形态的页面，查它们标没标 FAQPage。</li>
-      <li>翻请求日志搜 GPTBot，搜不到就查是不是被统计脚本或防火墙丢弃了。</li>
-      <li>有付费内容的话，用爬虫视角（curl 或站长工具的抓取测试）看受限页，确认引擎抓到的和用户看到的是同一份内容。</li>
-    </ol>
-    <p class="desc" style="margin-top:16px">每查一项记一行：现状、影响、修法。查完你手里就是自己站的这份审计报告。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">整轮改造的节奏表</div>
-    <p class="desc">最后交代这轮改造的排期，供你安排自己的版本时参考。核心原则：<b>按「引擎根本看不到」「看到了但不引用」「放大与防守」三层排优先级</b>，每层做完再做下一层。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>阶段</th><th>做什么</th><th>为什么排这个位置</th></tr>
-      <tr><td><b>第 1 周</b></td><td>sitemap 补多语言、llms-full.txt、补齐缺失的 description、注册站长平台并提交</td><td>全是「看不到」级别的病，不修的话后面做什么都白做。三项改的是同一个构建脚本，一次发版</td></tr>
-      <tr><td><b>第 2 周</b></td><td>FAQPage 结构化数据、JSON-LD 日期、爬虫监控面板</td><td>「看到了但不引用」层。监控面板要早于内容动作上线，否则后面的效果没仪表可看</td></tr>
-      <tr><td><b>第 3~4 周</b></td><td>全站一句话答案块</td><td>唯一以周计的内容工作量：几百页的摘要句由 AI 批量起草、人工过一遍。放最后是因为它慢，不是因为它不重要</td></tr>
-      <tr><td><b>每周例行</b></td><td>记录收录数、看爬虫曲线、看 AI 来源 referrer</td><td>改造是一次性的，度量是长期的。数字进台账，带日期</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">注意第一周三件事挤在一起的原因：它们改的是同一个构建脚本。一个人做优化，<b>按「改哪个文件」分组排期，比按「哪个更重要」排期省一半力气</b>，这是工程直觉在 SEO 上的应用。</p>
-    <a class="xref" href="seo-final.html">
-      <span class="xref-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
-      <span><span class="xref-t">改完拿什么持续验收 · 第 6 节</span><span class="xref-d">这轮改造的验收标准沉淀成了 12 项清单和四个度量口径，每次上线都能复用。</span></span>
-    </a>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">考一下 · 合规的边界在哪</div>
-    <div class="toy" id="q4Quiz">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
-        <span class="toy-t">下面哪种做法越过了软墙的合规线？</span>
-        <span class="toy-badge">单选</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">软墙和作弊只隔一层纸，这道题就是那层纸</div>
-        <div class="quiz-opts">
-          <div class="quiz-opt" data-k="0"><span class="qo-key">A</span><span>全文进 HTML，未登录用户见前 40%，JSON-LD 声明受限范围</span></div>
-          <div class="quiz-opt" data-k="1"><span class="qo-key">B</span><span>识别爬虫 UA 时返回全文，普通用户访问时整页只有登录框，页面不做任何声明</span></div>
-          <div class="quiz-opt" data-k="2"><span class="qo-key">C</span><span>免费页全文开放，付费页只把预览段放进 llms-full.txt 并注明「全文见链接」</span></div>
-          <div class="quiz-opt" data-k="3"><span class="qo-key">D</span><span>给 locked.html 提示页加 noindex，不让它占收录坑位</span></div>
-        </div>
-        <div class="quiz-fb"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">本节要点</div>
-    <div class="takeaways">
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>清单过了不代表没病：</b>本站 759 页里 743 页有 description，看着健康，一实测 Bing 收录只有 50 页。数字才是诊断书。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>每个缺口都要配「怎么发现、改了什么、拿什么验收」：</b>发现要可复制，修法要进脚本，验收要带时间和数字。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>软墙靠声明合规：</b>付费内容全文进 HTML 让引擎可抓，用 isAccessibleForFree 声明受限范围。删了声明就从优化滑进作弊。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>效果按周计：</b>动作当天做完，收录数、引用率要等引擎消化。验收全部写成带日期的目标，当天见效的承诺别信。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>按「改哪个文件」分组排期：</b>一个人做优化，同一个脚本里的改动挤进同一周，一次发版全上。</p></div>
-    </div>
-    <p class="src-note"><b>内容来源：</b>本站 2026 年 8 月 10 日 SEO / GEO 审计与当周改造的第一手记录。文中全部数字（Google 约 693 页 / Bing 约 50 页、sitemap 约 330 → 约 800 条、743/759 页有 description、531 个受限页、37 个 Q&amp;A 页、317 节 llms.txt）均为 2026-08-10 实测口径，收录数会随时间变化，方法不会。</p>
-  </section>
-
-</main>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "课程站读不到、收银文案答非所问，分别怎么改？", "name": "课程站读不到、收银文案答非所问，分别怎么改？", "url": "https://xueai.miyang.cn/slides/seo-4.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-08-12", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/05-dog.png", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="13">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 13 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 13 / 14</div><h1>课程站读不到、收银文案答非所问，分别怎么改？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A1" data-source-start="183" data-source-end="236">
+<p>聊到最后我发现，大部分人踩的坑其实一模一样：<strong>新概念学得比谁都快，但搜索引擎甚至连他是谁都没搞明白。</strong></p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 13 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>词表只能告诉你用户大概会怎么提问，不能替你把业务问题答清楚。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#case-course">第一个：几十节课，爬虫看到的却像单页</a></li>
+<li><a href="#case-question">第二个：断网还能不能收银？别只回答“智能”</a></li>
+<li><a href="#case-answer">把版本、支付方式、同步限制问到底</a></li>
+<li><a href="#case-business">真正难转型的，是原来的计件生意</a></li>
+<li><a href="#case-cycle">最后回到：生产事实、组织证据、验证效果</a></li></ol></details>
+<section id="case-course" class="reveal sc-section" data-source-section data-point-ids="">
+<h2>第一个：几十节课，爬虫看到的却像单页</h2>
+<div class="sc-author-passage" data-source-key="A1" data-source-start="265" data-source-end="542">
+<p>群里有个朋友做了教学网站，乍一看页面挺多，点进去内容非常饱满。但我顺手帮他看了一眼代码结构，好家伙，问题全暴露了：他把几十节课的内容全都塞在一个页面里，人点着是挺方便，但搜索爬虫根本读不懂这种千层饼结构。</p>
+<p>我当时直接跟他说了实话：<strong>一个知识点，就老老实实给它一个独立的页面。</strong></p>
+<p>这个页面得有干干净净的独立网址，标题清清楚楚，正文直接写在源码里，别搞那些复杂的嵌套。爬虫一进来，一眼就能看懂这页在讲啥、跟你的网站有什么关系。你搞那么多弹窗和层层嵌套，人看着热闹，爬虫抓到的就是几行空架子。你辛辛苦苦做了几十节课，在搜索引擎眼里，你可能就只是个单页。</p></div></section>
+<figure id="fig-a2-05" class="sc-figure" data-asset-key="A2-05" data-after-anchor="case-course"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/05-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/05-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗操作 SSR 印刷机，初始 HTML 带有正文"></a><figcaption>课程页先把正文输出完整，才能讨论搜索与引用；图为方法示意，不是项目改造结果。</figcaption></figure>
+<section id="case-question" class="reveal sc-section paywall-locked" data-source-section data-point-ids="">
+<h2>第二个：断网还能不能收银？别只回答“智能”</h2>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="731" data-source-end="1102">
+<p>假设一家连锁餐饮企业正在选型收银系统，采购负责人问：“门店断网后，还能继续收银吗？” ，然后在网上搜索找到一篇反复出现“餐饮收银系统”关键词的 SEO 文章，很可能通篇都在讲系统多么智能，却只字未提断网期间的交易限制，更没有说清恢复联网后如何处理数据冲突， AI 一键生成文章的通病就在这里完全体现出来了。</p>
+<p>但对于采用 RAG 架构的 AI 搜索来说，内容被检索到只是第一步，它还要经过相关性筛选与事实抽取，才能参与最终的答案生成。</p>
+<p>*普林斯顿大学等机构的 GEO 研究论文在实验中也印证了这一点*：单纯在文章里堆砌关键词，在生成式引擎中通常收益有限；相反，补充相关事实证据、引用具体数据并改善表达结构，在测试中往往更有效。</p>
+<p>所以把同一个结论换十种说法，增加的只是水分和篇幅；把一个具体的业务问题讲透，才增加了内容被 AI 采信的理由。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>这是原文中的假设选型例子，不是一个已经测出离线时长或同步效果的真实客户项目。研究实验的效果也会随领域和平台变化。</aside></section>
+<figure id="fig-a5-02" class="sc-figure" data-asset-key="A5-02" data-after-anchor="case-question"><a class="sc-image-link" href="images/seo-geo/2111476793555210739/02.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2111476793555210739/02.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="小狗核对离线收银的条件、支付限制与同步说明"></a><figcaption>采购问断网能否收银，就回答交易、支付和同步限制。此例为原文的假设选型情境。</figcaption></figure>
+<section id="case-answer" class="reveal sc-section paywall-locked" data-source-section data-point-ids="">
+<h2>把版本、支付方式、同步限制问到底</h2>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="285" data-source-end="476">
+<p>继续看餐饮收银系统的例子。在文章里反复宣称“系统稳定可靠”，对采购负责人毫无帮助；更有参考价值的内容，需要直接写明：在某具体版本下，系统支持离线收银多少小时、支持哪些支付方式、测试条件是什么，以及目前已知的局限有哪些。</p>
+<p>你会发现，这种要求已经远远超出了“文案润色”的范畴。操盘手必须找产品经理核实功能边界，向交付团队追问异常情况，再把枯燥的技术结论翻译成客户能理解、能复核的说明。</p></div></section>
+<section id="case-business" class="reveal sc-section paywall-locked" data-source-section data-point-ids="">
+<h2>真正难转型的，是原来的计件生意</h2>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="684" data-source-end="1023">
+<p><strong>许多服务商和团队的生存模式，是建立在“可计件交付”之上的。</strong></p>
+<p>文章按篇收费，分发按链接收费，效果按关键词截图验收。这种商业合同天然鼓励“堆产量、降成本”，它从机制上就惩罚那些愿意花三天时间去向产品经理核实一项业务事实的人。</p>
+<p>当甲方采购的依然是“发稿数量”，乙方就永远没有动力去做深度的业务访谈。哪怕合同封面的项目名称改成了时髦的 GEO，团队在执行时，依然会本能地退回到最容易交差、最容易按件计费的动作上去。</p>
+<p>真正的转型，必须把交付物向前推进一步：</p>
+<ul>
+<li>从交付<strong>文章数量</strong>，推进到交付<strong>经过核实的企业知识</strong>；</li>
+<li>从交付<strong>分发链接</strong>，推进到交付<strong>可被公开检索的独立证据</strong>；</li>
+<li>从交付<strong>偶然的推荐截图</strong>，推进到交付<strong>可重复验证的评估记录</strong>。</li>
+</ul></div></section>
+<figure id="fig-a5-03" class="sc-figure" data-asset-key="A5-03" data-after-anchor="case-business"><a class="sc-image-link" href="images/seo-geo/2111476793555210739/03.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2111476793555210739/03.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：换 GEO 招牌仍在批量发稿"></a><figcaption>按文章、链接和截图计件的交付机制，会把团队重新推回到批量发稿。</figcaption></figure>
+<section id="case-cycle" class="reveal sc-section paywall-locked" data-source-section data-point-ids="">
+<h2>最后回到：生产事实、组织证据、验证效果</h2>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="1025" data-source-end="1163">
+<p>在黄啊码看来，GEO 转型最终考验的，从来不是你会不会用 AI 批量写稿，而是一个团队<strong>生产事实、组织证据和验证效果</strong>的硬功夫。</p>
+<p>毕竟，如果一家公司连自己的产品在什么条件下有效、什么场景下不适用都讲不清楚，发再多的文章，也只是把这份含糊其辞，复制到互联网的更多角落而已。</p></div></section>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>看页面</strong>沿用原文课程站例子，检查每个重要问题有没有能直接访问、读到正文的页面。</li>
+<li><strong>看问题</strong>沿用断网收银例子，把客户要做的决定与页面现有答案放在一起。</li>
+<li><strong>问业务</strong>向产品与交付核实能力边界、版本和异常处理；没有测过的数字先不写。</li>
+<li><strong>改交付</strong>把核实后的知识、可检索证据与重复测试记录列为交付物，别只按稿件篇数验收。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份从客户原话到业务事实、公开材料和验证记录的检查表。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 客户问“断网还能收银吗”，哪份内容真正回答了问题？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="原文的重点是把具体业务问题讲透；真实能力要向产品与交付核实，不能编出离线时长当事实。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>客户问“断网还能收银吗”，哪份内容真正回答了问题？</legend>
+<label class="sc-option">
+<input type="radio" name="q13" value="0"><span>重复十次“智能餐饮收银系统”</span></label>
+<label class="sc-option">
+<input type="radio" name="q13" value="1"><span>说明版本、离线能力、支付限制与恢复同步条件</span></label>
+<label class="sc-option">
+<input type="radio" name="q13" value="2"><span>留下微信号，让客户自己来问</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>原文的重点是把具体业务问题讲透；真实能力要向产品与交付核实，不能编出离线时长当事实。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-13" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-13-finding"><span>客户原话与现有页面</span>
+<textarea id="work-13-finding" name="finding" rows="3" maxlength="20000" placeholder="用原话写问题，指出页面缺了什么"></textarea></label>
+<label class="sc-field wide" for="work-13-change"><span>需要核实的业务事实</span>
+<textarea id="work-13-change" name="change" rows="3" maxlength="20000" placeholder="版本、条件、限制、异常处理由谁确认"></textarea></label>
+<label class="sc-field wide" for="work-13-remaining"><span>公开材料与待验证项</span>
+<textarea id="work-13-remaining" name="remaining" rows="3" maxlength="20000" placeholder="哪些内容能发布，哪些还没有证据"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-business.html"><small>上一讲</small>小站怎么收钱：产品、佣金、赞助、线索和会员</a><a class="next" href="seo-final.html"><small>下一讲</small>上线检查清单：正文、链接、索引、证据、询盘逐项过</a></nav></main>
 <script src="i18n.js?v=20260903a"></script>
 <script src="lesson.js"></script>
 <script src="taste.js?v=20260810a"></script>
-<script src="nav-inject.js?v=20260903a"></script>
-<script>
-/* ── 收录数对比 ──
-   背景：50 对 693 是全节题眼，让数字当场长出来。
-   设计意图：条宽按真实比例（693 → 96%，50 → 7%），数字用
-   计数动画同步爬升，跑完弹解释卡；只能跑一次。 */
-(function () {
-  var btn = document.getElementById('i4Run');
-  btn.addEventListener('click', function () {
-    btn.disabled = true;
-    document.getElementById('i4g').style.width = '96%';
-    document.getElementById('i4b').style.width = '7%';
-    var t0 = null;
-    function tick(ts) {
-      if (!t0) t0 = ts;
-      var p = Math.min((ts - t0) / 800, 1);
-      var ease = 1 - Math.pow(1 - p, 3);
-      document.getElementById('i4gn').textContent = '约 ' + Math.round(693 * ease) + ' 页';
-      document.getElementById('i4bn').textContent = '约 ' + Math.round(50 * ease) + ' 页';
-      if (p < 1) { requestAnimationFrame(tick); }
-      else { document.getElementById('i4Why').classList.add('show', 'seo-pop'); }
-    }
-    requestAnimationFrame(tick);
-  });
-})();
-
-/* ── 审计报告板：点一条展开一条，五条全开亮收口 ── */
-(function () {
-  var root = document.getElementById('g4Audit');
-  var badge = document.getElementById('g4Badge');
-  var note = document.getElementById('g4Note');
-  var opened = 0;
-  root.addEventListener('click', function (e) {
-    var item = e.target.closest('.g4-item');
-    if (!item || item.classList.contains('open')) return;
-    item.classList.add('open');
-    item.querySelector('.g4-body').classList.add('seo-slide-up');
-    opened++;
-    badge.textContent = '拆开 ' + opened + ' / 5';
-    if (opened === 5) {
-      badge.textContent = '✓ 5 / 5';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* ── 软墙演示：两态各渲染「用户视角 + 爬虫视角」 ── */
-(function () {
-  var USER_HARD = '<div class="w4-h">这节课需要登录</div><p class="w4-p">登录后即可学习全部课程内容。</p><div class="w4-lockbar">微信扫码登录</div>';
-  var USER_SOFT = '<div class="w4-h">Agent 为什么会卡死在循环里</div><p class="w4-p">Agent 卡死多数发生在工具调用返回了它没见过的错误格式，模型把同一个动作重试到天荒地老…</p><p class="w4-p w4-fade">排查的第一步是打开调用日志，找到循环的起点。常见的三种起因分别是：工具超时后返回了 HTML 错误页、参数校验…</p><div class="w4-lockbar">登录后继续学习 · 前 40% 免费预览</div>';
-  var SRC_HARD = '<span class="tag">&lt;h1&gt;</span><span class="txt">这节课需要登录</span><span class="tag">&lt;/h1&gt;</span>\n<span class="tag">&lt;p&gt;</span><span class="txt">登录后即可学习全部课程内容。</span><span class="tag">&lt;/p&gt;</span>\n\n<span class="warn">// 正文零个字。531 个页面都长这样，</span>\n<span class="warn">// 对引擎来说这些课不存在。</span>';
-  var SRC_SOFT = '<span class="tag">&lt;h1&gt;</span><span class="txt">Agent 为什么会卡死在循环里</span><span class="tag">&lt;/h1&gt;</span>\n<span class="tag">&lt;p&gt;</span><span class="txt">Agent 卡死多数发生在工具调用返回了…（全文都在）</span><span class="tag">&lt;/p&gt;</span>\n\n<span class="ok">"isAccessibleForFree": false,</span>\n<span class="ok">"hasPart": { "cssSelector": ".paywall-locked",</span>\n<span class="ok">             "isAccessibleForFree": false }</span>\n\n<span class="ok">// 全文可抓 + 声明受限范围 = 合规软墙</span>';
-  var seg = document.getElementById('w4Seg');
-  var user = document.getElementById('w4User');
-  var src = document.getElementById('w4Src');
-  var verdict = document.getElementById('w4Verdict');
-  function render(k) {
-    user.innerHTML = k === 0 ? USER_HARD : USER_SOFT;
-    src.innerHTML = k === 0 ? SRC_HARD : SRC_SOFT;
-    src.classList.remove('seo-slide-up');
-    void src.offsetWidth;
-    src.classList.add('seo-slide-up');
-    if (k === 0) {
-      verdict.className = 'w4-verdict bad';
-      verdict.innerHTML = '<b>硬墙对谁都公平地关门。</b>用户看到登录框，爬虫也只看到登录框。安全是安全，代价是五百多节课在搜索和 AI 的世界里集体蒸发。';
-    } else {
-      verdict.className = 'w4-verdict ok';
-      verdict.innerHTML = '<b>软墙分开了「能看见」和「能看完」。</b>正文全文进 HTML，引擎照抓；未登录用户只展示前 40%，往下渐隐加登录条。合规的关键是右边绿色那几行：JSON-LD 明确声明受限范围，这就是和 cloaking 的分界线。';
-    }
-  }
-  seg.addEventListener('click', function (e) {
-    var b = e.target.closest('button');
-    if (!b || b.classList.contains('on')) return;
-    seg.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
-    b.classList.add('on');
-    render(+b.dataset.k);
-  });
-  render(0);
-})();
-
-/* 合规边界：给爬虫和用户两套内容且不声明，就是教科书式 cloaking */
-tasteQuiz('q4Quiz', {
-  answer: 1,
-  why: [
-    '这就是本站的软墙方案：用户和爬虫拿到同一份 HTML，区别只在客户端展示多少，且用 isAccessibleForFree 声明了受限范围。合规。',
-    '越线了，而且是教科书式的 cloaking：按访问者身份返回两套内容，还不做声明。引擎的立场很明确：可以有付费墙，但内容得对用户和爬虫一致，受限范围要声明。被识别的后果是整站惩罚。',
-    '合规。llms-full.txt 给预览段加指路链接，和软墙的口径一致：让 AI 知道这内容存在并可引用开头，全文的获取路径也是真实的。',
-    '合规且是好习惯：提示页是软墙的替身页，被收录反而占坑，noindex 请它退出竞争。'
-  ]
-});
-
-/* ── 前后翻牌 ── */
-(function () {
-  var root = document.getElementById('p4Flip');
-  var badge = document.getElementById('p4Badge');
-  var note = document.getElementById('p4Note');
-  var flipped = 0;
-  root.addEventListener('click', function (e) {
-    var card = e.target.closest('.p4-card');
-    if (!card || card.classList.contains('flip')) return;
-    card.classList.add('flip', 'seo-pop');
-    card.querySelector('.p4-v').textContent = card.dataset.a;
-    card.querySelector('.p4-s').textContent = card.dataset.s;
-    flipped++;
-    badge.textContent = '翻开 ' + flipped + ' / 6';
-    if (flipped === 6) {
-      badge.textContent = '✓ 6 / 6';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-</script>
-<!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260903a"></script><!--seo:end-->
-</body>
-</html>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

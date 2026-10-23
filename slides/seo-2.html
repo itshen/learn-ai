@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SEO 最低可行清单：能被抓、能被读懂、能被收录 | 被搜到：SEO 与 GEO</title>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
-<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
-<link rel="stylesheet" href="lesson.css?v=20260827a">
-<link rel="stylesheet" href="taste.css?v=20260810a">
-<link rel="stylesheet" href="seo.css?v=20260811a">
-<!-- SEO Start -->
-<meta name="description" content="SEO 的最低可行清单只有三件事：能被抓（正文别全靠 JS 渲染）、能被读懂（一页一个主题，title 说人话）、能被收录（sitemap、robots、站长平台提交）。抓取模拟器亲手切两态，看爬虫到底拿到了什么。">
-<meta name="keywords" content="SEO,sitemap,robots.txt,title 优化,meta description,canonical,站长平台,IndexNow,收录">
-<meta name="author" content="洛小山">
+<title>企业培训站：首页、服务、价格、案例、教程怎么写？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。">
+<meta name="author" content="洛小山、黄啊码">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://xueai.miyang.cn/slides/seo-2.html">
 <link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-2.html">
@@ -23,434 +15,135 @@
 <link rel="alternate" hreflang="zh-MO" href="https://xueai.miyang.cn/slides/seo-2.hk.html">
 <link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-2.html">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="xueai.miyang.cn · AI 产品经理培训">
-<meta property="og:title" content="SEO 最低可行清单：能被抓、能被读懂、能被收录">
-<meta property="og:description" content="只讲做了就有效、不做就归零的部分。十项清单，全部能自己动手核对。">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="企业培训站：首页、服务、价格、案例、教程怎么写？">
+<meta property="og:description" content="直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。">
 <meta property="og:url" content="https://xueai.miyang.cn/slides/seo-2.html">
-<meta property="og:image" content="https://xueai.miyang.cn/slides/og/seo-2.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SEO 最低可行清单：能被抓、能被读懂、能被收录">
-<meta name="twitter:description" content="只讲做了就有效、不做就归零的部分。十项清单，全部能自己动手核对。">
-<meta name="twitter:image" content="https://xueai.miyang.cn/og-cover.jpg">
-<!-- SEO End -->
-<style>
-/* ── 抓取模拟器 ──
-   背景：「正文别全靠 JS」是本节最重要的一条，但空口说没有体感，
-   要让读者亲眼看爬虫在两种页面里各拿到什么。
-   设计意图：左边是用户看到的页面（两态一样），右边是爬虫拿到的源码，
-   切换 seg 时右侧整块重渲染并播一次滑入；JS 渲染态的源码区几乎全空，
-   空得越彻底教学效果越好。 */
-.g2-stage{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;}
-.g2-col{display:flex;flex-direction:column;gap:8px;min-width:0;}
-.g2-colt{font-size:12.5px;font-weight:800;color:var(--sub);display:flex;align-items:center;gap:6px;}
-.g2-colt svg{width:14px;height:14px;color:var(--ct);}
-.g2-page{padding:16px;font-size:12px;line-height:1.6;background:#fff;}
-.g2-h{font-size:15px;font-weight:800;color:#111827;}
-.g2-p{color:#4b5563;margin-top:6px;}
-.g2-price{margin-top:10px;display:inline-block;padding:4px 12px;border-radius:8px;background:#111827;color:#fff;font-weight:700;font-size:11px;}
-.g2-src{flex:1;background:#0f172a;border-radius:12px;padding:14px 16px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.9;color:#94a3b8;overflow-x:auto;min-height:180px;}
-.g2-src .tag{color:#7dd3fc;}
-.g2-src .txt{color:#e2e8f0;}
-.g2-src .warn{color:#f87171;font-weight:700;}
-.g2-src .cmt{color:#64748b;font-style:italic;}
-.g2-verdict{margin-top:14px;padding:14px 18px;border-radius:10px;font-size:13.5px;line-height:1.8;color:var(--text);}
-.g2-verdict.ok{background:var(--good-soft);border:1.5px solid rgba(22,163,74,.25);}
-.g2-verdict.ok b{color:var(--good);}
-.g2-verdict.bad{background:var(--bad-soft);border:1.5px solid rgba(220,38,38,.25);}
-.g2-verdict.bad b{color:var(--bad);}
-
-/* ── title 改写器 ──
-   背景：搜索结果页上用户只看到 title 和 description 两行字，
-   弱文案点选替换，改一行亮一行。
-   设计意图：沿用 ixd-7 按钮文案改写器的玩法，读者已经熟悉；
-   替换的一瞬播 seo-pop，改完的行不可回退。 */
-.t2-list{display:flex;flex-direction:column;gap:10px;}
-.t2-row{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px 16px;cursor:pointer;transition:border-color .2s ease;}
-.t2-row:hover{border-color:var(--ct-line);}
-.t2-row.fixed{border-color:var(--good);cursor:default;background:var(--good-soft);}
-.t2-serp{font-family:ui-monospace,monospace;font-size:12px;color:#6b7280;margin-bottom:6px;}
-.t2-tt{font-size:14.5px;font-weight:700;color:#1a0dab;line-height:1.5;}
-.t2-row.fixed .t2-tt{color:#166534;}
-.t2-dd{font-size:12.5px;color:#4b5563;line-height:1.7;margin-top:3px;}
-.t2-why{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:#fff;border:1px solid rgba(22,163,74,.25);font-size:12.5px;line-height:1.7;color:var(--text);}
-.t2-row.fixed .t2-why{display:block;}
-.t2-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.t2-note.show{display:block;}
-.t2-note b{color:var(--ct-deep);}
-
-/* ── 收录三件套表格里的代码字 ── */
-.k2-code{font-family:ui-monospace,monospace;font-size:12px;background:rgba(0,0,0,.05);border-radius:5px;padding:1px 6px;white-space:nowrap;}
-
-/* ── 十项清单自查 ── */
-.l2-list{display:flex;flex-direction:column;gap:8px;}
-.l2-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:border-color .2s ease,background .2s ease;}
-.l2-item:hover{border-color:var(--ct-line);}
-.l2-item.on{border-color:var(--ct);background:var(--ct-soft);}
-.l2-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:transparent;margin-top:1px;transition:background .2s ease,color .2s ease;}
-.l2-item.on .l2-box{background:var(--ct);border-color:var(--ct);color:#fff;}
-.l2-t{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.6;}
-.l2-d{font-size:12px;color:var(--sub);line-height:1.65;margin-top:2px;}
-.l2-score{margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.l2-score b{color:var(--ct-deep);}
-
-@media (max-width:768px){
-  .g2-stage{grid-template-columns:1fr;}
-}
-</style>
+<meta name="twitter:title" content="企业培训站：首页、服务、价格、案例、教程怎么写？">
+<meta name="twitter:description" content="直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
 <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
-<!--seo:begin--><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"headline":"SEO 最低可行清单：能被抓、能被读懂、能被收录","name":"SEO 最低可行清单：能被抓、能被读懂、能被收录","url":"https://xueai.miyang.cn/slides/seo-2.html","inLanguage":"zh-CN","author":{"@type":"Person","name":"洛小山"},"publisher":{"@type":"Organization","name":"xueai.miyang.cn","url":"https://xueai.miyang.cn"},"learningResourceType":"课程","educationalLevel":"入门到进阶","isPartOf":{"@type":"Course","name":"AI 实战课 · 两个战场","url":"https://xueai.miyang.cn/slides/learn.html"},"isAccessibleForFree":true,"description":"SEO 的最低可行清单只有三件事：能被抓（正文别全靠 JS 渲染）、能被读懂（一页一个主题，title 说人话）、能被收录（sitemap、robots、站长平台提交）。抓取模拟器亲手切两态，看爬虫到底拿到了什么。","datePublished":"2026-08-12","dateModified":"2026-08-27"}</script><style>.xa-tldr{margin:18px 0 4px;padding:14px 18px;background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.16);border-radius:10px}.xa-tldr .xa-tldr-tag{display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent,#0066ff);margin-bottom:6px}.xa-tldr p{margin:0;font-size:15px;line-height:1.8;color:var(--text,#1f2937)}</style><!--seo:end-->
-</head>
-<body>
-<main class="lesson">
-
-  <header class="lesson-header">
-    <div class="kicker">被搜到 · 2 / 6</div>
-    <h1>SEO 最低可行清单：能被抓、能被读懂、能被收录</h1>
-    <p class="subtitle">SEO 这个词被各种「秘籍」搞得神神叨叨，其实对一个人的小站来说，值得做的部分很小、很明确：<b>让爬虫抓得到、让引擎读得懂、让收录查得着</b>。这一节只讲做了就有效、不做就归零的部分，每一条都能自己动手核对。</p>
-    <div class="chips"><span class="chip">抓取模拟器</span><span class="chip">title 改写</span><span class="chip">收录三件套</span><span class="chip">十项自查</span></div>
-  </header><!--seo:begin--><aside class="xa-tldr"><span class="xa-tldr-tag">一句话速览</span><p>只讲做了就有效的部分：一页一个主题、title 说人话、正文别全靠 JS 渲染、sitemap 与站长平台提交。抓取模拟器亲手切两态，看爬虫到底拿到了什么</p></aside><!--seo:end-->  <section class="reveal">
-    <div class="sec-label">最低可行是什么意思</div>
-    <p class="desc">传统 SEO 是个大行业：外链建设、竞品词库、站群、老域名…那套东西面向有团队有预算的公司。一个人做产品，学那些是浪费生命。好消息是，搜索引擎这些年一直在把游戏往一个方向推：<b>把内容做好、把技术障碍清掉的站，自然会被善待</b>。</p>
-    <p class="desc" style="margin-top:16px">所以最低可行清单的逻辑是：只做那些不做就直接出局的事。按照上一节漏斗的分层，它们正好分成三组：能被抓（抓取层）、能被读懂（理解层）、能被收录（索引层）。三组都通了，剩下的交给内容质量，那是第 5 节的事。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>分组</th><th>解决什么</th><th>不做的后果</th></tr>
-      <tr><td><b>能被抓</b></td><td>爬虫来了能拿到正文</td><td>抓到空壳，后面全归零</td></tr>
-      <tr><td><b>能被读懂</b></td><td>引擎知道每页在讲什么</td><td>收录了也不知道该在什么问题下展示你</td></tr>
-      <tr><td><b>能被收录</b></td><td>引擎知道你存在、有哪些页</td><td>收录靠随缘，快慢不可观测</td></tr>
-    </table></div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 爬虫来了，它拿到了什么</div>
-    <p class="desc">先治最要命的病。AI 生成的前端偏爱单页应用：页面打开先是个空壳，内容由 JS 请求数据再渲染出来。<b>用户看到的一切正常，爬虫拿到的是另一回事。</b>下面同一个产品页，切换两种实现方式，右边是爬虫实际抓到的源码。</p>
-    <div class="toy" id="g2Crawl">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></span>
-        <span class="toy-t">抓取模拟器</span>
-        <span class="toy-badge">切一切</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">两种实现，用户看到的页面一模一样，爬虫拿到的天差地别</div>
-        <div class="seg" id="g2Seg" style="margin-bottom:14px"><button class="on" data-k="0">正文写在 HTML 里</button><button data-k="1">正文全靠 JS 渲染</button></div>
-        <div class="g2-stage">
-          <div class="g2-col">
-            <span class="g2-colt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>用户看到的</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">invoiceowl.example.com</span></div>
-              <div class="mock g2-page">
-                <div class="g2-h">发票猫头鹰 · 给自由职业者的开票助手</div>
-                <p class="g2-p">上传合同，自动生成合规的发票申请单。支持增值税普票和专票，三分钟搞定过去要跑一下午的事。</p>
-                <span class="g2-price">免费开始</span>
-              </div>
-            </div>
-          </div>
-          <div class="g2-col">
-            <span class="g2-colt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>爬虫拿到的</span>
-            <div class="g2-src" id="g2Src"></div>
-          </div>
-        </div>
-        <div class="g2-verdict" id="g2Verdict"></div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">主流引擎宣称能执行 JS，但执行有配额、有延迟，小站排不上优先队列；多数 AI 爬虫干脆不执行 JS，抓到什么算什么。对策不用推翻架构：<b>关键页面（首页、功能页、文章页）保证 HTML 源码里就有正文</b>，交互部分继续用 JS 没问题。用 AI 写页面时把这句放进提示词，成本为零。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">一页一个主题，title 是那一页的脸</div>
-    <p class="desc">能被抓之后，第二件事是让引擎读懂每一页。原则只有一条：<b>一页回答一个问题</b>。什么都讲的页面，引擎不知道该在什么问题下展示它，最后哪个问题都轮不到。主题定了，title 和 description 就是这页在搜索结果里的脸：用户扫一眼这两行字，决定点不点。</p>
-    <p class="desc" style="margin-top:16px">下面是一个工具站在搜索结果页里的三条真实病例，<b>点一条，看它怎么改</b>。</p>
-    <div class="toy" id="t2Fix">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></span>
-        <span class="toy-t">搜索结果页文案急诊室</span>
-        <span class="toy-badge" id="t2Badge">改好 0 / 3</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">每条都是搜索结果页里的样子，点一条换成能被点的版本</div>
-        <div class="t2-list">
-          <div class="t2-row" data-k="0">
-            <div class="t2-serp">invoiceowl.example.com</div>
-            <div class="t2-tt" id="t2t0">首页 - 发票猫头鹰</div>
-            <div class="t2-dd" id="t2d0">欢迎访问本站。</div>
-            <div class="t2-why">「首页」两个字没有回答任何问题。改成用户会搜的那句话：谁、干什么、给谁用。description 别写欢迎语，写清这页能帮用户解决什么，它就是你的免费广告位。</div>
-          </div>
-          <div class="t2-row" data-k="1">
-            <div class="t2-serp">invoiceowl.example.com/features</div>
-            <div class="t2-tt" id="t2t1">功能介绍 | 强大的智能化一站式解决方案</div>
-            <div class="t2-dd" id="t2d1">我们采用先进的 AI 技术，赋能广大用户，打造极致体验。</div>
-            <div class="t2-why">「智能化」「赋能」「极致体验」是黑话三件套，用户不会搜这些词，引擎也不知道这页在讲什么。把功能名和用户的原话写进去，一个词都别浪费。</div>
-          </div>
-          <div class="t2-row" data-k="2">
-            <div class="t2-serp">invoiceowl.example.com/help/vat</div>
-            <div class="t2-tt" id="t2t2">帮助文档 - 页面 3</div>
-            <div class="t2-dd" id="t2d2">本页包含常见问题的解答，如有疑问请联系客服。</div>
-            <div class="t2-why">「页面 3」是给数据库看的，不是给人看的。帮助文档是长尾流量的金矿：每篇回答一个具体问题，title 就写那个问题本身，搜的人自己送上门。</div>
-          </div>
-        </div>
-        <div class="t2-note" id="t2Note"><b>三条改完，规律是同一个：</b>title 写用户会搜的那句话，description 写这页能帮他做什么。两行字加起来百来个字符，是你在搜索结果页里唯一的开口机会。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">点一点 · 两个首页，谁更容易被搜到</div>
-    <div class="toy" id="d2Duel">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></span>
-        <span class="toy-t">同一个产品，两种首页</span>
-        <span class="toy-badge">A/B 对决</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">从「能被抓、能被读懂」的角度点更好的那个</div>
-        <div class="duel">
-          <div class="duel-side">
-            <span class="duel-tag">方案 A</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">petdiary.example.com</span></div>
-              <div class="mock" style="padding:0;min-height:190px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6d28d9,#db2777);">
-                <div style="text-align:center;color:#fff;">
-                  <div style="font-size:17px;font-weight:800;letter-spacing:2px;">PETDIARY</div>
-                  <div style="font-size:10.5px;opacity:.85;margin-top:6px;">Loading experience…</div>
-                  <div style="margin-top:12px;width:120px;height:3px;background:rgba(255,255,255,.25);border-radius:2px;margin-left:auto;margin-right:auto;"><span style="display:block;width:40%;height:100%;background:#fff;border-radius:2px;"></span></div>
-                </div>
-              </div>
-            </div>
-            <div class="f1-cap" style="padding:10px 16px;font-size:12px;color:var(--sub);border-top:1px solid var(--border);background:var(--card);line-height:1.6;">开屏动画三秒，正文全在 JS 里，title 是「PetDiary」五个字母</div>
-          </div>
-          <div class="duel-side">
-            <span class="duel-tag">方案 B</span>
-            <div class="mockwin">
-              <div class="mockwin-bar"><i></i><i></i><i></i><span class="mockwin-url">petdiary.example.com</span></div>
-              <div class="mock" style="padding:18px;min-height:190px;">
-                <div style="font-size:15px;font-weight:800;color:#111827;line-height:1.5;">宠物日记：记录猫狗的体重、疫苗和体检提醒</div>
-                <p style="font-size:11.5px;color:#4b5563;line-height:1.7;margin-top:8px;">拍一张体检单，自动存档并设置下次提醒。支持多宠家庭，数据可导出给兽医。</p>
-                <div style="margin-top:10px;font-size:11px;color:#6b7280;line-height:1.8;">· 疫苗到期前 7 天提醒<br>· 体重曲线自动生成<br>· 就诊记录一键分享</div>
-                <span style="display:inline-block;margin-top:10px;padding:4px 12px;border-radius:8px;background:#111827;color:#fff;font-weight:700;font-size:11px;">免费开始</span>
-              </div>
-            </div>
-            <div class="f1-cap" style="padding:10px 16px;font-size:12px;color:var(--sub);border-top:1px solid var(--border);background:var(--card);line-height:1.6;">正文写在 HTML 里，title 带上「宠物 体重记录 疫苗提醒」这些用户会搜的词</div>
-          </div>
-        </div>
-        <div class="duel-verdict"></div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">这局对决顺便回答一个常见纠结：炫和被搜到冲突吗？不冲突，有先后。<b>先保证 HTML 里有完整正文，动画和交互往上叠加</b>，本章这些课件页自己就是这么做的：你现在读的每一个字都在源码里，交互组件全是额外加的。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">能被收录：把「随缘」变成「可观测」</div>
-    <p class="desc">抓得到、读得懂之后，最后一组动作是主动把站送到引擎面前。四样东西，一个下午能全部做完，做完收录从玄学变成一个能看数字的过程。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>动作</th><th>做什么</th><th>为什么值得</th></tr>
-      <tr><td><b>sitemap.xml</b></td><td>一个 XML 文件列出你全部页面的地址，放在站点根目录。多语言站每个 URL 还要用 <span class="k2-code">hreflang</span> 互指各语言版本</td><td>引擎照着清单抓，不用自己摸索你的站有几页。本站 2026 年 8 月补上英韩页面后，sitemap 条目从约 330 涨到约 950</td></tr>
-      <tr><td><b>robots.txt</b></td><td>根目录下的一个文本文件，声明哪些路径欢迎抓、哪些别抓，末尾指向 sitemap 的地址</td><td>它是爬虫进站看的第一个文件。写错一行 Disallow 能把全站封掉，改完务必用站长工具验证</td></tr>
-      <tr><td><b>canonical</b></td><td>每页 head 里一行 <span class="k2-code">&lt;link rel="canonical"&gt;</span>，声明这页的正式地址</td><td>带参数的地址、多个入口指向同一页时，引擎知道该把权重记在谁头上，不会自己人分自己人的票</td></tr>
-      <tr><td><b>站长平台提交</b></td><td>Google Search Console 和 Bing Webmaster 各注册一次，验证域名、提交 sitemap。Bing 顺手开通 IndexNow：发版后把变更页面的地址推给它</td><td>从此收录数、抓取错误、展示次数全部有报表。别只提交 Google：下一节的 GEO 会讲为什么 Bing 同样重要</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">这四样都不需要每天维护。sitemap 让构建脚本自动生成，站长平台每周看一眼报表，就够了。</p>
-    <a class="xref" href="seo-4.html">
-      <span class="xref-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
-      <span><span class="xref-t">这张清单漏一项会怎样 · 第 4 节</span><span class="xref-d">本站就漏过：sitemap 少了 470 个地址、Bing 没提交。第 4 节整节复盘这些坑的代价和修法。</span></span>
-    </a>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 十项清单，给你的站打个分</div>
-    <p class="desc">这一节讲的东西全部收进十项清单。<b>对照你的站逐项点亮做到的</b>，没有站就先收藏，上线那天回来过一遍。</p>
-    <div class="toy" id="l2Check">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></span>
-        <span class="toy-t">SEO 最低可行十项</span>
-        <span class="toy-badge" id="l2Badge">已做到 0 / 10</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">点亮做到的，分数实时更新</div>
-        <div class="l2-list">
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">关键页面的正文在 HTML 源码里</span><span class="l2-d">右键查看源代码能直接看到文字，核对方法就这么简单</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">每页只讲一个主题</span><span class="l2-d">说不清这页回答什么问题的页面，考虑拆开或合并</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">每页有独立的、说人话的 title</span><span class="l2-d">写用户会搜的那句话，不写「首页」「页面 3」</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">每页有 description</span><span class="l2-d">写这页能帮用户做什么，它是搜索结果里的免费广告位</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">有 sitemap.xml 且随内容更新</span><span class="l2-d">手动维护一定会漏，让构建脚本生成</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">有 robots.txt 且没误封</span><span class="l2-d">尤其检查上线时有没有忘了删测试期的全站 Disallow</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">每页有 canonical</span><span class="l2-d">带参数、多入口的页面尤其需要</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">Google Search Console 已验证并提交 sitemap</span><span class="l2-d">收录、展示、点击从此有报表</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">Bing Webmaster 已验证，IndexNow 已接</span><span class="l2-d">下一节会讲为什么 Bing 对 AI 时代格外重要</span></span></div>
-          <div class="l2-item"><span class="l2-box">✓</span><span><span class="l2-t">site: 查过收录数并记录了基线</span><span class="l2-d">没有基线就没有「改善」，今天的数字就是起点</span></span></div>
-        </div>
-        <div class="l2-score" id="l2Score"><b>0 / 10。</b>点亮你已经做到的项。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">给 AI 的一段固定提示词</div>
-    <p class="desc">这一节的多数要求，可以在让 AI 写页面时一次性说清。下面这段拿去就能用，贴在你的项目提示词或规则文件里：</p>
-    <div class="quote-card" style="margin-top:16px;font-size:14px;font-family:ui-monospace,monospace;line-height:1.9;">页面要求：正文写在 HTML 源码里，不依赖 JS 渲染；每页一个主题；title 写成用户会搜索的问题句，40 字以内；meta description 写这页能帮用户做什么，80 字以内；每页加 canonical；新增页面记得更新 sitemap 生成逻辑。</div>
-    <p class="desc" style="margin-top:16px">一段话的成本，换来每个新页面天生合格。这也是本章反复出现的模式：<b>能进提示词和脚本的要求，就别放进记忆和自觉里。</b></p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">考一下 · 整站消失之谜</div>
-    <div class="toy" id="q2Quiz">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
-        <span class="toy-t">上线两个月，全站收录突然掉到 0。查哪里最可能一击命中？</span>
-        <span class="toy-badge">单选</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">提示：这是真实世界里发生频率最高的事故之一</div>
-        <div class="quiz-opts">
-          <div class="quiz-opt" data-k="0"><span class="qo-key">A</span><span>被竞争对手举报了</span></div>
-          <div class="quiz-opt" data-k="1"><span class="qo-key">B</span><span>打开 robots.txt，看是不是有一行 Disallow: /</span></div>
-          <div class="quiz-opt" data-k="2"><span class="qo-key">C</span><span>内容质量不行，被算法惩罚了</span></div>
-          <div class="quiz-opt" data-k="3"><span class="qo-key">D</span><span>域名年限太短，权重不够</span></div>
-        </div>
-        <div class="quiz-fb"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">本节要点</div>
-    <div class="takeaways">
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>最低可行三组：</b>能被抓（正文进 HTML）、能被读懂（一页一主题，title 说人话）、能被收录（sitemap、robots、canonical、站长平台）。只做不做就出局的事。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>JS 空壳是 AI 前端的头号病：</b>用户看着正常，爬虫抓到空白。给 AI 提需求时写明「关键页面正文要在 HTML 源码里」，零成本。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>title 和 description 是搜索结果页里唯一的开口机会：</b>title 写用户会搜的问题，description 写这页帮他做什么。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>提交平台把收录变成可观测：</b>Google 和 Bing 都要提交，从此有报表有基线。十项清单打完分，缺哪补哪。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>能进提示词和脚本的要求，别放进记忆和自觉：</b>那段固定提示词贴进项目规则，每个新页面天生合格。</p></div>
-    </div>
-    <p class="src-note"><b>内容来源：</b>小山学堂「被搜到」专题原创。文中 sitemap 条目数（约 330 → 约 950）为本站 2026 年 8 月改造的真实数据，详见第 4 节完整复盘。</p>
-  </section>
-
-</main>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "企业培训站：首页、服务、价格、案例、教程怎么写？", "name": "企业培训站：首页、服务、价格、案例、教程怎么写？", "url": "https://xueai.miyang.cn/slides/seo-2.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-08-12", "dateModified": "2026-10-18", "isAccessibleForFree": true, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png"}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="3">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 3 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 3 / 14</div><h1>企业培训站：首页、服务、价格、案例、教程怎么写？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A2" data-source-start="375" data-source-end="435">
+<p>很多人做网站总想“一网打尽”，巴不得把公司简介、产品介绍、老板生平塞在同一个页面。结果就是：用户看晕了，搜索引擎也懵了。</p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 3 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>用户搜什么词的时候，应该戳进这个页面？</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#page-jobs">拿“企业培训”网站举个栗子</a></li>
+<li><a href="#signs">标题和描述，是写给搜索结果里的活人看的</a></li>
+<li><a href="#words">别在底下密密麻麻堆词，那是上古遗迹</a></li></ol></details>
+<section id="page-jobs" class="reveal sc-section" data-source-section data-point-ids="K017 K018"><span id="k017" class="sc-point-anchor" aria-hidden="true"></span><span id="k018" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>拿“企业培训”网站举个栗子</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="437" data-source-end="704">
+<p>做页面前，先抓着自己的秃头问自己：<strong>用户搜什么词的时候，应该戳进这个页面？</strong></p>
+<p>拿做“企业培训”的网站举个栗子：</p>
+<ul>
+<li><strong>首页</strong>：你是谁？能帮企业解决什么痛点？</li>
+<li><strong>服务页</strong>：讲明白你有哪些服务，如果有课程，这门课适合哪些部门？一共上几天？</li>
+<li><strong>价格页</strong>：别藏着掖着，到底收多少钱？有哪几种套餐？</li>
+<li><strong>案例页</strong>：别光吹牛，讲清楚你们给哪家公司做过、最后帮人家省了多少钱或提了多少效，数字是最好的证明。</li>
+<li><strong>干货/教程页</strong>：直接上手解决一个具体的小痛点（比如“员工怎么用 AI 提炼会议纪要”）。</li>
+</ul></div></section>
+<figure id="fig-a2-03" class="sc-figure" data-asset-key="A2-03" data-after-anchor="k018"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/03-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/03-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="首页、价格页与教程页分别回答是谁、多少钱和怎么做"></a><figcaption>首页解释是谁，价格页说明费用，教程页解决具体操作；每页有自己的核心任务。</figcaption></figure>
+<section id="signs" class="reveal sc-section" data-source-section data-point-ids="K019 K020 K021"><span id="k019" class="sc-point-anchor" aria-hidden="true"></span><span id="k020" class="sc-point-anchor" aria-hidden="true"></span><span id="k021" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>标题和描述，是写给搜索结果里的活人看的</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="849" data-source-end="1201">
+<p>在网页代码里，有三个地方最容易被忽略，但也最要命：</p>
+<ul>
+<li><strong>&lt;title&gt;（网页标题）</strong>：这就是搜索结果里那行最显眼的蓝字大标题，直接决定别人点不点你。</li>
+<li><strong>&lt;meta description&gt;（网页简介）</strong>：标题底下那两行灰字。虽然它不直接帮你排第一，但写得好不好，决定了别人是点你还是点你隔壁的同行。</li>
+<li><strong>&lt;h1&gt; 和 &lt;h2&gt;（正文大标题、小标题）</strong>：我们将网站的入口比作一个门，这就是进门之后的招牌，h1 告诉进来的客户说“你没走错”，h2、h3 把内容分成一块块，让人看得不累。<strong>（人是视觉动物，路上看到美女的时候你都得多看两眼，何况是一个网页。）</strong></li>
+</ul>
+<p>千万别偷懒，每个页面都得有自己定制的一套词，要是全站所有网页都叫“XX公司官方网站”，爬虫根本分不清谁是谁。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>搜索系统可能重写标题，摘要也可能从正文生成；description 不是固定显示的两行，也不直接保证排名。原文的“招牌”比喻用于说明这些字段各自的作用。 · <a href="https://developers.google.com/search/docs/crawling-indexing/special-tags">Google：支持的 meta 标签</a> · <a href="https://developers.google.com/search/docs/appearance/snippet">Google：搜索摘要与简介</a></aside></section>
+<figure id="fig-a3-04" class="sc-figure" data-asset-key="A3-04" data-after-anchor="k021"><a class="sc-image-link" href="images/seo-geo/2108759625306624027/04.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108759625306624027/04.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="小狗把长文整理成结论、对比和 FAQ"></a><figcaption>用清楚的标题层级组织结论、对比和问答，让读者能快速找到对应答案。</figcaption></figure>
+<section id="words" class="reveal sc-section" data-source-section data-point-ids="K022 K023"><span id="k022" class="sc-point-anchor" aria-hidden="true"></span><span id="k023" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别在底下密密麻麻堆词，那是上古遗迹</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="706" data-source-end="823">
+<p>一页可以带几个相关的长尾词，但核心目标必须是一个，把关键词自然地放到标题、正文里就行，千万别像十年前那样在底下密密麻麻堆词，现在的算法一眼就能识破这种小聪明，我昨晚为什么在群聊的时候不断提醒网友说别学我堆关键词，在这里能找到原因里吧？</p></div>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2647" data-source-end="2694">
+<p>另外，早就没人看 meta keywords 了，别浪费时间往里面塞几十个词，那属于上古遗迹。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>meta keywords 对 Google 不作为排名依据；主题词仍应自然出现在准确的标题与正文中。 · <a href="https://developers.google.com/search/docs/crawling-indexing/special-tags">Google：支持的 meta 标签</a></aside></section>
+<details class="sc-teaching-extras">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>示例 · 把页面职责写进 HTML</h2>
+<p>这段代码展示标题、简介和层级的关系，品牌与内容为教学假设。字段必须与页面实际信息一致，不能只复制代码而保留不真实的承诺。</p>
+<pre><code>&lt;title&gt;销售团队 AI 办公培训：课程与交付方式 | 示例品牌&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content=&quot;说明适用对象、练习范围与交付物；报价按团队需求确认。&quot;&gt;
+&lt;h1&gt;销售团队 AI 办公培训&lt;/h1&gt;
+&lt;h2&gt;适用对象与前提&lt;/h2&gt;
+&lt;h2&gt;练习内容和交付物&lt;/h2&gt;</code></pre></section>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>写下职责</strong>先给页面写一句任务说明，再决定它属于首页、服务、价格、案例还是教程。不同页面之间通过明确链接配合。</li>
+<li><strong>改写标题</strong>把品牌名称和主题安排清楚，去掉无意义重复。与站内相邻页面比较，确认差异来自实际内容，非仅替换几个词。</li>
+<li><strong>检查正文</strong>只读 H1、H2、H3 看是否能理解回答结构，再检查开头有没有兑现标题承诺。存在重要条件时及时说明。</li>
+<li><strong>查看呈现</strong>将标题和简介放入预览检查可读性，发布后核对搜索中的实际展示。摘要可能变化，不能把预览当作搜索系统的保证。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一页主题明确、标题独立、简介准确、层级清楚的完整说明，以及相邻页面的分工与链接关系。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 一份产品文档同时说明预算、部署和迁移，是否必须拆成三个页面？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="一页一个核心意图，不等于一个关键词只能占一页。完整决策可能需要多个相关小节，是否拆分取决于阅读、更新和任务关系。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>一份产品文档同时说明预算、部署和迁移，是否必须拆成三个页面？</legend>
+<label class="sc-option">
+<input type="radio" name="q3" value="0"><span>必须，一页只能出现一个关键词</span></label>
+<label class="sc-option">
+<input type="radio" name="q3" value="1"><span>不必，先看是否共同完成一个核心任务</span></label>
+<label class="sc-option">
+<input type="radio" name="q3" value="2"><span>必须，每个小节都要有独立域名</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>一页一个核心意图，不等于一个关键词只能占一页。完整决策可能需要多个相关小节，是否拆分取决于阅读、更新和任务关系。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-3" data-sc-workbook="title">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-3-title"><span>网页标题</span>
+<input id="work-3-title" name="title" type="text" maxlength="1000" placeholder="面向谁，回答什么问题"></label>
+<label class="sc-field wide" for="work-3-description"><span>页面简介</span>
+<textarea id="work-3-description" name="description" rows="3" maxlength="20000" placeholder="概括答案、适用对象与重要限制"></textarea></label>
+<label class="sc-field wide" for="work-3-promise"><span>读完能够完成什么</span>
+<textarea id="work-3-promise" name="promise" rows="3" maxlength="20000" placeholder="检查标题承诺是否与正文一致"></textarea></label></div>
+<div class="sc-search-preview" aria-label="文案示意预览"><strong data-preview-title>你的页面标题</strong>
+<p data-preview-description>用清楚的简介说明这页回答什么、适合谁。</p>
+<p>仅为文案预览，实际搜索呈现可能不同。</p></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-intent.html"><small>上一讲</small>SaaS、物流、题库：小站选什么题才能接到生意？</a><a class="next" href="seo-rendering.html"><small>下一讲</small>Vue/React 搜不到：robots、noindex、SSR 怎么查？</a></nav></main>
 <script src="i18n.js?v=20260903a"></script>
 <script src="lesson.js"></script>
 <script src="taste.js?v=20260810a"></script>
-<script src="nav-inject.js?v=20260903a"></script>
-<script>
-/* ── 抓取模拟器 ──
-   背景：「正文别全靠 JS」空口无凭，让读者亲眼看两种源码。
-   设计意图：seg 切换时源码区整块重渲染并播一次滑入；JS 态的
-   源码几乎全空，空得彻底才有冲击力。判词跟着两态换。 */
-(function () {
-  var SRC_HTML = '<span class="cmt">&lt;!-- 爬虫抓到的源码（节选） --&gt;</span>\n'
-    + '<span class="tag">&lt;h1&gt;</span><span class="txt">发票猫头鹰 · 给自由职业者的开票助手</span><span class="tag">&lt;/h1&gt;</span>\n'
-    + '<span class="tag">&lt;p&gt;</span><span class="txt">上传合同，自动生成合规的发票申请单。支持增值税普票和专票，三分钟搞定过去要跑一下午的事。</span><span class="tag">&lt;/p&gt;</span>\n'
-    + '<span class="tag">&lt;a&gt;</span><span class="txt">免费开始</span><span class="tag">&lt;/a&gt;</span>';
-  var SRC_JS = '<span class="cmt">&lt;!-- 爬虫抓到的源码（全文） --&gt;</span>\n'
-    + '<span class="tag">&lt;div</span> <span class="txt">id="root"</span><span class="tag">&gt;&lt;/div&gt;</span>\n'
-    + '<span class="tag">&lt;script </span><span class="txt">src="/bundle.js"</span><span class="tag">&gt;&lt;/script&gt;</span>\n'
-    + '\n<span class="warn">// 正文一个字都没有。</span>\n'
-    + '<span class="warn">// 标题、介绍、按钮全在 bundle.js 执行之后才存在。</span>';
-  var seg = document.getElementById('g2Seg');
-  var src = document.getElementById('g2Src');
-  var verdict = document.getElementById('g2Verdict');
-  function render(k) {
-    src.innerHTML = k === 0 ? SRC_HTML : SRC_JS;
-    src.classList.remove('seo-slide-up');
-    void src.offsetWidth;
-    src.classList.add('seo-slide-up');
-    if (k === 0) {
-      verdict.className = 'g2-verdict ok';
-      verdict.innerHTML = '<b>标题、介绍、行动按钮全在。</b>引擎能读懂这页是给自由职业者的开票工具，「自由职业 开发票」这类搜索才有机会轮到你。';
-    } else {
-      verdict.className = 'g2-verdict bad';
-      verdict.innerHTML = '<b>爬虫拿到一个空壳。</b>用户看到的那些文字，要等 bundle.js 执行完才存在。主流引擎执行 JS 有配额有延迟，多数 AI 爬虫干脆不执行。对它们来说，这个站等于没有内容。';
-    }
-  }
-  seg.addEventListener('click', function (e) {
-    var btn = e.target.closest('button');
-    if (!btn || btn.classList.contains('on')) return;
-    seg.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
-    btn.classList.add('on');
-    render(+btn.dataset.k);
-  });
-  render(0);
-})();
-
-/* ── title 急诊室 ──
-   背景：弱 title 的病要在搜索结果页的语境里看才扎眼。
-   设计意图：点一条原地替换成改好的版本并展开「为什么」，
-   替换播一次 seo-pop，不可回退；三条全改亮收口卡。 */
-(function () {
-  var FIX = [
-    { t: '发票猫头鹰：自由职业者三分钟开出合规发票', d: '上传合同自动生成发票申请单，支持增值税普票和专票。免费试用，不用装软件。' },
-    { t: '功能一览：合同识别、发票生成、税率核对 | 发票猫头鹰', d: '拍照或上传 PDF 合同，自动提取金额和税号，生成可直接提交的开票申请，税率自动核对。' },
-    { t: '增值税普票和专票有什么区别？该开哪种 | 发票猫头鹰帮助', d: '一分钟说清两种发票的适用场景、税率差异和常见拒收原因，附自由职业者最常见的三个坑。' }
-  ];
-  var root = document.getElementById('t2Fix');
-  var badge = document.getElementById('t2Badge');
-  var note = document.getElementById('t2Note');
-  var fixed = 0;
-  root.addEventListener('click', function (e) {
-    var row = e.target.closest('.t2-row');
-    if (!row || row.classList.contains('fixed')) return;
-    var k = +row.dataset.k;
-    row.classList.add('fixed', 'seo-pop');
-    document.getElementById('t2t' + k).textContent = FIX[k].t;
-    document.getElementById('t2d' + k).textContent = FIX[k].d;
-    fixed++;
-    badge.textContent = '改好 ' + fixed + ' / 3';
-    if (fixed === 3) {
-      badge.textContent = '✓ 3 / 3';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* 首页对决：B 赢在正文可抓、title 可搜；A 的开屏动画对引擎是三秒空白 */
-tasteDuel('d2Duel', {
-  winner: 1,
-  verdict: '方案 A 那三秒「Loading experience」对用户是仪式感，对爬虫是全部：它抓到的就是一个加载条。方案 B 把产品是什么、给谁用、能干什么全写在 HTML 里，「宠物 疫苗提醒」「猫 体重记录」这些真实搜索都有机会落到它头上。<b>先让引擎看得见，再谈体验的锦上添花。</b>'
-});
-
-/* 整站消失之谜：测试期的全站 Disallow 忘了删，是收录归零的头号嫌疑人 */
-tasteQuiz('q2Quiz', {
-  answer: 1,
-  why: [
-    '举报机制没有这个威力。收录整站归零的原因几乎都在自己家里，先自查再怀疑别人。',
-    '一击命中率最高的检查。典型剧情：开发期为了不让测试站被收录，robots.txt 写了全站 Disallow，上线时忘了删。引擎照章办事，把你整站请了出去。三十秒能查完的事，永远第一个查。',
-    '质量惩罚通常表现为排名下滑，很少直接把收录清零。而且两个月的新站还谈不上被算法重点关照。',
-    '域名年限影响排名的说法本身就存疑，就算有影响也不会让已收录的页面消失。'
-  ]
-});
-
-/* ── 十项自查 ──
-   背景：本节内容收口成可打分的清单，分数给行动压力。
-   设计意图：可点亮可熄灭（自查允许反悔），分数文案分三档。 */
-(function () {
-  var root = document.getElementById('l2Check');
-  var badge = document.getElementById('l2Badge');
-  var score = document.getElementById('l2Score');
-  var items = root.querySelectorAll('.l2-item');
-  function update() {
-    var n = root.querySelectorAll('.l2-item.on').length;
-    badge.textContent = '已做到 ' + n + ' / 10';
-    if (n === 10) {
-      badge.classList.add('solved');
-      score.innerHTML = '<b>10 / 10，最低可行线过了。</b>接下来的胜负在内容和 GEO，往下一节走。';
-    } else {
-      badge.classList.remove('solved');
-      if (n >= 6) {
-        score.innerHTML = '<b>' + n + ' / 10，底子不错。</b>剩下几项都是一次性动作，找个下午清完。';
-      } else {
-        score.innerHTML = '<b>' + n + ' / 10。</b>别灰心，这十项全是一次性动作，不需要天赋，只需要一个下午。从没点亮的第一项开始。';
-      }
-    }
-  }
-  items.forEach(function (item) {
-    item.addEventListener('click', function () {
-      item.classList.toggle('on');
-      update();
-    });
-  });
-  update();
-})();
-</script>
-<script src="skill-data.js?v=20260903a"></script>
-<script src="skill-copy.js?v=20260817a"></script>
-<!--seo:begin--><script src="watermark.js?v=20260806c"></script><!--seo:end-->
-</body>
-</html>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

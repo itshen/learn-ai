@@ -1770,54 +1770,219 @@ window.COURSE = {
       ],
     },
     {
-      id: 'p-seo',
-      num: '课后甜点',
-      title: '被搜到：SEO 与 GEO',
-      desc: '产品做出来了、确权了，接下来的问题是有没有人找得到。这一章讲两件事：SEO 的最低可行清单（能被抓、能被读懂、能被收录），以及 GEO 这个新战场（让 ChatGPT、Perplexity、Kimi、豆包在回答问题时愿意引用你）。全章用小山学堂自己的一次真实改造当案例，不教黑帽，不承诺排名，只给能自己动手核对的清单。前两节免登录，其余登录后学习。',
-      color: '#4338ca',
-      group: 'extra',
-      routes: ['use', 'pro', 'pm', 'build'],
-      bonus: true,
-      topics: [
-        {
-          id: 't-seo-why',
-          routes: ['use', 'pro', 'pm', 'build'],
-          title: '先搞清被发现这件事',
-          desc: '做完不等于有人来',
-          lessons: [
-            { file: 'seo-1.html', title: '做出来了，为什么没人来', desc: '三条流量入口各有各的脾气：搜索引擎主动搜、AI 引擎直接问、社交传播替你说。先玩一遍收录漏斗，看你的产品卡在哪一层', tag: '开篇' , navTitle: '为什么没人来'},
-          ],
-        },
-        {
-          id: 't-seo-field',
-          routes: ['use', 'pro', 'pm', 'build'],
-          title: '两个战场',
-          desc: '搜索引擎给链接，AI 引擎给答案',
-          lessons: [
-            { file: 'seo-2.html', title: 'SEO 最低可行清单：能被抓、能被读懂、能被收录', desc: '只讲做了就有效的部分：一页一个主题、title 说人话、正文别全靠 JS 渲染、sitemap 与站长平台提交。抓取模拟器亲手切两态，看爬虫到底拿到了什么', tag: '实战' , navTitle: 'SEO 最低可行清单'},
-            { file: 'seo-3.html', title: 'GEO：让 AI 引擎愿意引用你', desc: '用户不再只搜，还在问。自包含段落、FAQ 结构化数据、llms.txt 与新鲜度信号，四个杠杆各配一个当场能玩的教具，附 AI 爬虫点名册', tag: '交互' , navTitle: 'GEO 让 AI 引用你'},
-          ],
-        },
-        {
-          id: 't-seo-case',
-          routes: ['pm', 'build'],
-          title: '拆一个真实案例',
-          desc: '用本站的改造记录当解剖台',
-          lessons: [
-            { file: 'seo-4.html', title: '拆本站：Google 收录 693 页，Bing 只有 50 页', desc: '小山学堂 2026 年 8 月真实审计复盘：sitemap 漏了全部英韩页、Q&A 页白扔了 FAQ 引用、日志把爬虫全丢弃。每个缺口讲清怎么发现、改了什么、拿什么验收', tag: '案例' , navTitle: '拆本站真实改造'},
-          ],
-        },
-        {
-          id: 't-seo-final',
-          routes: ['pm', 'build'],
-          title: '优先级与收官',
-          desc: '一个人没有 SEO 团队，只有排序能力',
-          lessons: [
-            { file: 'seo-5.html', title: '一个人的优先级：先写能被搜到的问题', desc: '先写用户真的会打出来的那句问题，再堆功能；用真实经历换可信度。反面清单也在这一节：买外链、关键词堆砌、AI 批量灌水页，哪些是找死', tag: '实战' , navTitle: '一个人的优先级'},
-            { file: 'seo-final.html', title: '被搜到验收清单：上线前再过一遍', desc: '十二项可勾选清单：一页一主题、正文服务端可见、sitemap、一句话答案块、FAQ 结构化数据、llms.txt。附「怎么知道有效」的四个度量口径', tag: '收官' , navTitle: '被搜到验收清单'},
-          ],
-        },
+      "id": "p-seo",
+      "num": "课后甜点",
+      "title": "被搜到：SEO 与 GEO",
+      "desc": "先用 4 篇基础认识 TDK、站内优化、技术基建、内容与外链，再用 14 讲案例聊 SEO 到 GEO 的落地过程。每讲穿插相关配图，练习与检查工具按需展开。",
+      "color": "#4338ca",
+      "group": "extra",
+      "routes": [
+        "use",
+        "pro",
+        "pm",
+        "build"
       ],
+      "bonus": true,
+      "topics": [
+        {
+          "id": "t-seo-foundations",
+          "title": "先打地基：SEO 基础知识",
+          "desc": "从 TDK、站内装修和技术基建，认识内容、外链与 GEO。",
+          "routes": [
+            "use",
+            "pro",
+            "pm",
+            "build"
+          ],
+          "lessons": [
+            {
+              "file": "seo-basics-tdk.html",
+              "title": "SEO 入门先挂门牌：Title、Description 和 Keywords 怎么写",
+              "desc": "用极客数码的教学例子认识标题、描述和关键词，区分写作参考与排名规则，写出每页自己的门牌。",
+              "tag": "基础",
+              "navTitle": "基础 01 · 网页的 TDK 门牌怎么写"
+            },
+            {
+              "file": "seo-basics-onpage.html",
+              "title": "站内装修四件事：标题层级、网址、图片说明和内链",
+              "desc": "把二手手机验机教程的主次、地址、实拍图和延伸阅读整理清楚，让读者知道自己在哪、下一步去哪。",
+              "tag": "基础",
+              "navTitle": "基础 02 · 给网页做四项站内装修"
+            },
+            {
+              "file": "seo-basics-technical.html",
+              "title": "网站水电基建：速度、手机体验、抓取与结构化数据",
+              "desc": "认清性能指标、移动端、HTTPS、Sitemap、robots、noindex 和 Schema 的职责，再进入后面的技术案例。",
+              "tag": "基础",
+              "navTitle": "基础 03 · 把网站水电基建检查一遍"
+            },
+            {
+              "file": "seo-basics-content-geo.html",
+              "title": "内容和外链怎么做：从二手手机选词，一路接上 GEO",
+              "desc": "用预算、验机、平台对比和商品价格识别真实意图，理解原创经验、自然引用与 AI 答案之间的关系。",
+              "tag": "基础",
+              "navTitle": "基础 04 · 从选词与实测走到 GEO"
+            }
+          ]
+        },
+        {
+          "id": "t-seo-why",
+          "routes": [
+            "use",
+            "pro",
+            "pm",
+            "build"
+          ],
+          "title": "需求与页面任务",
+          "desc": "需求与页面任务",
+          "lessons": [
+            {
+              "file": "seo-1.html",
+              "title": "几十节课程放一页，怎么让搜索引擎读到？",
+              "desc": "从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。",
+              "tag": "交互",
+              "navTitle": "课程站怎样被读到"
+            },
+            {
+              "file": "seo-intent.html",
+              "title": "SaaS、物流、题库：小站选什么题才能接到生意？",
+              "desc": "用 SaaS 选型、跨境物流和朋友的题库经历，区分泛流量与付费需求，再把用户问题接到产品或服务。",
+              "tag": "交互",
+              "navTitle": "小站选题与付费需求"
+            },
+            {
+              "file": "seo-2.html",
+              "title": "企业培训站：首页、服务、价格、案例、教程怎么写？",
+              "desc": "直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。",
+              "tag": "交互",
+              "navTitle": "企业培训站怎么拆页"
+            }
+          ]
+        },
+        {
+          "id": "t-seo-technical",
+          "routes": [
+            "pm",
+            "build"
+          ],
+          "title": "技术基础与使用体验",
+          "desc": "技术基础与使用体验",
+          "lessons": [
+            {
+              "file": "seo-rendering.html",
+              "title": "Vue/React 搜不到：robots、noindex、SSR 怎么查？",
+              "desc": "沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。",
+              "tag": "交互",
+              "navTitle": "搜不到时逐项查什么"
+            },
+            {
+              "file": "seo-structure.html",
+              "title": "首页到文章怎么连：内链、301、canonical 怎么配？",
+              "desc": "把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。",
+              "tag": "交互",
+              "navTitle": "内链与重复网址"
+            },
+            {
+              "file": "seo-performance.html",
+              "title": "打开慢、点不动、页面乱跳：三个性能指标怎么查？",
+              "desc": "对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。",
+              "tag": "交互",
+              "navTitle": "页面性能怎么查"
+            }
+          ]
+        },
+        {
+          "id": "t-seo-content",
+          "routes": [
+            "use",
+            "pro",
+            "pm",
+            "build"
+          ],
+          "title": "内容、GEO 与公开证据",
+          "desc": "内容、GEO 与公开证据",
+          "lessons": [
+            {
+              "file": "seo-5.html",
+              "title": "工具测评怎么写：实测数据、对比表、FAQ 和下载清单",
+              "desc": "沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。",
+              "tag": "交互",
+              "navTitle": "测评文章怎样写实"
+            },
+            {
+              "file": "seo-3.html",
+              "title": "AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？",
+              "desc": "从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。",
+              "tag": "交互",
+              "navTitle": "AI 引用与推荐的区别"
+            },
+            {
+              "file": "geo-evidence.html",
+              "title": "通稿发五十遍不算证据：产品文档、案例、测评怎么补？",
+              "desc": "按原文三类材料补证据，再用断网收银问题核对版本、离线能力、支付方式、同步条件与不适用场景。",
+              "tag": "交互",
+              "navTitle": "产品证据怎么补齐"
+            },
+            {
+              "file": "seo-distribution.html",
+              "title": "新站先发哪里：公众号、知乎、CSDN、小红书与官网",
+              "desc": "保留作者的老号经历和渠道判断，讲一篇干货如何改编分发，平台负责触达、官网承接资料和业务，订阅怎样沉淀。",
+              "tag": "交互",
+              "navTitle": "新站分发渠道怎么选"
+            }
+          ]
+        },
+        {
+          "id": "t-seo-outcome",
+          "routes": [
+            "pm",
+            "build"
+          ],
+          "title": "评估与业务承接",
+          "desc": "评估与业务承接",
+          "lessons": [
+            {
+              "file": "geo-evaluation.html",
+              "title": "怎么测 AI 推荐效果：客户问题、重复测试、有效询盘",
+              "desc": "从销售客服收集问题，记录平台、日期、联网和上下文；核对提及、引用、事实与适配，再结合后台和询盘。",
+              "tag": "交互",
+              "navTitle": "AI 推荐效果怎么测"
+            },
+            {
+              "file": "seo-business.html",
+              "title": "小站怎么收钱：产品、佣金、赞助、线索和会员",
+              "desc": "把作者列出的收入方式逐项展开，说明 SaaS 持续分成、垂类赞助、有效线索、数字产品和会员各自如何承接。",
+              "tag": "交互",
+              "navTitle": "小站的五类收入"
+            }
+          ]
+        },
+        {
+          "id": "t-seo-case",
+          "routes": [
+            "pm",
+            "build"
+          ],
+          "title": "案例与综合验收",
+          "desc": "案例与综合验收",
+          "lessons": [
+            {
+              "file": "seo-4.html",
+              "title": "课程站读不到、收银文案答非所问，分别怎么改？",
+              "desc": "复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。",
+              "tag": "案例",
+              "navTitle": "课程站与收银两个例子"
+            },
+            {
+              "file": "seo-final.html",
+              "title": "上线检查清单：正文、链接、索引、证据、询盘逐项过",
+              "desc": "把原文四件起步动作与技术、内容、评估三项职责合起来；文末 26 项清单支持勾选保存和导出复查记录。",
+              "tag": "收官",
+              "navTitle": "上线前逐项检查"
+            }
+          ]
+        }
+      ]
     },
     {
       id: 'p8',

@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>GEO：让 AI 引擎愿意引用你 | 被搜到：SEO 与 GEO</title>
-<style>@keyframes _si{from{opacity:0}to{opacity:1}}body{opacity:0;animation:_si 0.15s ease 0.08s forwards}</style>
-<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
-<link rel="stylesheet" href="lesson.css?v=20260827a">
-<link rel="stylesheet" href="taste.css?v=20260810a">
-<link rel="stylesheet" href="seo.css?v=20260811a">
-<!-- SEO Start -->
-<meta name="description" content="用户不再只搜，还在问。GEO 的四个杠杆：自包含段落（一句话答案块）、FAQ 结构化数据、llms.txt 与新鲜度信号。引用竞标演示看 AI 更愿意引用哪段内容，附 AI 爬虫点名册和一个能直接用的 FAQPage 生成器。">
-<meta name="keywords" content="GEO,Generative Engine Optimization,AI 搜索,llms.txt,FAQPage,结构化数据,GPTBot,PerplexityBot,被 AI 引用">
-<meta name="author" content="洛小山">
+<title>AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。">
+<meta name="author" content="洛小山、黄啊码">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://xueai.miyang.cn/slides/seo-3.html">
 <link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-3.html">
@@ -23,437 +15,132 @@
 <link rel="alternate" hreflang="zh-MO" href="https://xueai.miyang.cn/slides/seo-3.hk.html">
 <link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-3.html">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="xueai.miyang.cn · AI 产品经理培训">
-<meta property="og:title" content="GEO：让 AI 引擎愿意引用你">
-<meta property="og:description" content="搜索给链接，AI 给答案。你要争的是答案里的一句引用。">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？">
+<meta property="og:description" content="从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。">
 <meta property="og:url" content="https://xueai.miyang.cn/slides/seo-3.html">
-<meta property="og:image" content="https://xueai.miyang.cn/slides/og/seo-3.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/02.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="GEO：让 AI 引擎愿意引用你">
-<meta name="twitter:description" content="搜索给链接，AI 给答案。你要争的是答案里的一句引用。">
-<meta name="twitter:image" content="https://xueai.miyang.cn/og-cover.jpg">
-<!-- SEO End -->
-<style>
-/* ── 引用竞标 ──
-   背景：「自包含段落」是 GEO 最重要的概念，得让读者站在 AI 的
-   位置挑一次素材，才明白为什么有的内容永远不被引用。
-   设计意图：三段候选全部可点，点开揭晓 AI 的取舍和理由；
-   三段都看完亮收口。约束：胜负不靠猜，每段的判词都要讲出规律。 */
-.b3-q{padding:14px 18px;border-radius:12px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;}
-.b3-q svg{width:18px;height:18px;color:var(--ct);flex-shrink:0;margin-top:2px;}
-.b3-list{display:flex;flex-direction:column;gap:10px;}
-.b3-cand{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px 16px;cursor:pointer;transition:border-color .2s ease;}
-.b3-cand:hover{border-color:var(--ct-line);}
-.b3-cand.judged{cursor:default;}
-.b3-cand.picked{border-color:var(--good);background:var(--good-soft);}
-.b3-cand.dropped{border-color:var(--border);opacity:.85;}
-.b3-src{font-size:11px;font-weight:800;color:var(--sub);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-.b3-tag{display:none;font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:999px;}
-.b3-cand.picked .b3-tag{display:inline-block;background:var(--good);color:#fff;}
-.b3-cand.dropped .b3-tag{display:inline-block;background:rgba(0,0,0,.12);color:var(--sub);}
-.b3-txt{font-size:13px;color:var(--text);line-height:1.8;}
-.b3-why{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:#fff;border:1px solid var(--border);font-size:12.5px;line-height:1.7;color:var(--sub);}
-.b3-cand.judged .b3-why{display:block;}
-.b3-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.b3-note.show{display:block;}
-.b3-note b{color:var(--ct-deep);}
-
-/* ── 一句话答案改写器 ── */
-.a3-stage{display:flex;flex-direction:column;gap:10px;}
-.a3-block{border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--card);}
-.a3-label{font-size:11px;font-weight:800;color:var(--sub);margin-bottom:6px;}
-.a3-txt{font-size:13px;color:var(--text);line-height:1.8;}
-.a3-btnrow{display:flex;gap:8px;flex-wrap:wrap;}
-.a3-btn{padding:8px 16px;border-radius:10px;border:1.5px solid var(--ct-line);background:var(--ct-soft);color:var(--ct-deep);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:background .15s;}
-.a3-btn:hover{background:rgba(67,56,202,.14);}
-.a3-btn:disabled{opacity:.45;cursor:default;}
-.a3-meter{display:flex;align-items:center;gap:10px;margin-top:4px;}
-.a3-meter .lb{font-size:12px;font-weight:800;color:var(--sub);flex-shrink:0;}
-.a3-track{flex:1;height:10px;border-radius:5px;background:rgba(0,0,0,.05);overflow:hidden;}
-.a3-fill{height:100%;width:15%;border-radius:5px;background:var(--bad);transition:width .35s ease-out,background .35s ease-out;}
-.a3-fill.good{background:var(--good);}
-.a3-vv{font-size:12px;font-weight:800;color:var(--sub);min-width:72px;text-align:right;}
-
-/* ── FAQPage 生成器 ── */
-.f3-form{display:flex;flex-direction:column;gap:10px;}
-.f3-form label{font-size:12.5px;font-weight:800;color:var(--text);}
-.f3-form input,.f3-form textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--card);resize:vertical;}
-.f3-form input:focus,.f3-form textarea:focus{outline:none;border-color:var(--ct);}
-.f3-out{margin-top:12px;background:#0f172a;border-radius:12px;padding:14px 16px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.8;color:#e2e8f0;overflow-x:auto;white-space:pre;}
-.f3-row{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;}
-.f3-copy{padding:8px 18px;border-radius:10px;border:none;background:var(--ct);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
-.f3-copied{font-size:12.5px;font-weight:700;color:var(--good);display:none;}
-.f3-copied.show{display:inline;}
-
-/* ── 爬虫点名册 ── */
-.c3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.c3-card{border:1.5px solid var(--border);border-radius:12px;background:var(--card);padding:14px;cursor:pointer;transition:border-color .2s ease,transform .2s ease;}
-.c3-card:hover{border-color:var(--ct-line);transform:translateY(-2px);}
-.c3-card.open{cursor:default;border-color:var(--ct);}
-.c3-card.open:hover{transform:none;}
-.c3-ua{font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:var(--ct-deep);}
-.c3-owner{font-size:11px;color:var(--sub);margin-top:2px;}
-.c3-info{display:none;margin-top:8px;font-size:12px;color:var(--text);line-height:1.7;}
-.c3-card.open .c3-info{display:block;}
-.c3-note{display:none;margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--ct-soft);border:1.5px solid var(--ct-line);font-size:13.5px;line-height:1.8;color:var(--text);}
-.c3-note.show{display:block;}
-.c3-note b{color:var(--ct-deep);}
-
-@media (max-width:768px){
-  .c3-grid{grid-template-columns:1fr;}
-}
-</style>
+<meta name="twitter:title" content="AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？">
+<meta name="twitter:description" content="从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/02.jpg">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
 <link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
-<!--seo:begin--><script type="application/ld+json">{"@context":"https://schema.org","@type":["Article","LearningResource"],"headline":"GEO：让 AI 引擎愿意引用你","name":"GEO：让 AI 引擎愿意引用你","url":"https://xueai.miyang.cn/slides/seo-3.html","inLanguage":"zh-CN","author":{"@type":"Person","name":"洛小山"},"publisher":{"@type":"Organization","name":"xueai.miyang.cn","url":"https://xueai.miyang.cn"},"learningResourceType":"课程","educationalLevel":"入门到进阶","isPartOf":{"@type":"Course","name":"AI 实战课 · 两个战场","url":"https://xueai.miyang.cn/slides/learn.html"},"isAccessibleForFree":false,"description":"用户不再只搜，还在问。GEO 的四个杠杆：自包含段落（一句话答案块）、FAQ 结构化数据、llms.txt 与新鲜度信号。引用竞标演示看 AI 更愿意引用哪段内容，附 AI 爬虫点名册和一个能直接用的 FAQPage 生成器。","datePublished":"2026-08-12","dateModified":"2026-08-27","hasPart":{"@type":"WebPageElement","isAccessibleForFree":false,"cssSelector":".paywall-locked"}}</script><style>.xa-tldr{margin:18px 0 4px;padding:14px 18px;background:rgba(0,102,255,0.04);border:1px solid rgba(0,102,255,0.16);border-radius:10px}.xa-tldr .xa-tldr-tag{display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent,#0066ff);margin-bottom:6px}.xa-tldr p{margin:0;font-size:15px;line-height:1.8;color:var(--text,#1f2937)}</style><style>html.xa-locked .paywall-locked:not(.xa-peek){display:none!important}html.xa-locked .xa-peek{max-height:132px;overflow:hidden;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%);mask-image:linear-gradient(180deg,#000 0,#000 14%,transparent 94%)}</style><script>try{if(localStorage.getItem('xa_auth')!=='1')document.documentElement.classList.add('xa-locked')}catch(e){document.documentElement.classList.add('xa-locked')}</script><!--seo:end-->
-</head>
-<body>
-<main class="lesson">
-
-  <header class="lesson-header">
-    <div class="kicker">被搜到 · 3 / 6</div>
-    <h1>GEO：让 AI 引擎愿意引用你</h1>
-    <p class="subtitle">越来越多的用户跳过搜索框，直接把问题丢给 ChatGPT、Kimi 或豆包。答案由 AI 组织，你的站在不在答案里，成了新的生死线。这门手艺有个名字：<b>GEO（Generative Engine Optimization）</b>。这一节讲它的四个杠杆，每个都配一个当场能玩的教具。</p>
-    <div class="chips"><span class="chip">引用竞标</span><span class="chip">一句话答案</span><span class="chip">FAQ 生成器</span><span class="chip">爬虫点名册</span></div>
-  </header><!--seo:begin--><aside class="xa-tldr"><span class="xa-tldr-tag">一句话速览</span><p>用户不再只搜，还在问。自包含段落、FAQ 结构化数据、llms.txt 与新鲜度信号，四个杠杆各配一个当场能玩的教具，附 AI 爬虫点名册</p></aside><!--seo:end-->  <section class="reveal">
-    <div class="sec-label">搜索给链接，AI 给答案</div>
-    <p class="desc">SEO 和 GEO 争的东西不一样。搜索引擎给用户十条蓝色链接，你争的是排位；AI 引擎直接给一段组织好的答案，<b>你争的是答案里的一句引用、一个署名</b>。用户可能永远不点进你的站，但「据某某站」这几个字就是新时代的曝光。</p>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>维度</th><th>SEO（搜索引擎）</th><th>GEO（AI 引擎）</th></tr>
-      <tr><td><b>用户看到什么</b></td><td>一排链接，自己挑</td><td>一段答案，AI 已经替他挑完了</td></tr>
-      <tr><td><b>你争什么</b></td><td>排名和点击</td><td>被引用、被推荐、被当作出处</td></tr>
-      <tr><td><b>内容被怎么消费</b></td><td>用户进站读全文</td><td>AI 摘走能独立成立的那一段</td></tr>
-      <tr><td><b>基础设施</b></td><td>sitemap、robots、结构化数据</td><td>全都要，再加 llms.txt 和可引用的段落写法</td></tr>
-    </table></div>
-    <p class="desc" style="margin-top:16px">好消息是两者不冲突：上一节的最低可行清单是 GEO 的地基，AI 引擎同样从抓取和索引开始。这一节讲的是在那之上，AI 特有的四个杠杆。</p>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">动手 · 站在 AI 的位置，挑一段引用</div>
-    <p class="desc">AI 引擎回答问题前，检索回来一堆候选段落，从里面挑能直接用的。<b>你来当一次 AI</b>：用户问「个人开发者的产品怎么定价」，检索回来三段内容，逐段点开，看它们的命运和理由。</p>
-    <div class="toy" id="b3Bid">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/></svg></span>
-        <span class="toy-t">引用竞标现场</span>
-        <span class="toy-badge" id="b3Badge">看过 0 / 3</span>
-      </div>
-      <div class="toy-body">
-        <div class="b3-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>用户提问：个人开发者的产品怎么定价？</div>
-        <div class="toy-hint">点每段候选，看 AI 的取舍</div>
-        <div class="b3-list">
-          <div class="b3-cand" data-k="0" data-fate="dropped">
-            <div class="b3-src">候选一 · 某产品博客<span class="b3-tag">落选</span></div>
-            <div class="b3-txt">定价是一门艺术，也是一门科学。正如我们在上一篇文章中提到的，很多因素都会影响你的决策。在深入探讨之前，让我们先回顾一下什么是价值主张…</div>
-            <div class="b3-why">读完这段，问题一个字都没被回答。它在铺垫、在引用自己的上一篇、在「即将深入探讨」。AI 摘不出任何能独立成立的句子，只能放弃。很多人的文章通篇都是这种「即将说到」体。</div>
-          </div>
-          <div class="b3-cand" data-k="1" data-fate="picked">
-            <div class="b3-src">候选二 · 某独立开发者的复盘<span class="b3-tag">被引用</span></div>
-            <div class="b3-txt">个人开发者定价的常见做法是三档：免费档给核心功能拉新，标准档定在同类产品的六到八折（2026 年个人效率工具普遍在每月 30 到 60 元），专业档放团队功能。我的工具站从每月 19 元涨到 39 元，付费率从 2.1% 降到 1.7%，但收入涨了六成。</div>
-            <div class="b3-why">这段被引用，因为它自包含：单独摘出来仍是一个完整回答，有具体做法、有价格区间、有第一手数据。「据一位独立开发者的实测」就是这么来的。</div>
-          </div>
-          <div class="b3-cand" data-k="2" data-fate="dropped">
-            <div class="b3-src">候选三 · 某问答社区高赞<span class="b3-tag">落选</span></div>
-            <div class="b3-txt">这个问题问得好，楼上说的都有道理。我补充一点，其实定价没有标准答案，主要看你的用户群体。我之前踩过坑，说多了都是泪，有兴趣的可以看我主页置顶。</div>
-            <div class="b3-why">口语化没问题，问题是信息密度为零：没有数字、没有做法、关键内容还要跳去「主页置顶」。AI 不会替你跳转，段落之外的东西等于不存在。</div>
-          </div>
-        </div>
-        <div class="b3-note" id="b3Note"><b>三段看完，规律浮出来了：</b>AI 挑的是能单独摘走、摘走之后依然成立的段落。这就是 GEO 第一杠杆「自包含段落」的全部含义，下面立刻练。</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal">
-    <div class="sec-label">杠杆一 · 每页开头给一段「一句话答案」</div>
-    <p class="desc">自包含段落最省力的落法：<b>每页 H1 下面，先用两三句话把这页的问题直接答掉</b>。是什么、为什么重要、一句话记住。剩下的正文再展开细节。用户扫一眼有收获，AI 摘一段能引用，双赢。</p>
-    <p class="desc" style="margin-top:16px">下面这页讲「API 限流」，开头写得很典型。<b>点两个按钮，看两种改法怎么把它救活。</b></p>
-    <div class="toy" id="a3Fix">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg></span>
-        <span class="toy-t">开头急救：从铺垫体到答案体</span>
-        <span class="toy-badge" id="a3Badge">两步改写</span>
-      </div>
-      <div class="toy-body">
-        <div class="a3-stage">
-          <div class="a3-block">
-            <div class="a3-label">这页的开头（H1 下的第一段）</div>
-            <div class="a3-txt" id="a3Text">在当今快速发展的互联网时代，API 已经成为系统间通信的重要方式。随着业务规模的不断扩大，如何保障服务的稳定性成为了一个值得深入探讨的话题。本文将带你一步步了解限流的方方面面。</div>
-          </div>
-          <div class="a3-meter">
-            <span class="lb">可引用度</span>
-            <span class="a3-track"><span class="a3-fill" id="a3Fill"></span></span>
-            <span class="a3-vv" id="a3Val">很低</span>
-          </div>
-          <div class="a3-btnrow">
-            <button class="a3-btn" id="a3Step1">第一步：砍掉铺垫</button>
-            <button class="a3-btn" id="a3Step2" disabled>第二步：把答案放进来</button>
-          </div>
-          <div class="a3-block" style="display:none" id="a3WhyBox">
-            <div class="a3-label">改动说明</div>
-            <div class="a3-txt" id="a3Why"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">这个「答案前置」的写法和第 2 节的 description 是一对：description 给搜索结果页看，一句话答案块给 AI 和赶时间的读者看。本站每个课程页 H1 下面那行「一句话速览」就是这个杠杆的落地，全站由构建脚本批量注入。</p>
-  </section>
-
-  <section class="reveal paywall-locked xa-peek">
-    <div class="sec-label">杠杆二 · Q&amp;A 页加 FAQ 结构化数据</div>
-    <p class="desc">如果你的页面本身就是一问一答（帮助文档、常见问题、本站的小白三千问都是），有一个几乎白捡的杠杆：<b>FAQPage 结构化数据</b>。在页面里放一段 JSON-LD，用机器能读的格式声明「这页的问题是什么、答案是什么」，引擎不用猜，直接拿走。</p>
-    <p class="desc" style="margin-top:16px">别被「结构化数据」四个字吓住，它就是一段固定格式的 JSON。<b>下面填上你自己的问答，生成一段能直接贴进页面的代码。</b></p>
-    <div class="toy" id="f3Gen">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
-        <span class="toy-t">FAQPage 生成器</span>
-        <span class="toy-badge">填一填</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">改下面两个框，代码实时更新；贴进页面 head 或正文末尾都行</div>
-        <div class="f3-form">
-          <label for="f3Q">问题（就是页面标题那句）</label>
-          <input id="f3Q" type="text" value="增值税普票和专票有什么区别？" maxlength="80">
-          <label for="f3A">答案（两三句话，自包含）</label>
-          <textarea id="f3A" rows="3" maxlength="300">专票可以抵扣进项税，普票不能；专票对购买方资质有要求，普票没有。自由职业者给企业客户开票，对方多半会要专票，注册时记得申请一般纳税人资格或找税务代开。</textarea>
-        </div>
-        <div class="f3-out" id="f3Out"></div>
-        <div class="f3-row">
-          <button class="f3-copy" id="f3Copy">复制这段代码</button>
-          <span class="f3-copied" id="f3Copied">已复制，贴进你的页面就行</span>
-        </div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">生成后拿 Google 的富媒体测试工具验一下（搜「rich results test」第一个就是）。本站给 37 个小白三千问页面补上 FAQPage 后<span class="data-note">2026-08-10 改造</span>，这批「Token 是什么」「AI 客服为什么蠢」式的原生问题，成了全站最容易被 AI 引用的页面。</p>
-    <div class="quote-card" style="margin-top:16px">一条纪律顺带立在这：<b>结构化数据必须和页面可见内容一致。</b>页面上没有的问答，别塞进 JSON-LD，那属于给引擎和用户两套内容，下一节讲这条线为什么碰不得。</div>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">杠杆三 · llms.txt：给 AI 引擎的导览图</div>
-    <p class="desc">robots.txt 告诉爬虫哪能去哪不能去，<b>llms.txt 反过来，是主动递给 AI 的一份站点导览</b>：放在根目录的一个 Markdown 文件，列出你有什么内容、每页讲什么、地址在哪。配套还有一个加强版 llms-full.txt，直接把全站正文拼成一个大文件，AI 一次就能读完你的站。</p>
-    <p class="desc" style="margin-top:16px">要说实话的是：这是 2024 年由社区提出的民间约定，不是官方标准，各家 AI 引擎的支持程度不一也在变化。但它成本极低（一个脚本自动生成），赌的是「让 AI 读懂你的成本越低，被引用的机会越大」这个朴素逻辑。本站的 llms.txt 覆盖全部 317 节课的目录和描述<span class="data-note">2026-08-10 口径</span>，llms-full.txt 把免费页全文、受限页预览段拼在一起，体积一到两兆。</p>
-    <p class="desc" style="margin-top:16px">llms.txt 长这样，一眼就懂：</p>
-    <div class="f3-out" style="margin-top:12px"># 小山学堂
-
-> 免费的 AI 实战课程，从零基础到 Agent 开发。
-
-## 课程
-
-- [Token 是什么](https://xueai.miyang.cn/slides/zero-q-token.html)：
-  用打字计费的比喻讲清 Token 与上下文窗口
-- [Agent 为什么会卡死](https://xueai.miyang.cn/slides/agent-3.html)：
-  循环起因排查与三种止损方式
-- …（共 317 节，每节一行标题加一句描述）</div>
-    <p class="desc" style="margin-top:16px">同一节还有个容易漏的杠杆：<b>新鲜度信号</b>。在 JSON-LD 里带上 datePublished 和 dateModified，AI 引擎偏爱能判断时效的内容，尤其是「2026 年还…吗」这类问题。日期从 git 提交记录里取，脚本一次搞定，别手填。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">杠杆四 · 认识来抓你的 AI 爬虫</div>
-    <p class="desc">GEO 做没做进去，有一个最诚实的信号：<b>AI 爬虫来没来、来得勤不勤</b>。它们都在请求日志里留名（User-Agent）。点开下面六张卡，认识最常见的几位访客。</p>
-    <div class="toy" id="c3Bots">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span>
-        <span class="toy-t">AI 爬虫点名册</span>
-        <span class="toy-badge" id="c3Badge">认识 0 / 6</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">点卡片看它是谁、来干什么</div>
-        <div class="c3-grid">
-          <div class="c3-card"><div class="c3-ua">GPTBot</div><div class="c3-owner">OpenAI</div><div class="c3-info">给模型训练收集语料。它来得勤，说明你的内容在进未来模型的知识库。</div></div>
-          <div class="c3-card"><div class="c3-ua">OAI-SearchBot</div><div class="c3-owner">OpenAI</div><div class="c3-info">服务 ChatGPT 的搜索功能，和训练爬虫分开。想被 ChatGPT 搜到，别把它拦了。</div></div>
-          <div class="c3-card"><div class="c3-ua">ClaudeBot</div><div class="c3-owner">Anthropic</div><div class="c3-info">给 Claude 收集训练语料，抓取节奏通常比较克制。</div></div>
-          <div class="c3-card"><div class="c3-ua">PerplexityBot</div><div class="c3-owner">Perplexity</div><div class="c3-info">服务答案引擎的实时检索。Perplexity 每条答案都带引用，是最容易观测 GEO 效果的平台。</div></div>
-          <div class="c3-card"><div class="c3-ua">Google-Extended</div><div class="c3-owner">Google</div><div class="c3-info">控制内容能不能用于 Gemini 训练的开关标识，拦它不影响正常搜索收录。</div></div>
-          <div class="c3-card"><div class="c3-ua">Bytespider</div><div class="c3-owner">字节跳动</div><div class="c3-info">豆包背后的爬虫，中文站的常客，抓取量常常大得惊人。</div></div>
-        </div>
-        <div class="c3-note" id="c3Note"><b>六位都认识了，去日志里点个名。</b>很多统计工具默认把 bot 流量全丢掉，等于把 GEO 的唯一仪表盘扔了。把这几个 UA 单独归档、按天看抓取量，曲线上升就是内容在进 AI 索引的直接证据。本站后台的「AI 抓取」页就是这么来的，下一节拆。</div>
-      </div>
-    </div>
-    <p class="desc" style="margin-top:16px">最后一个提醒，也是很多人漏掉的：<b>ChatGPT 的联网搜索大量依赖 Bing 的索引</b>（公开资料和各家站长的实测都指向这一点）。也就是说 Bing 收录得少，ChatGPT 就搜不到你。上一节让你提交 Bing Webmaster，伏笔在这里，下一节用本站的真实数字给你看差距有多大。</p>
-    <p class="desc" style="margin-top:16px">要不要拦训练类爬虫（GPTBot、ClaudeBot），是个立场问题不是技术问题：拦了，内容不进未来模型的知识库；不拦，等于免费供料。本站的选择是全放行，因为免费课的目标本来就是被更多人（和 AI）学到。你的站自己权衡，robots.txt 里一行就能表态。</p>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">四个杠杆，一张速查表</div>
-    <div class="tbl-wrap"><table class="tbl">
-      <tr><th>杠杆</th><th>做一次要多久</th><th>怎么验收</th></tr>
-      <tr><td><b>一句话答案块</b></td><td>每页两三句，存量页面批量补需要几天</td><td>随机摘一段问自己：单独读成立吗</td></tr>
-      <tr><td><b>FAQPage 结构化数据</b></td><td>脚本活，半天</td><td>Google 富媒体测试通过</td></tr>
-      <tr><td><b>llms.txt / llms-full.txt</b></td><td>脚本活，半天</td><td>根目录能访问，随构建更新</td></tr>
-      <tr><td><b>日期信号</b></td><td>脚本活，两小时</td><td>抽查 JSON-LD 日期与 git 记录一致</td></tr>
-    </table></div>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">考一下 · 被 AI 转述了，该哭该笑</div>
-    <div class="toy" id="q3Quiz">
-      <div class="toy-head">
-        <span class="toy-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
-        <span class="toy-t">AI 把你的教程完整转述给了用户，用户没点进你的站。这对你意味着什么？</span>
-        <span class="toy-badge">单选</span>
-      </div>
-      <div class="toy-body">
-        <div class="toy-hint">这是 GEO 时代最常见的焦虑，值得想清楚</div>
-        <div class="quiz-opts">
-          <div class="quiz-opt" data-k="0"><span class="qo-key">A</span><span>纯亏：流量被 AI 截走了，应该用 robots 把 AI 爬虫全拦掉</span></div>
-          <div class="quiz-opt" data-k="1"><span class="qo-key">B</span><span>看内容定位：教程被转述换来了署名曝光，产品和独家经验才是要用户进站的部分</span></div>
-          <div class="quiz-opt" data-k="2"><span class="qo-key">C</span><span>无所谓，反正流量本来也不值钱</span></div>
-          <div class="quiz-opt" data-k="3"><span class="qo-key">D</span><span>去投诉 AI 厂商侵权</span></div>
-        </div>
-        <div class="quiz-fb"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="reveal paywall-locked">
-    <div class="sec-label">本节要点</div>
-    <div class="takeaways">
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>GEO 争的是引用：</b>用户看答案不看链接，你要成为 AI 愿意摘走的那一段。SEO 的地基照打，四个杠杆加在上面。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>自包含段落是第一杠杆：</b>每页开头两三句直接给答案，摘走之后依然成立。铺垫体和「看我主页置顶」体永远不被引用。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>Q&amp;A 页加 FAQPage、根目录放 llms.txt、JSON-LD 带日期：</b>三件事全是一次性脚本活，做完 AI 读懂你的成本大幅下降。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>爬虫日志是 GEO 的仪表盘：</b>GPTBot、PerplexityBot 这些 UA 单独归档看曲线。另外记住那条暗线：Bing 收录数直接影响 ChatGPT 能不能搜到你。</p></div>
-      <div class="tk-item"><span class="tk-ic">✓</span><p><b>被 AI 转述不全是坏事：</b>通用知识换署名曝光，产品和第一手经验留作进站理由。内容分层设计，别一刀切拦爬虫。</p></div>
-    </div>
-    <p class="src-note"><b>内容来源：</b>小山学堂「被搜到」专题原创。llms.txt 为 2024 年社区提案（llmstxt.org），各引擎支持程度以其官方文档为准；文中本站数据均注明口径日期，完整改造记录见第 4 节。</p>
-  </section>
-
-</main>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？", "name": "AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？", "url": "https://xueai.miyang.cn/slides/seo-3.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-08-12", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/02.jpg", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="8">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 8 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 8 / 14</div><h1>AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A3" data-source-start="95" data-source-end="283">
+<p>大家应该都发现：现在的我们越来越懒了，以前差个问题找个东西，还得去百度搜一搜，一个链接一个链接戳进去对比，现在呢？直接在 DeepSeek、Kimi 或者豆包里敲一行字：“推荐几个好用的工具，对比一下优缺点”，AI 啪一下就把表格和结论给你列整齐了。</p>
+<p>这就带来了一个问题：*以前大家拼命争的是搜索引擎前排的链接；现在要争的，是 AI 给出的答案里，能不能直接带上你的名字。*</p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 8 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>以前争的是搜索引擎前排的链接；现在要争的，是 AI 答案里能不能带上你的名字。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#what-geo">别被高级新词吓退，先说清楚在争什么</a></li>
+<li><a href="#rebrand">换了招牌，交付动作却原封不动</a></li>
+<li><a href="#cite">内容被引用，不等于品牌获得正向推荐</a></li>
+<li><a href="#foundation">SEO 基本功继续有用，旧工作方式要改</a></li></ol></details>
+<section id="what-geo" class="reveal sc-section" data-source-section data-point-ids="K058 K059"><span id="k058" class="sc-point-anchor" aria-hidden="true"></span><span id="k059" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别被高级新词吓退，先说清楚在争什么</h2>
+<div class="sc-author-passage" data-source-key="A3" data-source-start="285" data-source-end="627">
+<p>这就是所谓的 <strong>GEO（生成式引擎优化）</strong>，别被这个高级新词给吓退了，它的核心目的就一句话：当大模型组织答案时，打心底里觉得你最专业、最可信，从而把你的产品推到用户嘴边。</p>
+<h3>GEO 跟以前的 SEO 到底差在哪？</h3>
+<p>想玩转新规矩，就得先把老思维扔了，这俩在当下已经变得面目全非：</p>
+<ul>
+<li><strong>以前的 SEO 是给爬虫看的：</strong> 爬虫很认死理，只要你页面里多塞几次关键词、弄点反向链接，它就觉得你排前面没毛病；</li>
+<li><strong>现在的 GEO 是给大模型脑子看的：</strong> 大模型拿到问题后，会先去网上搜一大堆资料，把它们切碎消化，然后自己重新写一段人话。</li>
+</ul>
+<p>所以，传统的“疯狂堆词、做点伪原创”在 GEO 面前就是大巫见小巫了，大模型需要的是：<strong>清清楚楚可给用户直接使用的答案。</strong></p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>原文“SEO 是给爬虫看的”用于批评堆词旧做法，不能代表全部 SEO。联网检索与读取还取决于产品模式，并非每次模型回答都搜索网页。</aside></section>
+<figure id="fig-a3-02" class="sc-figure" data-asset-key="A3-02" data-after-anchor="k058"><a class="sc-image-link" href="images/seo-geo/2108759625306624027/02.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108759625306624027/02.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：从链接位置到答案中的品牌呈现"></a><figcaption>从争取链接位置，到让业务信息在答案中被发现并准确呈现，观察对象发生了变化。</figcaption></figure>
+<section id="rebrand" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K060"><span id="k060" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>换了招牌，交付动作却原封不动</h2>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="337" data-source-end="427">
+<p>风口之下，不少传统 SEO 服务商迅速换了招牌，但仔细看他们的执行方案，依然是批量改写文章，再找一批账号全网分发，过去承诺关键词排名，现在承诺“AI 推荐”，交付动作几乎原封不动。</p></div>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="1122" data-source-end="1467">
+<p>听说 AI 回答问题时会参考多个信源，一些团队立刻祭出了老本行：批量注册百家号、知乎、行业网站账号，把同一篇品牌通稿铺向全网，随后，几十个发布链接被打包进结案报告，美其名曰“<strong>全网大模型语料建设</strong>”。</p>
+<p>这种做法混淆了两个基本概念：</p>
+<p>第一，<strong>网页被联网搜索工具抓取，不等于进入了大模型的参数训练集，</strong> 一次公开发布，并不能证明模型已经学会并记住了企业希望灌输的信息。</p>
+<p>第二，<strong>多个网址不代表多份信息证明你的内容足够饱满，</strong> 同一份公关稿如果被复制粘贴五十次，它的事实基础依然只有薄薄的一份。</p>
+<p>当然，现有的 AI 系统受限于检索机制，确实偶尔会被低质铺量的信息误导，但我们不能把大模型当成毫无分辨力的机器，更不能把靠短期铺量刷出来的某张AI 推荐截图，当成企业的长期壁垒。</p></div></section>
+<figure id="fig-a5-03" class="sc-figure" data-asset-key="A5-03" data-after-anchor="k060"><a class="sc-image-link" href="images/seo-geo/2111476793555210739/03.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2111476793555210739/03.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：换 GEO 招牌仍在批量发稿"></a><figcaption>换上 GEO 招牌继续批量发稿，并不能证明内容进入了模型训练或产生了有效引用。</figcaption></figure>
+<section id="cite" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K061"><span id="k061" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>内容被引用，不等于品牌获得正向推荐</h2>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="106" data-source-end="283">
+<p>同时，团队还必须面对一个残酷的事实：<strong>内容被 AI 引用，不等于品牌获得了正向推荐。</strong></p>
+<p>AI 完全可能引用你的产品说明，用来向用户解释“为什么该产品不适合某个场景”。如果团队依然只用粗放的“品牌提及率”来邀功，很容易把一段精准的劝退或负面评价也算进政绩里。</p>
+<p>专业的 GEO 追求的是企业能力被<strong>准确呈现</strong>——优势要有据可查，限制也要坦诚说清。</p></div></section>
+<figure id="fig-a5-04" class="sc-figure" data-asset-key="A5-04" data-after-anchor="k061"><a class="sc-image-link" href="images/seo-geo/2111476793555210739/04.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2111476793555210739/04.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="原文插画：来源引用不等于适合该场景的推荐"></a><figcaption>来源被引用，也可能是为了说明产品不适用；提及、引用和正向推荐需要分别记录。</figcaption></figure>
+<section id="foundation" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K062 K063"><span id="k062" class="sc-point-anchor" aria-hidden="true"></span><span id="k063" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>SEO 基本功继续有用，旧工作方式要改</h2>
+<div class="sc-author-passage" data-source-key="A5" data-source-start="429" data-source-end="554">
+<p>其实，技术 SEO 的基本功依然有价值，Google Search Central 就曾在官方文档中明确表示，现有的 SEO 最佳实践继续适用于其 AI 搜索功能，无须做特殊的额外优化，但需要被推倒重来的，是那套旧的工作方式，黄啊码将其分为以下几种：</p></div>
+<div class="sc-author-passage" data-source-key="D1" data-source-start="0" data-source-end="104">
+<p>标题里说“90% 以上的 SEO 无法转型”，固然是一个强调性的感性判断（目前并没有可核验的行业统计），但转型的困境确实普遍且刺眼：<strong>服务名称已经迭代到了 AI 时代，生产方式和考核逻辑却还停留在原地。</strong></p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>Google 的 AI 搜索功能继续适用 SEO 基础要求，不需要特供标记或 llms.txt。原文引用的研究实验也不能当成跨平台固定排名公式。 · <a href="https://developers.google.com/search/docs/appearance/ai-features">Google：AI 搜索功能与网站</a> · <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">Google：生成式 AI 搜索优化指南</a></aside></section>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>限定场景</strong>先确定平台、产品模式和目标问题。说明自己观察的是联网搜索回答，还是其他交互，避免把不同过程混在一起。</li>
+<li><strong>补齐材料</strong>对照问题检查公开页面有没有真实答案。技术可访问和业务事实分别负责，缺参数时优先核实而不是反复润色。</li>
+<li><strong>分开事件</strong>把抓取、检索、引用、推荐与训练分别表述。观察不到的过程留作未知，不能通过结果截图倒推训练与排名。</li>
+<li><strong>进行验证</strong>用固定条件保存完整回答，核查限制是否保留。格式调整作为可验证的改动，不向所有平台承诺同一种引用效果。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份范围清楚的 GEO 目标说明与初始观察记录，能指出哪些是公开证据、哪些是样本现象、哪些还不能判断。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · AI 引用了文档，准确说明产品不适合当前需求，怎样记录？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="引用与推荐不是同一指标。完整记录用户约束，准确说明不适用条件可以是合理回答，不能只截取品牌名报喜。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>AI 引用了文档，准确说明产品不适合当前需求，怎样记录？</legend>
+<label class="sc-option">
+<input type="radio" name="q8" value="0"><span>算作该需求中的正向推荐</span></label>
+<label class="sc-option">
+<input type="radio" name="q8" value="1"><span>分别记录引用、准确性和合理排除</span></label>
+<label class="sc-option">
+<input type="radio" name="q8" value="2"><span>认定网页已经永久进入训练集</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>引用与推荐不是同一指标。完整记录用户约束，准确说明不适用条件可以是合理回答，不能只截取品牌名报喜。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-8" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-8-question"><span>目标问题与约束</span>
+<textarea id="work-8-question" name="question" rows="3" maxlength="20000" placeholder="记录本次任务和限制"></textarea></label>
+<label class="sc-field wide" for="work-8-observed"><span>实际观察</span>
+<textarea id="work-8-observed" name="observed" rows="3" maxlength="20000" placeholder="保留回答与可见引用，不推测内部过程"></textarea></label>
+<label class="sc-field wide" for="work-8-interpretation"><span>分别判断</span>
+<textarea id="work-8-interpretation" name="interpretation" rows="3" maxlength="20000" placeholder="提及、引用、准确性与需求匹配分别写"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-5.html"><small>上一讲</small>工具测评怎么写：实测数据、对比表、FAQ 和下载清单</a><a class="next" href="geo-evidence.html"><small>下一讲</small>通稿发五十遍不算证据：产品文档、案例、测评怎么补？</a></nav></main>
 <script src="i18n.js?v=20260903a"></script>
 <script src="lesson.js"></script>
 <script src="taste.js?v=20260810a"></script>
-<script src="nav-inject.js?v=20260903a"></script>
-<script>
-/* ── 引用竞标 ──
-   背景：自包含段落的规律要让读者站在 AI 的位置亲自挑一次。
-   设计意图：点一段揭晓这一段的命运（picked/dropped）和理由，
-   判词滑入只播一次；三段全看完亮收口卡。 */
-(function () {
-  var root = document.getElementById('b3Bid');
-  var badge = document.getElementById('b3Badge');
-  var note = document.getElementById('b3Note');
-  var seen = 0;
-  root.addEventListener('click', function (e) {
-    var cand = e.target.closest('.b3-cand');
-    if (!cand || cand.classList.contains('judged')) return;
-    cand.classList.add('judged', cand.dataset.fate);
-    cand.querySelector('.b3-why').classList.add('seo-slide-up');
-    seen++;
-    badge.textContent = '看过 ' + seen + ' / 3';
-    if (seen === 3) {
-      badge.textContent = '✓ 3 / 3';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-
-/* ── 一句话答案两步改写 ──
-   背景：「答案前置」要演出来：先砍铺垫（内容归零），再放答案（可引用度起飞）。
-   设计意图：两步必须按顺序点，文本替换配 seo-pop，仪表条一次到位。 */
-(function () {
-  var text = document.getElementById('a3Text');
-  var fill = document.getElementById('a3Fill');
-  var val = document.getElementById('a3Val');
-  var whyBox = document.getElementById('a3WhyBox');
-  var why = document.getElementById('a3Why');
-  var s1 = document.getElementById('a3Step1');
-  var s2 = document.getElementById('a3Step2');
-  s1.addEventListener('click', function () {
-    s1.disabled = true;
-    text.textContent = '本文介绍 API 限流。';
-    text.classList.add('seo-pop');
-    fill.style.width = '30%';
-    val.textContent = '还是低';
-    whyBox.style.display = '';
-    why.textContent = '「在当今时代」「值得深入探讨」「带你一步步了解」全删了，一个信息点都没损失，因为它们本来就没有信息。但砍完只剩一句预告，答案还是不在场。';
-    s2.disabled = false;
-  });
-  s2.addEventListener('click', function () {
-    s2.disabled = true;
-    text.classList.remove('seo-pop');
-    void text.offsetWidth;
-    text.textContent = 'API 限流是给接口设置单位时间的调用上限（如每分钟 60 次），超出的请求被拒绝或排队，防止突发流量把服务打垮。常见算法有令牌桶和滑动窗口，个人项目从网关层的固定配额做起就够用。';
-    text.classList.add('seo-pop');
-    fill.style.width = '92%';
-    fill.classList.add('good');
-    val.textContent = '能被摘走';
-    why.textContent = '现在这段是什么、为什么、怎么做都在场，单独摘出来是一个完整回答。正文接着展开算法细节完全不冲突：答案前置，细节后置，两类读者各取所需。';
-  });
-})();
-
-/* ── FAQPage 生成器 ──
-   背景：结构化数据听着吓人，亲手生成一段就祛魅了。
-   设计意图：输入实时渲染 JSON-LD，复制按钮用 execCommand 兜底。 */
-(function () {
-  var q = document.getElementById('f3Q');
-  var a = document.getElementById('f3A');
-  var out = document.getElementById('f3Out');
-  var copied = document.getElementById('f3Copied');
-  function render() {
-    var data = {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      'mainEntity': [{
-        '@type': 'Question',
-        'name': q.value.trim() || '（问题）',
-        'acceptedAnswer': { '@type': 'Answer', 'text': a.value.trim() || '（答案）' }
-      }]
-    };
-    out.textContent = '<script type="application/ld+json">\n'
-      + JSON.stringify(data, null, 2)
-      + '\n<\/script>';
-  }
-  q.addEventListener('input', render);
-  a.addEventListener('input', render);
-  render();
-  document.getElementById('f3Copy').addEventListener('click', function () {
-    var txt = out.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt);
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = txt;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
-    copied.classList.add('show');
-  });
-})();
-
-/* 被转述的取舍：拦爬虫是因噎废食，分层设计才是解法 */
-tasteQuiz('q3Quiz', {
-  answer: 1,
-  why: [
-    '全拦是因噎废食：你同时失去了被引用、被推荐、被当作出处的全部机会，竞品会很感谢你让出的位置。真在意付费内容被白拿，用第 4 节讲的软墙分层，别一刀切。',
-    '这就是内容分层的思路：通用知识（教程、概念解释）被转述不亏，AI 替你把名字念给了本来到不了的用户；真正要用户进站的是产品本身和别人抄不走的第一手经验。把前者敞开供给 AI，把后者做成进站的理由。',
-    '流量的价值看你的商业模式，对靠产品转化的站，一个带着明确问题进站的访客很值钱。「无所谓」不是策略，是没想。',
-    '各家 AI 厂商的抓取都提供了 robots 级的退出机制，走「投诉侵权」这条路成本高胜算低。技术问题用技术手段解决：想退出就声明退出，想被引用就把内容做成好引用的样子。'
-  ]
-});
-
-/* ── 爬虫点名册 ── */
-(function () {
-  var root = document.getElementById('c3Bots');
-  var badge = document.getElementById('c3Badge');
-  var note = document.getElementById('c3Note');
-  var opened = 0;
-  root.addEventListener('click', function (e) {
-    var card = e.target.closest('.c3-card');
-    if (!card || card.classList.contains('open')) return;
-    card.classList.add('open');
-    card.querySelector('.c3-info').classList.add('seo-slide-up');
-    opened++;
-    badge.textContent = '认识 ' + opened + ' / 6';
-    if (opened === 6) {
-      badge.textContent = '✓ 6 / 6';
-      badge.classList.add('solved');
-      note.classList.add('show', 'seo-pop');
-    }
-  });
-})();
-</script>
-<script src="skill-data.js?v=20260903a"></script>
-<script src="skill-copy.js?v=20260817a"></script>
-<!--seo:begin--><script src="watermark.js?v=20260806c"></script><script src="paywall.js?v=20260903a"></script><!--seo:end-->
-</body>
-</html>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

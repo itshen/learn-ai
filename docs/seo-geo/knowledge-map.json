@@ -1,0 +1,2275 @@
+{
+  "updated_on": "2026-10-18",
+  "base_revision": "5a933d287dd5074cc1543cb849146f3261d47521",
+  "scope": "5 篇黄啊码 X 原文及当前会话文章稿；按原文段落分篇；仅简体中文",
+  "counts": {
+    "lessons": 14,
+    "knowledge_points": 96,
+    "active_images": 32,
+    "regenerated_images": 6,
+    "lesson_figure_placements": 40,
+    "unique_images_in_lessons": 22,
+    "foundation_lessons": 4,
+    "total_lessons": 18,
+    "foundation_topics": 26,
+    "new_foundation_images": 4,
+    "total_figure_placements": 48
+  },
+  "sources": {
+    "A1": {
+      "id": "2108374618365108603",
+      "title": "你开发的站点，连搜索引擎都不认，这不白干活了吗？一篇文章直接教会你",
+      "url": "https://x.com/ama_huangama/article/2108374618365108603"
+    },
+    "A2": {
+      "id": "2108587885016363340",
+      "title": "为什么你的站点更新了上百篇内容，还是换不来一个真实客户？",
+      "url": "https://x.com/ama_huangama/article/2108587885016363340"
+    },
+    "A3": {
+      "id": "2108759625306624027",
+      "title": "做了那么多年 SEO，为什么就是做不好 GEO？这篇干货内容全都告诉你",
+      "url": "https://x.com/ama_huangama/article/2108759625306624027"
+    },
+    "A4": {
+      "id": "2110342528948113829",
+      "title": "日均几百IP也能月入过万？揭秘小而美高价值站点的底层逻辑",
+      "url": "https://x.com/ama_huangama/article/2110342528948113829"
+    },
+    "A5": {
+      "id": "2111476793555210739",
+      "title": "90% 喊着做 GEO 的团队，还在拿旧 SEO 忽悠甲方",
+      "url": "https://x.com/ama_huangama/article/2111476793555210739"
+    },
+    "D1": {
+      "id": "user-conversation-draft",
+      "title": "为什么 90% 以上的 SEO 无法转型成 GEO？（用户会话稿）",
+      "url": null
+    }
+  },
+  "lessons": [
+    {
+      "order": 1,
+      "file": "slides/seo-1.html",
+      "title": "几十节课程放一页，怎么让搜索引擎读到？",
+      "description": "从群聊里的课程站说起，检查独立网址和源码正文；再按品牌搜索、页面检查、经验发布、后台记录四步起步。",
+      "knowledge_points": [
+        "K001",
+        "K002",
+        "K003",
+        "K004",
+        "K005",
+        "K006",
+        "K007",
+        "K008"
+      ],
+      "figures": [
+        "A1-01",
+        "A2-02",
+        "A1-04"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k001",
+          "asset_key": "A1-01",
+          "caption": "先让品牌、产品与业务信息在互联网上可识别，再讨论新增访问。"
+        },
+        {
+          "after_anchor": "k007",
+          "asset_key": "A2-02",
+          "caption": "文章数量增加，不代表客户的问题得到了解答；先检查缺失的事实和业务承接。"
+        },
+        {
+          "after_anchor": "k008",
+          "asset_key": "A1-04",
+          "caption": "品牌搜索可用于记录基线。图为原文历史截图，不代表当前搜索结果或精确收录数量。"
+        }
+      ],
+      "main_prose_chinese_characters": 1656,
+      "source_keys": [
+        "A1",
+        "A2",
+        "A5",
+        "D1"
+      ]
+    },
+    {
+      "order": 2,
+      "file": "slides/seo-intent.html",
+      "title": "SaaS、物流、题库：小站选什么题才能接到生意？",
+      "description": "用 SaaS 选型、跨境物流和朋友的题库经历，区分泛流量与付费需求，再把用户问题接到产品或服务。",
+      "knowledge_points": [
+        "K009",
+        "K010",
+        "K011",
+        "K012",
+        "K013",
+        "K014",
+        "K015",
+        "K016"
+      ],
+      "figures": [
+        "A4-01",
+        "A3-05",
+        "A5-02"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k009",
+          "asset_key": "A4-01",
+          "caption": "把访问量、有效需求与交付成本一起看，才能判断细分站点的商业价值。"
+        },
+        {
+          "after_anchor": "k013",
+          "asset_key": "A3-05",
+          "caption": "把用户场景、工具能力和验证条件说清楚，读者才有依据选型。"
+        },
+        {
+          "after_anchor": "k014",
+          "asset_key": "A5-02",
+          "caption": "把功能词改成客户会问的具体问题，例如断网后能否继续收银、存在哪些限制。"
+        }
+      ],
+      "main_prose_chinese_characters": 808,
+      "source_keys": [
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    },
+    {
+      "order": 3,
+      "file": "slides/seo-2.html",
+      "title": "企业培训站：首页、服务、价格、案例、教程怎么写？",
+      "description": "直接拆企业培训站的五类页面，再写各自的 title、description 和正文标题，避免全站都叫“公司官网”。",
+      "knowledge_points": [
+        "K017",
+        "K018",
+        "K019",
+        "K020",
+        "K021",
+        "K022",
+        "K023"
+      ],
+      "figures": [
+        "A2-03",
+        "A3-04"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k018",
+          "asset_key": "A2-03",
+          "caption": "首页解释是谁，价格页说明费用，教程页解决具体操作；每页有自己的核心任务。"
+        },
+        {
+          "after_anchor": "k021",
+          "asset_key": "A3-04",
+          "caption": "用清楚的标题层级组织结论、对比和问答，让读者能快速找到对应答案。"
+        }
+      ],
+      "main_prose_chinese_characters": 609,
+      "source_keys": [
+        "A2"
+      ]
+    },
+    {
+      "order": 4,
+      "file": "slides/seo-rendering.html",
+      "title": "Vue/React 搜不到：robots、noindex、SSR 怎么查？",
+      "description": "沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。",
+      "knowledge_points": [
+        "K024",
+        "K025",
+        "K026",
+        "K027",
+        "K028",
+        "K029",
+        "K030",
+        "K031",
+        "K032",
+        "K033"
+      ],
+      "figures": [
+        "A2-04",
+        "A2-05",
+        "A2-06"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k027",
+          "asset_key": "A2-04",
+          "caption": "允许抓取与允许索引是两件事；公开页面的 noindex 必须能被爬虫读取。"
+        },
+        {
+          "after_anchor": "k031",
+          "asset_key": "A2-05",
+          "caption": "SSR 或预渲染让初始 HTML 带有正文，仍需核查实际响应、脚本与访问条件。"
+        },
+        {
+          "after_anchor": "k032",
+          "asset_key": "A2-06",
+          "caption": "核心页面通过可解析的普通链接连接，让用户和爬虫都能继续访问。"
+        }
+      ],
+      "main_prose_chinese_characters": 553,
+      "source_keys": [
+        "A2"
+      ]
+    },
+    {
+      "order": 5,
+      "file": "slides/seo-structure.html",
+      "title": "首页到文章怎么连：内链、301、canonical 怎么配？",
+      "description": "把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。",
+      "knowledge_points": [
+        "K034",
+        "K035",
+        "K036",
+        "K037",
+        "K038",
+        "K039",
+        "K040",
+        "K041"
+      ],
+      "figures": [
+        "A2-03",
+        "A2-06"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k034",
+          "asset_key": "A2-03",
+          "caption": "先分清页面职责，再安排首页、分类与详情之间的访问路径。"
+        },
+        {
+          "after_anchor": "k038",
+          "asset_key": "A2-06",
+          "caption": "把支柱内容、场景文章和相关服务连成可使用的主题路径，链接文字说明目标。"
+        }
+      ],
+      "main_prose_chinese_characters": 321,
+      "source_keys": [
+        "A2",
+        "A4"
+      ]
+    },
+    {
+      "order": 6,
+      "file": "slides/seo-performance.html",
+      "title": "打开慢、点不动、页面乱跳：三个性能指标怎么查？",
+      "description": "对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。",
+      "knowledge_points": [
+        "K042",
+        "K043",
+        "K044",
+        "K045",
+        "K046",
+        "K047"
+      ],
+      "figures": [
+        "A3-05",
+        "A2-05"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k043",
+          "asset_key": "A3-05",
+          "caption": "性能判断来自测量和条件记录；图中的 120ms 只是示意，不能当作 LCP 达标证据。"
+        },
+        {
+          "after_anchor": "k047",
+          "asset_key": "A2-05",
+          "caption": "服务端输出正文有助于内容被直接读取，加载和交互表现仍要分别测量。"
+        }
+      ],
+      "main_prose_chinese_characters": 414,
+      "source_keys": [
+        "A2",
+        "A4"
+      ]
+    },
+    {
+      "order": 7,
+      "file": "slides/seo-5.html",
+      "title": "工具测评怎么写：实测数据、对比表、FAQ 和下载清单",
+      "description": "沿原文的“觅食”比喻，把结论、截图、测试条件、alt、模板与小工具放进文章；120ms 等数字保留示例身份。",
+      "knowledge_points": [
+        "K048",
+        "K049",
+        "K050",
+        "K051",
+        "K052",
+        "K053",
+        "K054",
+        "K055",
+        "K056",
+        "K057"
+      ],
+      "figures": [
+        "A3-04",
+        "A4-04",
+        "A4-05"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k050",
+          "asset_key": "A3-04",
+          "caption": "先给结论，再用对比与 FAQ 补齐条件；结构清楚有助于理解，不保证被 AI 采用。"
+        },
+        {
+          "after_anchor": "k052",
+          "asset_key": "A4-04",
+          "caption": "实测数字要能回到方法、条件和原始材料，并与官网、独立测评及反馈交叉核对。"
+        },
+        {
+          "after_anchor": "k055",
+          "asset_key": "A4-05",
+          "caption": "模板、数据和小工具可以成为可重复使用的内容资产，需要持续维护。"
+        }
+      ],
+      "main_prose_chinese_characters": 880,
+      "source_keys": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    },
+    {
+      "order": 8,
+      "file": "slides/seo-3.html",
+      "title": "AI 怎么找到并引用你：抓取、训练、引用、推荐有何区别？",
+      "description": "从 AI 整理工具优缺点的场景，拆开检索、训练与推荐；解释批量发稿和一张推荐截图各自不能证明什么。",
+      "knowledge_points": [
+        "K058",
+        "K059",
+        "K060",
+        "K061",
+        "K062",
+        "K063"
+      ],
+      "figures": [
+        "A3-02",
+        "A5-03",
+        "A5-04"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k058",
+          "asset_key": "A3-02",
+          "caption": "从争取链接位置，到让业务信息在答案中被发现并准确呈现，观察对象发生了变化。"
+        },
+        {
+          "after_anchor": "k060",
+          "asset_key": "A5-03",
+          "caption": "换上 GEO 招牌继续批量发稿，并不能证明内容进入了模型训练或产生了有效引用。"
+        },
+        {
+          "after_anchor": "k061",
+          "asset_key": "A5-04",
+          "caption": "来源被引用，也可能是为了说明产品不适用；提及、引用和正向推荐需要分别记录。"
+        }
+      ],
+      "main_prose_chinese_characters": 1045,
+      "source_keys": [
+        "A3",
+        "A5",
+        "D1"
+      ]
+    },
+    {
+      "order": 9,
+      "file": "slides/geo-evidence.html",
+      "title": "通稿发五十遍不算证据：产品文档、案例、测评怎么补？",
+      "description": "按原文三类材料补证据，再用断网收银问题核对版本、离线能力、支付方式、同步条件与不适用场景。",
+      "knowledge_points": [
+        "K064",
+        "K065",
+        "K066",
+        "K067",
+        "K068",
+        "K069",
+        "K070",
+        "K071"
+      ],
+      "figures": [
+        "A3-03",
+        "A5-02",
+        "A4-04",
+        "A5-04"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k064",
+          "asset_key": "A3-03",
+          "caption": "内部知识经过核验，再形成可公开访问的官网资料、专业文章与外部证据。"
+        },
+        {
+          "after_anchor": "k065",
+          "asset_key": "A5-02",
+          "caption": "产品文档要回答版本、能力、使用条件和异常处理，而不只写宣传结论。"
+        },
+        {
+          "after_anchor": "k067",
+          "asset_key": "A4-04",
+          "caption": "独立测评与公开材料应能交叉核对；相同通稿的多个副本不能替代独立证据。"
+        },
+        {
+          "after_anchor": "k069",
+          "asset_key": "A5-04",
+          "caption": "主动交代不适用条件，帮助读者作出准确判断，也减少错误推荐。"
+        }
+      ],
+      "main_prose_chinese_characters": 862,
+      "source_keys": [
+        "A3",
+        "A5",
+        "D1"
+      ]
+    },
+    {
+      "order": 10,
+      "file": "slides/seo-distribution.html",
+      "title": "新站先发哪里：公众号、知乎、CSDN、小红书与官网",
+      "description": "保留作者的老号经历和渠道判断，讲一篇干货如何改编分发，平台负责触达、官网承接资料和业务，订阅怎样沉淀。",
+      "knowledge_points": [
+        "K072",
+        "K073",
+        "K074",
+        "K075",
+        "K076",
+        "K077",
+        "K078"
+      ],
+      "figures": [
+        "A1-02",
+        "A1-03",
+        "A5-07"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k072",
+          "asset_key": "A1-02",
+          "caption": "保持品牌身份、专业方向与公开资料一致。图为原文个人主页截图，历史数字不作为当前效果。"
+        },
+        {
+          "after_anchor": "k075",
+          "asset_key": "A1-03",
+          "caption": "同一份真实经验可按渠道改编，核心事实与版本保持一致。图为原文发布界面截图。"
+        },
+        {
+          "after_anchor": "k077",
+          "asset_key": "A5-07",
+          "caption": "平台承担触达与互动，官网保留文档、工具和业务承接；优先级由实际资源与需求决定。"
+        }
+      ],
+      "main_prose_chinese_characters": 1138,
+      "source_keys": [
+        "A1",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    },
+    {
+      "order": 11,
+      "file": "slides/geo-evaluation.html",
+      "title": "怎么测 AI 推荐效果：客户问题、重复测试、有效询盘",
+      "description": "从销售客服收集问题，记录平台、日期、联网和上下文；核对提及、引用、事实与适配，再结合后台和询盘。",
+      "knowledge_points": [
+        "K079",
+        "K080",
+        "K081",
+        "K082",
+        "K083",
+        "K084",
+        "K085",
+        "K086",
+        "K087",
+        "K088"
+      ],
+      "figures": [
+        "A2-07",
+        "A5-04",
+        "A5-06"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k082",
+          "asset_key": "A2-07",
+          "caption": "保留基线并重复测试，分别观察不同环节，不把一次截图当成稳定效果。"
+        },
+        {
+          "after_anchor": "k086",
+          "asset_key": "A5-04",
+          "caption": "判断推荐是否符合采购条件；准确说明不适用，与事实错误需要分别处理。"
+        },
+        {
+          "after_anchor": "k088",
+          "asset_key": "A5-06",
+          "caption": "把答案测试和业务反馈回接到知识材料，持续修正公开信息与评估记录。"
+        }
+      ],
+      "main_prose_chinese_characters": 781,
+      "source_keys": [
+        "A2",
+        "A5",
+        "D1"
+      ]
+    },
+    {
+      "order": 12,
+      "file": "slides/seo-business.html",
+      "title": "小站怎么收钱：产品、佣金、赞助、线索和会员",
+      "description": "把作者列出的收入方式逐项展开，说明 SaaS 持续分成、垂类赞助、有效线索、数字产品和会员各自如何承接。",
+      "knowledge_points": [
+        "K089",
+        "K090",
+        "K091",
+        "K092",
+        "K093",
+        "K094",
+        "K095",
+        "K096"
+      ],
+      "figures": [
+        "A3-05",
+        "A4-05"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "k089",
+          "asset_key": "A3-05",
+          "caption": "围绕实际工具、自己的产品与服务选择收入路径，并核对合作与结算条件。"
+        },
+        {
+          "after_anchor": "k094",
+          "asset_key": "A4-05",
+          "caption": "工具、佣金、赞助、数字产品和会员可以组合，但每条收入路径都要核算维护与交付成本。"
+        }
+      ],
+      "main_prose_chinese_characters": 514,
+      "source_keys": [
+        "A4"
+      ]
+    },
+    {
+      "order": 13,
+      "file": "slides/seo-4.html",
+      "title": "课程站读不到、收银文案答非所问，分别怎么改？",
+      "description": "复盘作者遇到的课程站和假设的收银选型：先让正文可读，再补业务边界，最后把计件发稿改为事实、证据和记录交付。",
+      "knowledge_points": [],
+      "figures": [
+        "A2-05",
+        "A5-02",
+        "A5-03"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "case-course",
+          "asset_key": "A2-05",
+          "caption": "课程页先把正文输出完整，才能讨论搜索与引用；图为方法示意，不是项目改造结果。"
+        },
+        {
+          "after_anchor": "case-question",
+          "asset_key": "A5-02",
+          "caption": "采购问断网能否收银，就回答交易、支付和同步限制。此例为原文的假设选型情境。"
+        },
+        {
+          "after_anchor": "case-business",
+          "asset_key": "A5-03",
+          "caption": "按文章、链接和截图计件的交付机制，会把团队重新推回到批量发稿。"
+        }
+      ],
+      "main_prose_chinese_characters": 1140,
+      "source_keys": [
+        "A1",
+        "A5",
+        "D1"
+      ]
+    },
+    {
+      "order": 14,
+      "file": "slides/seo-final.html",
+      "title": "上线检查清单：正文、链接、索引、证据、询盘逐项过",
+      "description": "把原文四件起步动作与技术、内容、评估三项职责合起来；文末 26 项清单支持勾选保存和导出复查记录。",
+      "knowledge_points": [],
+      "figures": [
+        "A2-07",
+        "A5-06",
+        "A5-03",
+        "A3-03"
+      ],
+      "figure_layout": [
+        {
+          "after_anchor": "final-scope",
+          "asset_key": "A2-07",
+          "caption": "从品牌搜索、页面检查、真实经验和定期数据记录开始，逐项定位卡点。"
+        },
+        {
+          "after_anchor": "final-technical",
+          "asset_key": "A5-06",
+          "caption": "以业务事实为源头，让技术、专业内容与效果评估共同参与验收。"
+        },
+        {
+          "after_anchor": "final-evidence",
+          "asset_key": "A5-03",
+          "caption": "把精力花在真实解答与长期维护上，别靠换招牌和短期铺量交差。"
+        },
+        {
+          "after_anchor": "final-evaluation",
+          "asset_key": "A3-03",
+          "caption": "企业知识、独立证据与可重复记录，才是能够继续核对的交付物。"
+        }
+      ],
+      "main_prose_chinese_characters": 1061,
+      "source_keys": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "D1"
+      ]
+    }
+  ],
+  "knowledge_points": [
+    {
+      "id": "K001",
+      "title": "上线不等于被搜索或 AI 发现",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603"
+      ],
+      "source_keys": [
+        "A1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k001",
+      "section_anchor": "site-shell",
+      "text_characters": 244
+    },
+    {
+      "id": "K002",
+      "title": "搜索、AI 答案与平台内容是不同的发现入口",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A1",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k002",
+      "section_anchor": "old-craft",
+      "text_characters": 228
+    },
+    {
+      "id": "K003",
+      "title": "说清品牌是谁、服务谁、解决什么问题",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603"
+      ],
+      "source_keys": [
+        "A1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k003",
+      "section_anchor": "site-shell",
+      "text_characters": 244
+    },
+    {
+      "id": "K004",
+      "title": "技术 SEO、专业解答、评估机制的职责",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A1",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k004",
+      "section_anchor": "old-craft",
+      "text_characters": 228
+    },
+    {
+      "id": "K005",
+      "title": "沿抓取、索引、展现、点击、咨询分层诊断",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A1",
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k005",
+      "section_anchor": "today",
+      "text_characters": 545
+    },
+    {
+      "id": "K006",
+      "title": "有效客户和商业结果优先于泛流量规模",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108587885016363340",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A2",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k006",
+      "section_anchor": "not-volume",
+      "text_characters": 446
+    },
+    {
+      "id": "K007",
+      "title": "发稿数量不能替代内容质量和业务事实",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108587885016363340",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A2",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k007",
+      "section_anchor": "not-volume",
+      "text_characters": 446
+    },
+    {
+      "id": "K008",
+      "title": "搜索品牌及产品名，记录当前可发现性基线",
+      "lesson_order": 1,
+      "lesson_file": "slides/seo-1.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A1",
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k008",
+      "section_anchor": "today",
+      "text_characters": 545
+    },
+    {
+      "id": "K009",
+      "title": "按细分需求选择站点方向",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k009",
+      "section_anchor": "choose",
+      "text_characters": 290
+    },
+    {
+      "id": "K010",
+      "title": "理解 B 端和重决策场景的购买约束",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k010",
+      "section_anchor": "choose",
+      "text_characters": 290
+    },
+    {
+      "id": "K011",
+      "title": "专业小众消费也可形成决策型内容",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k011",
+      "section_anchor": "choose",
+      "text_characters": 290
+    },
+    {
+      "id": "K012",
+      "title": "以省时间、省钱或增收检验问题价值",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2108759625306624027",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A3",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k012",
+      "section_anchor": "pain",
+      "text_characters": 193
+    },
+    {
+      "id": "K013",
+      "title": "定位具体用户、场景、预算与使用限制",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2108759625306624027",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A3",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k013",
+      "section_anchor": "pain",
+      "text_characters": 193
+    },
+    {
+      "id": "K014",
+      "title": "把产品功能翻译为客户实际提问",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A2",
+        "A4",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k014",
+      "section_anchor": "intent",
+      "text_characters": 240
+    },
+    {
+      "id": "K015",
+      "title": "优先回答对比、替代和具体场景的长尾需求",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A2",
+        "A4",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k015",
+      "section_anchor": "intent",
+      "text_characters": 240
+    },
+    {
+      "id": "K016",
+      "title": "把问题和可提供的产品或服务对应起来",
+      "lesson_order": 2,
+      "lesson_file": "slides/seo-intent.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A2",
+        "A4",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k016",
+      "section_anchor": "intent",
+      "text_characters": 240
+    },
+    {
+      "id": "K017",
+      "title": "每页围绕一个核心意图，可覆盖相关问题",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k017",
+      "section_anchor": "page-jobs",
+      "text_characters": 186
+    },
+    {
+      "id": "K018",
+      "title": "首页、服务、价格、案例和教程的职责分工",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k018",
+      "section_anchor": "page-jobs",
+      "text_characters": 186
+    },
+    {
+      "id": "K019",
+      "title": "title 独立、准确、自然地表达页面主题",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k019",
+      "section_anchor": "signs",
+      "text_characters": 235
+    },
+    {
+      "id": "K020",
+      "title": "description 说明页面价值，搜索摘要可能被改写",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k020",
+      "section_anchor": "signs",
+      "text_characters": 235
+    },
+    {
+      "id": "K021",
+      "title": "H1 与 H2/H3 组织正文层级",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k021",
+      "section_anchor": "signs",
+      "text_characters": 235
+    },
+    {
+      "id": "K022",
+      "title": "关键词自然表达，避免机械堆砌",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k022",
+      "section_anchor": "words",
+      "text_characters": 137
+    },
+    {
+      "id": "K023",
+      "title": "不要把 meta keywords 当作 Google 优化重点",
+      "lesson_order": 3,
+      "lesson_file": "slides/seo-2.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k023",
+      "section_anchor": "words",
+      "text_characters": 137
+    },
+    {
+      "id": "K024",
+      "title": "抓取是访问并获取页面的过程",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k024",
+      "section_anchor": "crawl-index",
+      "text_characters": 45
+    },
+    {
+      "id": "K025",
+      "title": "索引与抓取是不同环节，均不保证排名",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k025",
+      "section_anchor": "crawl-index",
+      "text_characters": 45
+    },
+    {
+      "id": "K026",
+      "title": "robots.txt 控制抓取，不能保证网址不被索引",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k026",
+      "section_anchor": "door",
+      "text_characters": 81
+    },
+    {
+      "id": "K027",
+      "title": "noindex 需要可被爬虫读取；内部资料应有访问控制",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k027",
+      "section_anchor": "door",
+      "text_characters": 81
+    },
+    {
+      "id": "K028",
+      "title": "sitemap 帮助发现 URL，不保送抓取与索引",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k028",
+      "section_anchor": "menu",
+      "text_characters": 109
+    },
+    {
+      "id": "K029",
+      "title": "成功页、失效页与迁移页返回合适的 HTTP 状态",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k029",
+      "section_anchor": "menu",
+      "text_characters": 109
+    },
+    {
+      "id": "K030",
+      "title": "JavaScript 可以被 Google 执行，但资源与渲染可能失败",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k030",
+      "section_anchor": "blank",
+      "text_characters": 162
+    },
+    {
+      "id": "K031",
+      "title": "SSR、预渲染及源码正文可见的适用价值",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k031",
+      "section_anchor": "blank",
+      "text_characters": 162
+    },
+    {
+      "id": "K032",
+      "title": "使用可解析的 a href，避免用 hash 承载不同正文路由",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k032",
+      "section_anchor": "links",
+      "text_characters": 55
+    },
+    {
+      "id": "K033",
+      "title": "用站长平台与 URL 检查诊断，site: 仅作粗查",
+      "lesson_order": 4,
+      "lesson_file": "slides/seo-rendering.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k033",
+      "section_anchor": "verify",
+      "text_characters": 73
+    },
+    {
+      "id": "K034",
+      "title": "首页到分类再到详情的可达路径",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k034",
+      "section_anchor": "roads",
+      "text_characters": 118
+    },
+    {
+      "id": "K035",
+      "title": "链接文字应说明目标内容",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k035",
+      "section_anchor": "roads",
+      "text_characters": 118
+    },
+    {
+      "id": "K036",
+      "title": "文章与相关服务、工具、进阶教程互相衔接",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k036",
+      "section_anchor": "roads",
+      "text_characters": 118
+    },
+    {
+      "id": "K037",
+      "title": "支柱页组织一个主题的完整决策信息",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k037",
+      "section_anchor": "cluster",
+      "text_characters": 120
+    },
+    {
+      "id": "K038",
+      "title": "长尾内容相互连接，形成主题集群",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k038",
+      "section_anchor": "cluster",
+      "text_characters": 120
+    },
+    {
+      "id": "K039",
+      "title": "网址迁移使用适当的永久重定向",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k039",
+      "section_anchor": "address",
+      "text_characters": 59
+    },
+    {
+      "id": "K040",
+      "title": "用 canonical 等信号处理参数和重复地址",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k040",
+      "section_anchor": "address",
+      "text_characters": 59
+    },
+    {
+      "id": "K041",
+      "title": "规范地址与内链、地图、重定向保持一致",
+      "lesson_order": 5,
+      "lesson_file": "slides/seo-structure.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k041",
+      "section_anchor": "address",
+      "text_characters": 59
+    },
+    {
+      "id": "K042",
+      "title": "移动端阅读与交互优先，靠测量定位问题",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k042",
+      "section_anchor": "experience",
+      "text_characters": 129
+    },
+    {
+      "id": "K043",
+      "title": "LCP 观察主要内容的加载表现",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k043",
+      "section_anchor": "experience",
+      "text_characters": 129
+    },
+    {
+      "id": "K044",
+      "title": "INP 观察交互响应表现",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k044",
+      "section_anchor": "experience",
+      "text_characters": 129
+    },
+    {
+      "id": "K045",
+      "title": "CLS 观察页面视觉稳定性",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k045",
+      "section_anchor": "experience",
+      "text_characters": 129
+    },
+    {
+      "id": "K046",
+      "title": "压缩大图，按实际需求选择尺寸与格式",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k046",
+      "section_anchor": "images",
+      "text_characters": 42
+    },
+    {
+      "id": "K047",
+      "title": "控制脚本、插件和主题负担，合理使用缓存/CDN",
+      "lesson_order": 6,
+      "lesson_file": "slides/seo-performance.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k047",
+      "section_anchor": "stack",
+      "text_characters": 231
+    },
+    {
+      "id": "K048",
+      "title": "开头先回答主要问题，减少无关铺垫",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2108759625306624027"
+      ],
+      "source_keys": [
+        "A2",
+        "A3"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k048",
+      "section_anchor": "answer",
+      "text_characters": 249
+    },
+    {
+      "id": "K049",
+      "title": "段落独立交代结论与条件，标题结构清楚",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2108759625306624027"
+      ],
+      "source_keys": [
+        "A2",
+        "A3"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k049",
+      "section_anchor": "answer",
+      "text_characters": 249
+    },
+    {
+      "id": "K050",
+      "title": "FAQ 和对比表用于清楚表达，不保证被 AI 采用",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2108759625306624027"
+      ],
+      "source_keys": [
+        "A2",
+        "A3"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k050",
+      "section_anchor": "answer",
+      "text_characters": 249
+    },
+    {
+      "id": "K051",
+      "title": "以真实使用过程、实测和第一手经验提供增量",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2108759625306624027",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A3",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k051",
+      "section_anchor": "experience",
+      "text_characters": 263
+    },
+    {
+      "id": "K052",
+      "title": "参数与效果数字交代条件、出处和统计口径",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2108759625306624027",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A2",
+        "A3",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k052",
+      "section_anchor": "experience",
+      "text_characters": 263
+    },
+    {
+      "id": "K053",
+      "title": "配图用于解释问题，alt 描述实际图意",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108587885016363340"
+      ],
+      "source_keys": [
+        "A2"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k053",
+      "section_anchor": "useful-images",
+      "text_characters": 51
+    },
+    {
+      "id": "K054",
+      "title": "计算器、筛选器等工具增加内容使用价值",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k054",
+      "section_anchor": "asset",
+      "text_characters": 75
+    },
+    {
+      "id": "K055",
+      "title": "模板、SOP 与数据手册形成可复用资产",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k055",
+      "section_anchor": "asset",
+      "text_characters": 75
+    },
+    {
+      "id": "K056",
+      "title": "内容围绕自己的专业与业务，减少无关追热点",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A1",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k056",
+      "section_anchor": "expertise",
+      "text_characters": 197
+    },
+    {
+      "id": "K057",
+      "title": "持续更新真实材料，AI 可协助改编但事实需核验",
+      "lesson_order": 7,
+      "lesson_file": "slides/seo-5.html",
+      "source_articles": [
+        "2108374618365108603",
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A1",
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k057",
+      "section_anchor": "expertise",
+      "text_characters": 197
+    },
+    {
+      "id": "K058",
+      "title": "GEO 关注企业信息在 AI 答案中的可发现与准确呈现",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "2108759625306624027"
+      ],
+      "source_keys": [
+        "A3"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k058",
+      "section_anchor": "what-geo",
+      "text_characters": 248
+    },
+    {
+      "id": "K059",
+      "title": "联网检索、读取、筛选和生成是不同的处理环节",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "2108759625306624027"
+      ],
+      "source_keys": [
+        "A3"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k059",
+      "section_anchor": "what-geo",
+      "text_characters": 248
+    },
+    {
+      "id": "K060",
+      "title": "网页被检索或抓取不能证明进入模型训练集",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k060",
+      "section_anchor": "rebrand",
+      "text_characters": 356
+    },
+    {
+      "id": "K061",
+      "title": "品牌提及、来源引用、正向推荐要分别记录",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k061",
+      "section_anchor": "cite",
+      "text_characters": 137
+    },
+    {
+      "id": "K062",
+      "title": "SEO 的技术和优质内容基础继续有价值",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k062",
+      "section_anchor": "foundation",
+      "text_characters": 159
+    },
+    {
+      "id": "K063",
+      "title": "格式与所谓平台偏好应做实验，不当通用排名公式",
+      "lesson_order": 8,
+      "lesson_file": "slides/seo-3.html",
+      "source_articles": [
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k063",
+      "section_anchor": "foundation",
+      "text_characters": 159
+    },
+    {
+      "id": "K064",
+      "title": "企业知识库作为事实源，适合公开的部分经核验后发布",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k064",
+      "section_anchor": "source",
+      "text_characters": 82
+    },
+    {
+      "id": "K065",
+      "title": "产品文档说明参数、功能和能力边界",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k065",
+      "section_anchor": "proof",
+      "text_characters": 176
+    },
+    {
+      "id": "K066",
+      "title": "案例说明部署环境、条件与实际过程",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k066",
+      "section_anchor": "proof",
+      "text_characters": 176
+    },
+    {
+      "id": "K067",
+      "title": "第三方测评公开方法、过程和限制",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k067",
+      "section_anchor": "proof",
+      "text_characters": 176
+    },
+    {
+      "id": "K068",
+      "title": "重复转载不等于多份独立证据",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k068",
+      "section_anchor": "copies",
+      "text_characters": 201
+    },
+    {
+      "id": "K069",
+      "title": "坦诚说明不适用场景，减少误导性推荐",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2108759625306624027",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A3",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k069",
+      "section_anchor": "limits",
+      "text_characters": 372
+    },
+    {
+      "id": "K070",
+      "title": "公开材料之间能交叉核对事实，保留版本与更新时间",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2108759625306624027",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A3",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k070",
+      "section_anchor": "limits",
+      "text_characters": 372
+    },
+    {
+      "id": "K071",
+      "title": "核实客户关切的例外与异常，避免只写宣传结论",
+      "lesson_order": 9,
+      "lesson_file": "slides/geo-evidence.html",
+      "source_articles": [
+        "2108759625306624027",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A3",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k071",
+      "section_anchor": "limits",
+      "text_characters": 372
+    },
+    {
+      "id": "K072",
+      "title": "品牌与专业主题持续一致，建立可搜索的公开资料",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2108374618365108603"
+      ],
+      "source_keys": [
+        "A1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k072",
+      "section_anchor": "footprints",
+      "text_characters": 328
+    },
+    {
+      "id": "K073",
+      "title": "依据业务地区与目标读者选择渠道",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2108374618365108603"
+      ],
+      "source_keys": [
+        "A1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k073",
+      "section_anchor": "footprints",
+      "text_characters": 328
+    },
+    {
+      "id": "K074",
+      "title": "在相关垂直社区参与真实讨论和展示材料",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2108759625306624027",
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A3",
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k074",
+      "section_anchor": "communities",
+      "text_characters": 262
+    },
+    {
+      "id": "K075",
+      "title": "同一份真实经验可按渠道读者改编",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2108374618365108603"
+      ],
+      "source_keys": [
+        "A1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k075",
+      "section_anchor": "adapt",
+      "text_characters": 120
+    },
+    {
+      "id": "K076",
+      "title": "官网承担可控的产品、文档、工具和业务承接",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k076",
+      "section_anchor": "choice",
+      "text_characters": 264
+    },
+    {
+      "id": "K077",
+      "title": "平台与自建站按触达、转化和维护成本安排优先级",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k077",
+      "section_anchor": "choice",
+      "text_characters": 264
+    },
+    {
+      "id": "K078",
+      "title": "分散渠道风险，积累可持续联系的订阅关系",
+      "lesson_order": 10,
+      "lesson_file": "slides/seo-distribution.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k078",
+      "section_anchor": "subscribe",
+      "text_characters": 74
+    },
+    {
+      "id": "K079",
+      "title": "从销售与客服收集真实客户问题",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k079",
+      "section_anchor": "questions",
+      "text_characters": 77
+    },
+    {
+      "id": "K080",
+      "title": "问题集覆盖采购约束和具体使用场景",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2111476793555210739"
+      ],
+      "source_keys": [
+        "A5"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k080",
+      "section_anchor": "questions",
+      "text_characters": 77
+    },
+    {
+      "id": "K081",
+      "title": "记录平台、日期、联网状态和上下文",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k081",
+      "section_anchor": "repeat",
+      "text_characters": 138
+    },
+    {
+      "id": "K082",
+      "title": "保持基线并重复测试，记录采样方式与次数",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k082",
+      "section_anchor": "repeat",
+      "text_characters": 138
+    },
+    {
+      "id": "K083",
+      "title": "单独观察品牌是否出现",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k083",
+      "section_anchor": "meaning",
+      "text_characters": 137
+    },
+    {
+      "id": "K084",
+      "title": "保留引用地址并核查实际支撑的说法",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k084",
+      "section_anchor": "meaning",
+      "text_characters": 137
+    },
+    {
+      "id": "K085",
+      "title": "核查事实准确性和信息是否过期",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k085",
+      "section_anchor": "meaning",
+      "text_characters": 137
+    },
+    {
+      "id": "K086",
+      "title": "判断推荐与约束是否匹配，区分合理劝退与错误",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k086",
+      "section_anchor": "meaning",
+      "text_characters": 137
+    },
+    {
+      "id": "K087",
+      "title": "结合可识别 AI 来源访问及品牌搜索变化",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A2",
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k087",
+      "section_anchor": "business",
+      "text_characters": 313
+    },
+    {
+      "id": "K088",
+      "title": "用有效询盘交叉验证，样本率不外推为全网曝光",
+      "lesson_order": 11,
+      "lesson_file": "slides/geo-evaluation.html",
+      "source_articles": [
+        "2108587885016363340",
+        "2111476793555210739",
+        "user-conversation-draft"
+      ],
+      "source_keys": [
+        "A2",
+        "A5",
+        "D1"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k088",
+      "section_anchor": "business",
+      "text_characters": 313
+    },
+    {
+      "id": "K089",
+      "title": "连接自己的产品、试用和服务销售",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k089",
+      "section_anchor": "product",
+      "text_characters": 76
+    },
+    {
+      "id": "K090",
+      "title": "按具体联盟规则评估佣金及持续订阅分成",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k090",
+      "section_anchor": "product",
+      "text_characters": 76
+    },
+    {
+      "id": "K091",
+      "title": "评估垂类赞助与 Newsletter 合作",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k091",
+      "section_anchor": "sponsor",
+      "text_characters": 145
+    },
+    {
+      "id": "K092",
+      "title": "定义合格商机与承接方式，评估线索变现",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k092",
+      "section_anchor": "sponsor",
+      "text_characters": 145
+    },
+    {
+      "id": "K093",
+      "title": "把模板、数据库与行业材料做成数字产品",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k093",
+      "section_anchor": "membership",
+      "text_characters": 76
+    },
+    {
+      "id": "K094",
+      "title": "用持续专业价值支撑会员和订阅产品",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k094",
+      "section_anchor": "membership",
+      "text_characters": 76
+    },
+    {
+      "id": "K095",
+      "title": "把广告、合作位变现与搜索排名承诺区分开",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k095",
+      "section_anchor": "paid",
+      "text_characters": 35
+    },
+    {
+      "id": "K096",
+      "title": "核算获客、维护和交付成本，区分收入与利润",
+      "lesson_order": 12,
+      "lesson_file": "slides/seo-business.html",
+      "source_articles": [
+        "2110342528948113829"
+      ],
+      "source_keys": [
+        "A4"
+      ],
+      "treatment": "原文段落归类；技术核对单列",
+      "anchor": "k096",
+      "section_anchor": "loop",
+      "text_characters": 102
+    }
+  ],
+  "foundation_manifest": "foundation-lessons.json",
+  "learning_path": [
+    "slides/seo-basics-tdk.html",
+    "slides/seo-basics-onpage.html",
+    "slides/seo-basics-technical.html",
+    "slides/seo-basics-content-geo.html",
+    "slides/seo-1.html",
+    "slides/seo-intent.html",
+    "slides/seo-2.html",
+    "slides/seo-rendering.html",
+    "slides/seo-structure.html",
+    "slides/seo-performance.html",
+    "slides/seo-5.html",
+    "slides/seo-3.html",
+    "slides/geo-evidence.html",
+    "slides/seo-distribution.html",
+    "slides/geo-evaluation.html",
+    "slides/seo-business.html",
+    "slides/seo-4.html",
+    "slides/seo-final.html"
+  ]
+}

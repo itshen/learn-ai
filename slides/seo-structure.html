@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>首页到文章怎么连：内链、301、canonical 怎么配？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。">
+<meta name="author" content="洛小山、黄啊码">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.miyang.cn/slides/seo-structure.html">
+<link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-structure.html">
+<link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-structure.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="首页到文章怎么连：内链、301、canonical 怎么配？">
+<meta property="og:description" content="把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。">
+<meta property="og:url" content="https://xueai.miyang.cn/slides/seo-structure.html">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="首页到文章怎么连：内链、301、canonical 怎么配？">
+<meta name="twitter:description" content="把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
+<link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "首页到文章怎么连：内链、301、canonical 怎么配？", "name": "首页到文章怎么连：内链、301、canonical 怎么配？", "url": "https://xueai.miyang.cn/slides/seo-structure.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "把首页、分类、文章与服务串起来；用内容集群补长尾问题，处理旧网址迁移和带参数的重复地址。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-10-18", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/03-dog.png", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="5">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 5 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 5 / 14</div><h1>首页到文章怎么连：内链、301、canonical 怎么配？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2031" data-source-end="2057">
+<p>好的网站结构，就像个指示清楚的路牌，去哪里都明明白白</p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 5 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>链接文字直接说明白去哪，写“查看具体课表”就比干瘪瘪的“点击这里”强。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#roads">去哪里都明明白白</a></li>
+<li><a href="#cluster">围绕核心问题，把长尾内容织成一张网</a></li>
+<li><a href="#address">换了网址别断路，同一内容认准正版</a></li></ol></details>
+<section id="roads" class="reveal sc-section" data-source-section data-point-ids="K034 K035 K036"><span id="k034" class="sc-point-anchor" aria-hidden="true"></span><span id="k035" class="sc-point-anchor" aria-hidden="true"></span><span id="k036" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>去哪里都明明白白</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2059" data-source-end="2127"><ul>
+<li>首页必须挂着核心分类的牌子；</li>
+<li>分类页能顺畅点进每一篇具体的文章；</li>
+<li>具体的文章里，顺手再推荐一下相关的服务页或者进阶教程。</li>
+</ul></div>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2129" data-source-end="2211">
+<p>链接文字直接说明白去哪，写“查看具体课表”就比干瘪瘪的“点击这里”强一百倍，如果有些旧页面换了网址，一定要配 <strong>301 永久重定向</strong>，别让老访客和老权重全丢了。</p></div></section>
+<figure id="fig-a2-03" class="sc-figure" data-asset-key="A2-03" data-after-anchor="k034"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/03-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/03-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="首页、价格页与教程页分别回答是谁、多少钱和怎么做"></a><figcaption>先分清页面职责，再安排首页、分类与详情之间的访问路径。</figcaption></figure>
+<section id="cluster" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K037 K038"><span id="k037" class="sc-point-anchor" aria-hidden="true"></span><span id="k038" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>围绕核心问题，把长尾内容织成一张网</h2>
+<div class="sc-author-passage" data-source-key="A4" data-source-start="1584" data-source-end="1729">
+<p><strong>内容集群架构</strong>：<br>围绕核心大词搭建关键页面，并通过数十篇长尾长文（形成严密的网状内链结构），如果你觉得不明白这个原因，请参考公众号对于长文是会加多一部分的流量加持，再不明白，直接看 X，对于文章的数据确实会偏高，但有个前提，依旧是内容质量，内容质量，内容质量，重要的事情说三遍。</p></div></section>
+<figure id="fig-a2-06" class="sc-figure" data-asset-key="A2-06" data-after-anchor="k038"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/06-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/06-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗用活页环把首页、分类、文章和相关服务连接起来"></a><figcaption>把支柱内容、场景文章和相关服务连成可使用的主题路径，链接文字说明目标。</figcaption></figure>
+<section id="address" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K039 K040 K041"><span id="k039" class="sc-point-anchor" aria-hidden="true"></span><span id="k040" class="sc-point-anchor" aria-hidden="true"></span><span id="k041" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>换了网址别断路，同一内容认准正版</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2213" data-source-end="2292">
+<p>如果同一个内容可以通过好几个不同链接打开（比如带推广参数的链接），一定要在主链接上加个 canonical 标签，告诉爬虫：“认准这个正版，别把权重算乱了”。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>迁移使用合适的永久重定向；重复版本按实际内容配置 canonical，不能只在主地址加标签就算完成。内链、地图和重定向尽量指向一致的规范地址，canonical 是信号，不是命令。 · <a href="https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls">Google：规范网址处理</a></aside></section>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>示例 · 一个规范版本，多个需要处理的地址</h2>
+<p>假设 /guide-old 已永久迁移，推广参数版本与正文相同。先确认新地址是完整、可用的目标，再安排重定向与重复处理；canonical 只是整体信号的一部分。</p>
+<div class="sc-table-wrap"><table class="sc-table"><thead><tr><th>地址</th><th>需要核对</th></tr></thead><tbody><tr><td>/guides/deploy</td><td>正常正文、自身规范关系、目录与地图一致</td></tr><tr><td>/guide-old</td><td>迁移目标、状态、是否有循环或多余跳转</td></tr><tr><td>/guides/deploy?campaign=demo</td><td>是否确为同一内容，规范信号是否一致</td></tr></tbody></table></div>
+<pre><code>&lt;link rel=&quot;canonical&quot; href=&quot;https://example.com/guides/deploy&quot;&gt;</code></pre></section>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>画访问路径</strong>从首页走到分类、详情和相关服务，记录断点。检查重要页面是否只能从临时入口抵达，给必要内容建立稳定路径。</li>
+<li><strong>梳理主题</strong>把同一决策下的问题列成支柱页和子页，逐一说明独立任务。对重复答案考虑合并，对缺失条件安排补充。</li>
+<li><strong>核对地址</strong>比较参数和旧路径的实际内容，确定规范与迁移关系。不同任务的页面不能为了集中表现而随意指向同一地址。</li>
+<li><strong>同步验证</strong>更新链接、地图和映射，测试最终目标、循环与跳转链。保存地址表，发布后再核对搜索系统实际选择的版本。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份主题与页面关系图，加一张旧地址、重复地址与规范版本的处理表；重要路径全部能够实际走通。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 三种推广参数打开同一份正文，最先应该做什么？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="先确定哪些地址真是重复内容，再选择合适的规范与迁移处理。内部链接、地图和重定向也要保持一致。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>三种推广参数打开同一份正文，最先应该做什么？</legend>
+<label class="sc-option">
+<input type="radio" name="q5" value="0"><span>把它们当作三篇独立内容继续互链</span></label>
+<label class="sc-option">
+<input type="radio" name="q5" value="1"><span>先确认规范地址，再统一相关信号</span></label>
+<label class="sc-option">
+<input type="radio" name="q5" value="2"><span>把所有不同产品页都 canonical 到首页</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>先确定哪些地址真是重复内容，再选择合适的规范与迁移处理。内部链接、地图和重定向也要保持一致。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-5" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-5-canonical"><span>期望规范地址</span>
+<textarea id="work-5-canonical" name="canonical" rows="3" maxlength="20000" placeholder="最终希望读者和系统使用哪个地址"></textarea></label>
+<label class="sc-field wide" for="work-5-variants"><span>已有地址与状态</span>
+<textarea id="work-5-variants" name="variants" rows="3" maxlength="20000" placeholder="列出参数、旧路径及其实际正文和状态"></textarea></label>
+<label class="sc-field wide" for="work-5-mapping"><span>处理映射</span>
+<textarea id="work-5-mapping" name="mapping" rows="3" maxlength="20000" placeholder="说明重定向、canonical、内链和地图怎样配合"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-rendering.html"><small>上一讲</small>Vue/React 搜不到：robots、noindex、SSR 怎么查？</a><a class="next" href="seo-performance.html"><small>下一讲</small>打开慢、点不动、页面乱跳：三个性能指标怎么查？</a></nav></main>
+<script src="i18n.js?v=20260903a"></script>
+<script src="lesson.js"></script>
+<script src="taste.js?v=20260810a"></script>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

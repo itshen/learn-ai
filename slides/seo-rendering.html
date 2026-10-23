@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vue/React 搜不到：robots、noindex、SSR 怎么查？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。">
+<meta name="author" content="洛小山、黄啊码">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.miyang.cn/slides/seo-rendering.html">
+<link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-rendering.html">
+<link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-rendering.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="Vue/React 搜不到：robots、noindex、SSR 怎么查？">
+<meta property="og:description" content="沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。">
+<meta property="og:url" content="https://xueai.miyang.cn/slides/seo-rendering.html">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/04-dog.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vue/React 搜不到：robots、noindex、SSR 怎么查？">
+<meta name="twitter:description" content="沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/04-dog.png">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
+<link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "Vue/React 搜不到：robots、noindex、SSR 怎么查？", "name": "Vue/React 搜不到：robots、noindex、SSR 怎么查？", "url": "https://xueai.miyang.cn/slides/seo-rendering.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "沿能打开却搜不到的问题，分清抓取与索引，核对 robots、noindex、地图、状态码、源码正文和真实链接。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-10-18", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108587885016363340/04-dog.png", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="4">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 4 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 4 / 14</div><h1>Vue/React 搜不到：robots、noindex、SSR 怎么查？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1225" data-source-end="1256">
+<p>很多新手容易犯迷糊：我的网址在浏览器里能打开，怎么就搜不到呢？</p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 4 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>提交了站点地图不等于保送收录。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#crawl-index">爬虫来看了一眼，和把你放进数据库是两码事</a></li>
+<li><a href="#door">门口的保安告示，和门后的纸条</a></li>
+<li><a href="#menu">给爬虫带路的菜单，别塞一堆错误地址</a></li>
+<li><a href="#blank">花里胡哨看够了，正文却是一张白纸</a></li>
+<li><a href="#links">爬虫得顺着真正的链接一页一页逛</a></li>
+<li><a href="#verify">不知道收没收录，先把检查口径弄清楚</a></li></ol></details>
+<section id="crawl-index" class="reveal sc-section" data-source-section data-point-ids="K024 K025"><span id="k024" class="sc-point-anchor" aria-hidden="true"></span><span id="k025" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>爬虫来看了一眼，和把你放进数据库是两码事</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1258" data-source-end="1318">
+<p>这里有两个概念：<strong>抓取</strong>（爬虫顺着网线爬进来看了一眼）和<strong>收录</strong>（爬虫觉得你写得还行，把你放进了搜索数据库里）。</p></div></section>
+<section id="door" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K026 K027"><span id="k026" class="sc-point-anchor" aria-hidden="true"></span><span id="k027" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>门口的保安告示，和门后的纸条</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1320" data-source-end="1447">
+<p>有几个点必须看紧了，如果你做的网页是企业内部站点，更要注意了：</p>
+<ul>
+<li><strong>robots.txt</strong>：这是门口的保安告示，如果上面写了禁止爬虫访问，爬虫扭头就走；</li>
+<li><strong>noindex</strong>：这是贴在门后的纸条，意思是“你可以进来看，但别把我登报纸上”；</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>noindex 必须能被爬虫读取，robots 禁抓可能让它读不到该规则。内部资料需要身份认证与访问权限，robots 和 noindex 都不是安全门锁。 · <a href="https://developers.google.com/search/docs/crawling-indexing/robots/intro">Google：robots.txt 的用途与限制</a> · <a href="https://developers.google.com/search/docs/crawling-indexing/block-indexing">Google：noindex 的生效条件</a></aside></section>
+<figure id="fig-a2-04" class="sc-figure" data-asset-key="A2-04" data-after-anchor="k027"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/04-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/04-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="允许抓取的网页带 noindex，不进入索引书架"></a><figcaption>允许抓取与允许索引是两件事；公开页面的 noindex 必须能被爬虫读取。</figcaption></figure>
+<section id="menu" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K028 K029"><span id="k028" class="sc-point-anchor" aria-hidden="true"></span><span id="k029" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>给爬虫带路的菜单，别塞一堆错误地址</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1449" data-source-end="1637"><ul>
+<li><strong>sitemap.xml（站点地图）</strong>：相当于一张给爬虫带路的菜单，告诉它你家都有哪些好菜；</li>
+<li><strong>HTTP 状态码</strong>：正常就该是标准的 200，删掉的页面就利索地给 404，别整那些稀奇古怪的跳转。</li>
+</ul>
+<p>记住两点：<strong>提交了站点地图不等于保送收录</strong>；另外，别以为在 robots.txt 里把网页锁了就能彻底防收录，想彻底不让搜到，规规矩矩加 noindex。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>状态码应反映真实情况：正常内容、迁移、不存在和临时故障分别处理。地图提供发现线索，不能保证索引。 · <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/overview">Google：站点地图</a></aside></section>
+<section id="blank" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K030 K031"><span id="k030" class="sc-point-anchor" aria-hidden="true"></span><span id="k031" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>花里胡哨看够了，正文却是一张白纸</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1668" data-source-end="1908">
+<p>现在的开发老哥都喜欢用 Vue 或 React 搞单页应用（SPA），看着各种动效很炫，但对爬虫来说就是：😡<strong> 你是在难为我，我只看代码，看文字，不是来看你花里胡哨</strong>。</p>
+<p>为什么？因为有时候浏览器打开要等半天 JavaScript 加载数据，搜索引擎爬虫耐心很差，如果接口卡一下或者脚本报错，<strong>它抓到的可能就是一张白纸。</strong></p>
+<p>怎么避坑？</p>
+<ul>
+<li>做核心业务和文章页面，老老实实用<strong>服务端渲染（SSR）或者预渲染</strong>，让服务器吐出来的第一波 HTML 源码里就有大白话正文。</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>Google 可以执行 JavaScript；原文的“白卷”说的是脚本、接口或访问条件导致正文缺失的风险。SSR/预渲染也要检查实际输出，不能只看框架名称。 · <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics">Google：JavaScript SEO</a></aside></section>
+<figure id="fig-a2-05" class="sc-figure" data-asset-key="A2-05" data-after-anchor="k031"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/05-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/05-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗操作 SSR 印刷机，初始 HTML 带有正文"></a><figcaption>SSR 或预渲染让初始 HTML 带有正文，仍需核查实际响应、脚本与访问条件。</figcaption></figure>
+<section id="links" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K032"><span id="k032" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>爬虫得顺着真正的链接一页一页逛</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="1910" data-source-end="2013"><ul>
+<li>页面跳转要用规规矩矩的 &lt;a href=&quot;/courses/ai-office&quot;&gt; 链接，千万别偷懒用那种点击事件或者 #/courses 这类带井号的哈希路由，爬虫顺着真正的链接才能一页一页逛下去。</li>
+</ul></div></section>
+<figure id="fig-a2-06" class="sc-figure" data-asset-key="A2-06" data-after-anchor="k032"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/06-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/06-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗用活页环把首页、分类、文章和相关服务连接起来"></a><figcaption>核心页面通过可解析的普通链接连接，让用户和爬虫都能继续访问。</figcaption></figure>
+<section id="verify" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K033"><span id="k033" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>不知道收没收录，先把检查口径弄清楚</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2905" data-source-end="3029">
+<p>国内站看百度搜索资源平台，海外看 Google Search Console（GSC），有了后台，你就不用瞎猜，看数据对症下药：</p>
+<ul>
+<li><strong>页面根本没收录</strong>：先查代码是不是把爬虫挡了，或者页面是不是空白没渲染出来，还是不知道，用 site:网址；</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>site: 可以粗看，结果和数量并非完整、精确的索引库存；关键页面结合站长平台的 URL 检查和实际响应核对。 · <a href="https://developers.google.com/search/docs/monitor-debug/search-operators/all-search-site">Google：site: 查询的边界</a></aside></section>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>示例 · 不同目标使用不同控制</h2>
+<p>生产公开页、公开但不参与搜索的页面、受权限保护的内部页，需要分别配置。以下仅示意 noindex 与普通链接，不能把 noindex 用作内部资料的访问保护。</p>
+<pre><code>&lt;!-- 仅用于希望公开可访问、但不希望被索引的页面 --&gt;
+&lt;meta name=&quot;robots&quot; content=&quot;noindex&quot;&gt;
+
+&lt;!-- 核心页面使用可解析链接；目标应能直接访问 --&gt;
+&lt;a href=&quot;/guides/deploy&quot;&gt;查看部署条件与检查步骤&lt;/a&gt;</code></pre></section>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>确认公开范围</strong>先确认页面本来就适合对外公开。内部资料保持权限，必要时单独制作公开说明，不为索引盲目移除认证。</li>
+<li><strong>核对响应</strong>同时检查状态与正文，测试正常、迁移和不存在的路径。对 JavaScript 页面比较初始响应和渲染结果。</li>
+<li><strong>核对规则</strong>检查 robots、noindex、规范地址和地图是否与目标一致。记录实际读到的规则，不只看后台配置界面。</li>
+<li><strong>复查处理</strong>完成必要修改后记录版本，再通过站长工具和实际访问复查。索引与排名另行观察，不把提交按钮当完成证明。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份逐 URL 的技术证据表，包含访问条件、响应、渲染、抓取与索引规则，以及修改后的复查记录。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 页面已被 robots 禁抓，又加入 noindex，能保证搜索系统看到新规则吗？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="支持 noindex 的搜索系统需要读取标签或响应头。抓取限制、索引规则与私密内容的访问权限，应按不同目标分别配置。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>页面已被 robots 禁抓，又加入 noindex，能保证搜索系统看到新规则吗？</legend>
+<label class="sc-option">
+<input type="radio" name="q4" value="0"><span>能，两层保护一定更有效</span></label>
+<label class="sc-option">
+<input type="radio" name="q4" value="1"><span>不能，禁抓可能使页面内规则无法被读取</span></label>
+<label class="sc-option">
+<input type="radio" name="q4" value="2"><span>只要把 noindex 写进 sitemap 就行</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>支持 noindex 的搜索系统需要读取标签或响应头。抓取限制、索引规则与私密内容的访问权限，应按不同目标分别配置。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">只在当前页面整理输入，可导出到本地；不会查询外部 AI 或自动验证事实。</p>
+<form id="worksheet-4" data-sc-workbook="notes">
+<div class="sc-form-grid">
+<label class="sc-field wide" for="work-4-url"><span>待检查网址</span>
+<textarea id="work-4-url" name="url" rows="3" maxlength="20000" placeholder="填写具体页面，而不只是域名"></textarea></label>
+<label class="sc-field wide" for="work-4-response"><span>实际响应与渲染</span>
+<textarea id="work-4-response" name="response" rows="3" maxlength="20000" placeholder="状态、初始正文、脚本或资源失败情况"></textarea></label>
+<label class="sc-field wide" for="work-4-rules"><span>控制与复查记录</span>
+<textarea id="work-4-rules" name="rules" rows="3" maxlength="20000" placeholder="robots、noindex、地图和 URL 检查结果"></textarea></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-2.html"><small>上一讲</small>企业培训站：首页、服务、价格、案例、教程怎么写？</a><a class="next" href="seo-structure.html"><small>下一讲</small>首页到文章怎么连：内链、301、canonical 怎么配？</a></nav></main>
+<script src="i18n.js?v=20260903a"></script>
+<script src="lesson.js"></script>
+<script src="taste.js?v=20260810a"></script>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>

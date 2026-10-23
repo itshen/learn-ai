@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>打开慢、点不动、页面乱跳：三个性能指标怎么查？ | 被搜到：SEO 与 GEO</title>
+<meta name="description" content="对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。">
+<meta name="author" content="洛小山、黄啊码">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xueai.miyang.cn/slides/seo-performance.html">
+<link rel="alternate" hreflang="zh-CN" href="https://xueai.miyang.cn/slides/seo-performance.html">
+<link rel="alternate" hreflang="x-default" href="https://xueai.miyang.cn/slides/seo-performance.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="小山学堂">
+<meta property="og:title" content="打开慢、点不动、页面乱跳：三个性能指标怎么查？">
+<meta property="og:description" content="对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。">
+<meta property="og:url" content="https://xueai.miyang.cn/slides/seo-performance.html">
+<meta property="og:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/05.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="打开慢、点不动、页面乱跳：三个性能指标怎么查？">
+<meta name="twitter:description" content="对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。">
+<meta name="twitter:image" content="https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/05.jpg">
+<script id="xueaiThemeBridge" src="theme-bridge.js?v=20260816k"></script>
+<link rel="stylesheet" href="lesson.css?v=20260827a">
+<link rel="stylesheet" href="taste.css?v=20260810a">
+<link rel="stylesheet" href="seo.css?v=20260811a">
+<link rel="stylesheet" href="seo-course.css?v=20261018a">
+<link rel="stylesheet" href="lesson-dark-compat.css?v=20260816k">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": ["Article", "LearningResource"], "headline": "打开慢、点不动、页面乱跳：三个性能指标怎么查？", "name": "打开慢、点不动、页面乱跳：三个性能指标怎么查？", "url": "https://xueai.miyang.cn/slides/seo-performance.html", "inLanguage": "zh-CN", "author": [{"@type": "Person", "name": "洛小山"}, {"@type": "Person", "name": "黄啊码"}], "publisher": {"@type": "Organization", "name": "小山学堂"}, "description": "对应手机加载、交互和布局问题，认识 LCP、INP、CLS；再处理大图、脚本、主题、插件与技术栈。", "learningResourceType": "课程", "isPartOf": {"@type": "Course", "name": "被搜到：SEO 与 GEO", "url": "https://xueai.miyang.cn/slides/seo-guide.html"}, "datePublished": "2026-10-18", "dateModified": "2026-10-18", "isAccessibleForFree": false, "image": "https://xueai.miyang.cn/slides/images/seo-geo/2108759625306624027/05.jpg", "hasPart": {"@type": "WebPageElement", "isAccessibleForFree": false, "cssSelector": ".paywall-locked"}}</script><noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head><body><main class="lesson" data-seo-lesson="6">
+<nav class="sc-breadcrumb" aria-label="章节位置"><a href="seo-guide.html">SEO 与 GEO · 本章目录</a><span>案例第 6 / 14 讲</span><a href="seo-gallery.html">配图索引</a></nav>
+<header class="lesson-header">
+<div class="kicker">案例实战 · 6 / 14</div><h1>打开慢、点不动、页面乱跳：三个性能指标怎么查？</h1>
+<div class="subtitle sc-author-intro">
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2716" data-source-end="2729">
+<p>现在没人有耐心等你转圈圈：</p></div></div>
+<div class="chips"><span class="chip">案例实战</span><span class="chip">案例第 6 / 14 讲</span><span class="chip">图文</span><span class="chip">可选练习</span></div>
+<p class="sc-meta">原文 黄啊码 · 课程框架 洛小山 · 整理 2026-10-18</p></header>
+<aside class="sc-brief xa-tldr"><strong>一句话速览</strong>
+<p>高变现的能力往往来源于最简单的技术。</p></aside>
+<details class="sc-outline">
+<summary>这一讲会解决哪些问题</summary>
+<ol>
+<li><a href="#experience">转圈圈、点不动、正文突然被挤走</a></li>
+<li><a href="#images">5MB 原图、没用的脚本，先减负</a></li>
+<li><a href="#stack">别炫技，成熟技术栈直接上手</a></li></ol></details>
+<section id="experience" class="reveal sc-section" data-source-section data-point-ids="K042 K043 K044 K045"><span id="k042" class="sc-point-anchor" aria-hidden="true"></span><span id="k043" class="sc-point-anchor" aria-hidden="true"></span><span id="k044" class="sc-point-anchor" aria-hidden="true"></span><span id="k045" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>转圈圈、点不动、正文突然被挤走</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2731" data-source-end="2827"><ul>
+<li>手机点开等超过 3 秒，大部分人都直接关了；</li>
+<li>稍微点个按钮卡半天没反应，体验极差；</li>
+<li>看着看着，上面的广告图突然刷出来，把正文一下子挤到底下去（页面跳动），体验感差，告辞，不送。</li>
+</ul></div>
+<div class="sc-author-passage" data-source-key="A4" data-source-start="1170" data-source-end="1283"><ul>
+<li><strong>核心技术基准</strong>：<br><strong>Core Web Vitals</strong> 表现优秀（LCP、INP、CLS全绿），完整的结构化数据和 sitemap站点地图，让搜索引擎直接抓取到产品、评价、文章结构，移动端绝对优先的排版与交互体验。</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>原文“超过 3 秒大部分人离开”是体验提醒，不作为本课统计。LCP 看主要内容加载、INP 看交互、CLS 看布局稳定性；阈值与第 75 百分位的练习放在文末工具里。 · <a href="https://web.dev/articles/vitals">web.dev：Web Vitals</a> · <a href="https://developers.google.com/search/docs/appearance/core-web-vitals">Google：核心网页指标与搜索</a></aside></section>
+<figure id="fig-a3-05" class="sc-figure" data-asset-key="A3-05" data-after-anchor="k043"><a class="sc-image-link" href="images/seo-geo/2108759625306624027/05.jpg" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108759625306624027/05.jpg" width="1199" height="675" loading="lazy" decoding="async" alt="小狗测量工具的使用表现，标有示例数据"></a><figcaption>性能判断来自测量和条件记录；图中的 120ms 只是示意，不能当作 LCP 达标证据。图内数量、参数或收入设问为示意或原文修辞，不作为本课程实测结论。</figcaption></figure>
+<section id="images" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K046"><span id="k046" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>5MB 原图、没用的脚本，先减负</h2>
+<div class="sc-author-passage" data-source-key="A2" data-source-start="2829" data-source-end="2886">
+<p>把那些动辄 5MB 的大高清原图压缩成 WebP 格式，把没用的脚本删一删，手机上看舒服了，核心指标自然就达标了。</p></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>压缩图片和删脚本有助于减负，是否达标仍需实测；按尺寸与场景选择 WebP、AVIF 等合适格式，并预留图片空间。</aside></section>
+<section id="stack" class="reveal sc-section paywall-locked" data-source-section data-point-ids="K047"><span id="k047" class="sc-point-anchor" aria-hidden="true"></span>
+<h2>别炫技，成熟技术栈直接上手</h2>
+<div class="sc-author-passage" data-source-key="A4" data-source-start="774" data-source-end="1168">
+<p>选择适合长线SEO、性能极快且易于维护的技术栈，高变现的能力往往来源于最简单的技术，什么 vue、什么 elementui，别！求你了，市面上那么多成熟的建站技术栈直接上手就好。</p>
+<ul>
+<li><strong>静态/极速博客与内容站</strong>：<br><strong>Next.js / Astro</strong>：首屏极速加载、现代SEO支持极佳，适合需要定制化交互和工具页面的站点。<br><strong>Ghost / Hugo</strong>：专注内容输出，加载速度快，自带现代会员订阅系统（Ghost支持原生Stripe集成）。</li>
+<li><strong>快速建站与生态集成</strong>：<br><strong>WordPress</strong>：生态成熟、插件极其丰富（适合Affiliate营销、SEO插件支持成熟），但务必配置轻量主题和CDN缓存，越重越好看的主题，加载速度非常缓慢，但说句实话，建站这么多年，我接手过的个人站点，WordPress 最多，如果你觉得比较陌生也正常，因为大多数人叫它简称： WP；</li>
+</ul></div>
+<aside class="sc-note" data-editorial-note><strong>整理补充：</strong>框架名称不保证速度。Ghost 提供会员能力；Hugo 是静态站生成器，会员需额外集成。WordPress 的主题、插件和缓存配置会影响实际表现。</aside></section>
+<figure id="fig-a2-05" class="sc-figure" data-asset-key="A2-05" data-after-anchor="k047"><a class="sc-image-link" href="images/seo-geo/2108587885016363340/05-dog.png" aria-label="打开原尺寸图片"><img src="images/seo-geo/2108587885016363340/05-dog.png" width="1672" height="941" loading="lazy" decoding="async" alt="小狗操作 SSR 印刷机，初始 HTML 带有正文"></a><figcaption>服务端输出正文有助于内容被直接读取，加载和交互表现仍要分别测量。</figcaption></figure>
+<details class="sc-teaching-extras paywall-locked">
+<summary>动手练习与检查工具</summary>
+<p class="sc-note">以下为整理时补充的练习，可按自己的业务填写；文章正文取自黄啊码原文段落。</p>
+<section class="reveal sc-section">
+<h2>把这一讲用到自己的业务</h2>
+<div class="sc-steps">
+<ol>
+<li><strong>定义任务</strong>选一条真实手机路径，包含阅读、操作和提交反馈。记录设备与网络条件，避免把不同环境的数据直接比较。</li>
+<li><strong>识别问题</strong>分别观察主要内容加载、交互响应和页面跳动。结合报告定位对应元素或任务，不先预设一定是图片或服务器问题。</li>
+<li><strong>安排修复</strong>根据影响处理资源大小、脚本、空间预留或缓存。缓存涉及价格与权限时要同时保证信息正确，不只追求命中率。</li>
+<li><strong>同条件复测</strong>保留改动前后记录，再结合真实用户数据观察。数据缺失就说明缺失，不用一次绿灯替代整站验收。</li></ol>
+<p class="sc-deliverable"><strong>本节交付：</strong>一份包含条件、问题位置、改动与复测结果的体验记录。练习的阈值只帮助理解指标，不给页面计算搜索排名。</p></div></section>
+<section class="reveal sc-section">
+<h2>判断一下 · 手机上按钮响应迟钝，首图已很小，应该优先查哪类问题？</h2>
+<div class="toy sc-quiz" data-sc-quiz data-correct="1" data-explanation="交互卡顿需要检查实际操作过程。加载、响应和版面跳动分别定位；单次实验室结果也不能代替真实用户分布。">
+<div class="toy-head"><span class="toy-t">本节判断题</span><span class="toy-badge">单选</span></div>
+<div class="toy-body">
+<fieldset><legend>手机上按钮响应迟钝，首图已很小，应该优先查哪类问题？</legend>
+<label class="sc-option">
+<input type="radio" name="q6" value="0"><span>继续无限压缩首图</span></label>
+<label class="sc-option">
+<input type="radio" name="q6" value="1"><span>观察交互中的长任务与相关脚本</span></label>
+<label class="sc-option">
+<input type="radio" name="q6" value="2"><span>把页面标题多加几个关键词</span></label></fieldset>
+<button type="button" class="sc-button">核对解释</button>
+<p class="sc-feedback" data-feedback role="status" aria-live="polite">选择后查看解释，可重新判断。</p>
+<details>
+<summary>直接阅读答案说明</summary>
+<p>交互卡顿需要检查实际操作过程。加载、响应和版面跳动分别定位；单次实验室结果也不能代替真实用户分布。</p></details></div></div></section>
+<section class="reveal sc-section">
+<h2>动手 · 写下自己的检查记录</h2>
+<div class="toy">
+<div class="toy-head"><span class="toy-t">本节工作单</span><span class="toy-badge">填写与导出</span></div>
+<div class="toy-body">
+<p class="toy-hint">阈值练习：LCP ≤ 2.5 秒、INP ≤ 200 毫秒、CLS ≤ 0.1 为“良好”参考。真实用户评估看第 75 百分位，实验室与现场数据分开。</p>
+<form id="worksheet-6" data-sc-workbook="performance">
+<div class="sc-form-grid">
+<label class="sc-field" for="work-6-lcp"><span>LCP（秒）</span>
+<input id="work-6-lcp" name="lcp" type="number" min="0" step="any" inputmode="decimal" placeholder="例如 2.4"></label>
+<label class="sc-field" for="work-6-inp"><span>INP（毫秒）</span>
+<input id="work-6-inp" name="inp" type="number" min="0" step="any" inputmode="decimal" placeholder="例如 180"></label>
+<label class="sc-field" for="work-6-cls"><span>CLS</span>
+<input id="work-6-cls" name="cls" type="number" min="0" step="any" inputmode="decimal" placeholder="例如 0.08"></label></div>
+<div class="sc-actions">
+<button type="submit" class="sc-button">整理记录</button>
+<button type="button" class="sc-button secondary" data-export>导出 JSON</button></div>
+<pre class="sc-output" data-output role="status" aria-live="polite">填写后点击“整理记录”。输入不会自动保存，离开前可导出。</pre></form></div></div></section></details>
+<nav class="sc-next" aria-label="本章前后课件"><a href="seo-structure.html"><small>上一讲</small>首页到文章怎么连：内链、301、canonical 怎么配？</a><a class="next" href="seo-5.html"><small>下一讲</small>工具测评怎么写：实测数据、对比表、FAQ 和下载清单</a></nav></main>
+<script src="i18n.js?v=20260903a"></script>
+<script src="lesson.js"></script>
+<script src="taste.js?v=20260810a"></script>
+<script src="nav-inject.js?v=20261018b"></script>
+<script src="seo-course.js?v=20261018a"></script>
+<script src="watermark.js?v=20260806c"></script>
+<script src="paywall.js?v=20260903a"></script>
+</body></html>
